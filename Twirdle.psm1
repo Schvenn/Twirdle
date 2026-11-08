@@ -107,8 +107,6 @@ if (!$match) {break}}
 if ($match) {$word}}
 
 if ($results.Count -gt 250 -and -not $Force) {Write-Host -f white "`nThere are too many matches (" -n; Write-Host -f red "$($results.Count)" -n; Write-Host -f white "). Add more letters to the " -n; Write-Host -f cyan "Find" -n; Write-Host -f white ", or " -n; Write-Host -f cyan "Exclude" -n; Write-Host -f white " letter patterns or use the " -n; Write-Host -f cyan "Force" -n; Write-Host -f white " parameter.`n"
-Write-Host -f yellow ("-" * 100)
-Write-Host ""
 return}
 
 if (-not $Import) {[pscustomobject]@{DictionaryFile = 'twirdle.txt'
