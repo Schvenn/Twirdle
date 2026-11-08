@@ -1,4 +1,4 @@
-# TWIRDLE/WORDLE Word Solver
+# TWIRDLE/WORDLE Solver
 This tool started as an experiment. I was looking for the best starting word for the game Twirdle based not just on the most common letters in the English language, but also their best locations.
 
 Twirdle is a Wordle clone, hosted on tweet.app, which is a subscription-based Twitter alternative to which I have a lifetime subscription as an early adopter.
