@@ -78,7 +78,7 @@ $correctpositions = @{}
 $misplacedletters = @{}
 $requiredletters = @{}
 foreach ($i in 0..4) {$misplacedletters[$i] = @()}
-foreach ($pattern in $patterns) {if ($pattern.Length -ne 5) {Write-Host -f red "Invalid pattern: $pattern"
+foreach ($pattern in $patterns) {if ($pattern.Length -ne 5) {Write-Host -f red "Invalid pattern: $pattern`n"
 return}
 for ($i = 0; $i -lt 5; $i++) {$char = $pattern[$i]
 if ($char -eq '_') {continue}
@@ -106,7 +106,7 @@ break}}
 if (!$match) {break}}
 if ($match) {$word}}
 
-if ($results.Count -gt 250 -and -not $Force) {Write-Host -f white "`nThere are too many matches (" -n; Write-Host -f red "$($results.Count)" -n; Write-Host -f white "). Add more letters to the " -n; Write-Host -f cyan "Find" -n; Write-Host -f white " or " -n; Write-Host -f cyan "Exclude" -n; Write-Host -f white " letter patterns.`n"
+if ($results.Count -gt 250 -and -not $Force) {Write-Host -f white "`nThere are too many matches (" -n; Write-Host -f red "$($results.Count)" -n; Write-Host -f white "). Add more letters to the " -n; Write-Host -f cyan "Find" -n; Write-Host -f white ", or " -n; Write-Host -f cyan "Exclude" -n; Write-Host -f white " letter patterns or use the " -n; Write-Host -f cyan "Force" -n; Write-Host -f white " parameter.`n"
 Write-Host -f yellow ("-" * 100)
 Write-Host ""
 return}
