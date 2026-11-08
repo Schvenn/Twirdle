@@ -1,9 +1,12 @@
-# TWIRDLE Word Solver
+# TWIRDLE/WORDLE Word Solver
 This tool started as an experiment. I was looking for the best starting word for the game Twirdle based not just on the most common letters in the English language, but also their best locations.
+
+Twirdle is a Wordle clone, hosted on tweet.app, which is a subscription-based Twitter alternative to which I have a lifetime subscription as an early adopter.
+
 Once I had created a tool to determine that, I decided to find out what the best follow up word would be, because 10 letters covering two turns will often give you a very strong edge on the game, with the second word being dependant on the first.
 That's how this tool was born.
 
-Then, I just kept going.
+Then, I just kept going:
 
 * I decided to let it evaluate alternate words to start the game and score them accordingly, as well.
 * I also decided to allow the import of a custom dictionary, since I don't really know what word list the developers actually use. The included list is based on Scrabble's TWL.
@@ -13,14 +16,17 @@ So, I added the following:
 
 * The ability to use uppercase, lowercase and underscores demonstrating current puzzle state, so that the script would return all possible word matches.
 * The ability to define excluded letters.
+* The ability to add multiple, sequential turns.
+* A help screen.
+* And finally, the ability to force the output, even if the resulting number of words was greater than 250.
 
 Well, I did it.
 I proved I could write a script that would solve the puzzles with as little effort as possible.
 I'm actually kind of sad about it.
 While it was fun to develop, "beating" the game can take the fun out of it, if you use it as a cheat.
-Even cooler, I wrote this in under 120 lines of code.
+Even cooler, I wrote this in under 150 lines of code.
 
-I decided to publish it anyway, because despite the game being less than a month old on the platform, I already see that there are a dozen or so people already blatantly cheating, by solving every puzzle in under 1 second, like @exo, @jesuschrist, @jkt, @santa.
+I decided to publish it anyway, because despite the game being less than a month old on the platform at the time of writing this script, I already see that there are a dozen or so people already blatantly cheating, by solving every puzzle in under 1 second, like @exo, @jesuschrist, @jkt, @santa.
 Yes, I'm calling them out, directly.
 So, the integrity of the game is already compromised, but by using a tool like this properly, even using it after you have solved the puzzle honestly, it can actually help you to learn strategies and expand your vocabulary to think of words you may have missed the first time around, meaning it has some intrinsic value, even as a legitimate tool.
 
@@ -51,36 +57,33 @@ Here is a sample output:
 ## Usage
 
 ```text
-Twirdle -TestWords <word1,word2> -Find <L_ttERs> -Exclude <letters> -Import <importfile>
+Usage: Twirdle -Import <importfile> -TestWords <word1,word2> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force
 ```
+`TestWords` cannot be used with the `Find`/`Exclude`/`Force` parameters.<br>
+`Exclude` and `Force` must be used with the Find parameter.<br>
 
-> **Note:** `TestWords` and `Find`/`Exclude` are mutually exclusive.
+For the Find parameter:
 
+|Parameter/Format|Description|
+|---|---|
+|Uppercase letters|represent the correct letters, in the correct position.|
+|Underscores|represent unknowns.|
+|Lowercase letters|represent the correct letters, but incorrect location.|
+|Commas|separates multiple, sequential guesses.|
+|Exclude|lists letters that cannot be included in the results.|
+|Force|forces the display of all results, even if they exceed 250.|
+
+Examples:
+
+```
+Twirdle -TestWords slate,round
+Twirdle -Find t_R_s,__RST
+Twirdle -Find t_R_s,__RST -Exclude eaud
+Twirdle -Find ___ED -Force
+```
 ---
 
-## Find Function Syntax
-
-| Pattern | Meaning |
-|----------|----------|
-| Uppercase letters | Correct letter in the correct position |
-| `_` (underscore) | Unknown letter |
-| Lowercase letters | Correct letter, but in the wrong position |
-
-### Example
-
-```text
-A_pLe
-```
-
-- `A` = correct letter, correct position
-- `_` = unknown letter
-- `p` = letter exists but is in the wrong position
-- `L` = correct letter, correct position
-- `e` = letter exists but is in the wrong position
-
----
-
-# How to Solve Twirdle 
+# How to Solve Twirdle/Wordle 
 
 For best results, apparently we should start with:
 
@@ -88,10 +91,9 @@ For best results, apparently we should start with:
 2. **Second guess:** `doily`
 
 I don't, though.
-I prefer `slate` and `round`, because they're more natural words.
+I prefer `slate` and `round`, because they're more natural words; and just knowing this, I already have a great head start on the game.
 
-As a strategy, I start with `slate` and only use `round` as the next word if the game tells me that I have only 1 or 2 letters right, but in the wrong position.
-Between those 10 letters, including 4 vowels, I will likely guess the overwhelming majority of words the game can present in 4 turns or less.
+As a strategy, I only use `round` as the second word if the game tells me that I have only 1 or 2 letters right, but neither in the correct position, because between those 10 letters, including 4 vowels, I will likely guess the overwhelming majority of words the game chooses in 4 turns or less.
 
 Does knowing these two pieces of information about the English language to start the game constitute cheating, to begin with?
 Maybe, but no moreso than Wheel of Fortune giving players RSTLNE on their final puzzle, because they know people will pick those, anyway.
