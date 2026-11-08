@@ -78,7 +78,7 @@ $correctpositions = @{}
 $misplacedletters = @{}
 $requiredletters = @{}
 foreach ($i in 0..4) {$misplacedletters[$i] = @()}
-foreach ($pattern in $patterns) {if ($pattern.Length -ne 5) {Write-Host -f red "Invalid pattern: $pattern`n"
+foreach ($pattern in $patterns) {if ($pattern.Length -ne 5) {Write-Host -f red "`nInvalid pattern: $pattern`n"
 return}
 for ($i = 0; $i -lt 5; $i++) {$char = $pattern[$i]
 if ($char -eq '_') {continue}
