@@ -121,7 +121,7 @@ Exclude = $Exclude
 Matches = $results.Count
 Words   = $results -join ', '}}
 
-Write-Host -f yellow "`n`t`t`t`tTWIRDLE/WORDLE Word Solver"
+Write-Host -f yellow "`n`t`t`t`tTWIRDLE/WORDLE Solver"
 Write-Host -f yellow ("-" * 100)
 
 if ($Import) {ImportTwirdleList $Import}
