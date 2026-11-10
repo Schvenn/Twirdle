@@ -1,18 +1,18 @@
-@{RootModule = 'Twirdle.psm1'
-ModuleVersion = '1.5'
+@{RootModule = 'Twordle.psm1'
+ModuleVersion = '2.0'
 GUID = '2142cd1d-2094-4732-b946-91950dcb7e1d'
 Author = 'Craig Plath'
 CompanyName = 'Plath Consulting Incorporated'
 Copyright = '© Craig Plath. All rights reserved.'
-Description = 'Twirdle word helper.'
+Description = 'Twirdle/Wordle word helper and game.'
 PowerShellVersion = '5.1'
-FunctionsToExport = @('Twirdle')
+FunctionsToExport = @('Twordle')
 CmdletsToExport = @()
 VariablesToExport = @()
 AliasesToExport = @()
-FileList = @('Twirdle.txt', 'Twirdle.psm1')
+FileList = @('Twordle.txt', 'Twordle.psm1')
 
-PrivateData = @{PSData = @{Tags = @('game', 'solver', 'tweet.app', 'twirdle')
+PrivateData = @{PSData = @{Tags = @('game', 'solver', 'tweet.app', 'twirdle', 'wordle')
 LicenseUri = 'https://github.com/Schvenn/Twirdle/blob/main/license.txt'
 ProjectUri = 'https://github.com/Schvenn/Twirdle'
-ReleaseNotes = 'Added multiple turn support and output throttling.'}}}
+ReleaseNotes = 'Added the ability to play the game from within the tool.'}}}
