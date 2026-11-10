@@ -25,7 +25,7 @@ So, I did it.
 I proved I could write a script that would solve the puzzles with as little effort as possible.
 I'm actually kind of sad about it.
 While it was fun to develop, "beating" the game can take the fun out of it, if you use it as a cheat.
-Even cooler, I wrote this in under 150 lines of code.
+Even cooler, I wrote this in under 250 lines of code.
 
 I decided to publish it anyway, because despite the game being less than a month old on the platform at the time of writing this script, I already see that there are a dozen or so people already blatantly cheating, by solving every puzzle in under 1 second, like @exo, @jesuschrist, @jkt, @santa.
 Yes, I'm calling them out, directly.
