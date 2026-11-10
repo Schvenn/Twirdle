@@ -1,8 +1,8 @@
 function Twordle ([string[]]$TestWords, [string[]]$Find, [string]$Exclude, [string]$Import, [switch]$Force, [switch]$Play) {# Twordle/Wordle word helper and game.
 
 function TestTwordleWords {param([string[]]$guess)
-if ($guess.Count -gt 2) {Write-Host -f yellow "Ignoring extra words beyond the first two.`n"
-$guess = $guess | Select-Object -First 2}
+if ($guess.Count -gt 3) {Write-Host -f yellow "Ignoring extra words beyond the first three.`n"
+$guess = $guess | Select-Object -First 3}
 $usedletters = @{}
 $positionscore = 0
 $presencescore = 0
@@ -52,7 +52,11 @@ TotalScore = $score.TotalScore}}
 
 $bestfirst = $results | Sort-Object TotalScore -Descending | Select-Object -First 1
 $used = $bestfirst.Word.ToCharArray()
+
 $bestsecond = $results | Where-Object {($_.Word.ToCharArray() | Where-Object {$_ -in $used}).Count -eq 0} | Sort-Object TotalScore -Descending | Select-Object -First 1
+$used += $bestsecond.Word.ToCharArray()
+
+$bestthird = $results | Where-Object {($_.Word.ToCharArray() | Where-Object {$_ -in $used}).Count -eq 0} | Sort-Object TotalScore -Descending | Select-Object -First 1
 
 $firstposition = foreach ($i in 0..4) {($positionfreq[$i].GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1).Key}
 
@@ -60,13 +64,15 @@ $secondposition = foreach ($i in 0..4) {($positionfreq[$i].GetEnumerator() | Sor
 
 $thirdposition = foreach ($i in 0..4) {($positionfreq[$i].GetEnumerator() | Sort-Object Value -Descending | Select-Object -Skip 2 -First 1).Key}
 
-if ($Import -or $TestWords){[pscustomobject]@{DictionaryFile = Split-Path $path -Leaf
+if ($Import -or $TestWords) {[pscustomobject]@{DictionaryFile = Split-Path $path -Leaf
 WordCount = $script:words.Count
 BestFirstGuess = $bestfirst.Word
 FirstScore = $bestfirst.TotalScore
 BestSecondGuess = $bestsecond.Word
 SecondScore = $bestsecond.TotalScore
-TotalScore = $bestsecond.TotalScore + $bestfirst.TotalScore
+BestThirdGuess = $bestthird.Word
+ThirdScore = $bestthird.TotalScore
+TotalScore = $bestfirst.TotalScore + $bestsecond.TotalScore + $bestthird.TotalScore
 MostCommonFirstPosition = ($firstposition -join ',')
 SecondPosition = ($secondposition -join ',')
 ThirdPosition = ($thirdposition -join ',')}
@@ -199,9 +205,10 @@ if (-not $Find -and -not $Exclude -and $Import){Write-Host -f yellow ("-" * 100)
 if ($args.Count -gt 0 -and $args[0] -match '(?i)^[a-z]{5},[a-z]{5}$') {$TestWords = $args[0]}
 if ($TestWords){TestTwordleWords $TestWords}
 if ($Find) {Findword $Find $Exclude | Format-List}
-if (-not $TestWords -and -not $Find) {Write-Host -f cyan "Usage: Twordle -Import <importfile> -TestWords <word1,word2> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play"
+if (-not $TestWords -and -not $Find) {Write-Host -f cyan "Usage: Twordle -Import <importfile> -TestWords <word1,word2,word3> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play"
 Write-Host -f cyan "`nTestWords" -n; Write-Host -f red " cannot" -n; Write-Host -f white " be used with the " -n; Write-Host -f cyan "Find/Exclude/Force" -n; Write-Host -f white " parameters."
-Write-Host -f cyan "Exclude" -n; Write-Host -f white " and " -n; Write-Host -f cyan "Force" -n; Write-Host -f green " must" -n; Write-Host -f white " be used with the " -n; Write-Host -f cyan "Find" -n; Write-Host -f white " parameter.`n"
+Write-Host -f cyan "Exclude" -n; Write-Host -f white " and " -n; Write-Host -f cyan "Force" -n; Write-Host -f green " must" -n; Write-Host -f white " be used with the " -n; Write-Host -f cyan "Find" -n; Write-Host -f white " parameter."
+Write-Host -f cyan "Import" -n; Write-Host -f white " can be used with all parameters, even " -n; Write-Host -f cyan "Play" -n; Write-Host -f white ".`n"
 Write-Host -f yellow "For the " -n; Write-Host -f cyan "Find" -n; Write-Host -f yellow " parameter:`n"
 Write-Host -f white "Uppercase letters" -n; Write-Host -f yellow "`trepresent the correct letters, in the correct position."
 Write-Host -f white "Underscores" -n; Write-Host -f yellow "`t`trepresent unknowns."
