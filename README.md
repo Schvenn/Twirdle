@@ -20,7 +20,7 @@ So, I added the following:
 * A help screen.
 * Next, I added the ability to force the output, even if the resulting number of words was greater than 250.
 * I extended the word coverage to 3 words for those people who really want to push the boundaries.
-* And finally, the best feature was recreating the actual game within the tool itself.
+* And finally, the best feature was recreating the actual game within the tool itself and since this is a solving tool, there is even a cheat switch to play the game with it enabled.
 
 So, I did it.
 I proved I could write a script that would solve the puzzles with as little effort as possible.
@@ -59,11 +59,11 @@ Here is a sample output:
 ## Usage
 
 ```text
-Usage: Twirdle -Import <importfile> -TestWords <word1,word2,word3> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play
+Usage: Twirdle -Import <importfile> -TestWords <word1,word2,word3> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -Cheat
 ```
 `TestWords` cannot be used with the `Find`/`Exclude`/`Force` parameters.<br>
 `Exclude` and `Force` must be used with the Find parameter.<br>
-`Play` of course, lets you play the game.<br>
+`Play` of course, lets you play the game, and if you so choose, you can do so with the `Cheat` switch enabled.<br>
 
 For the Find parameter:
 
@@ -93,6 +93,7 @@ Twirdle -Find ___ED -Force
 * The alphabet at the bottom will do the same, so that you can keep track of what letters are in play and those that are not yet played.
 * The game will not let you replay a word or play an invalid word.
 * You can import a custom dictionary with the `-import` parameter, as well.
+* Possible matches will only appear if the `-cheat` parameter is used.
 
 ```
          TWORDLE
@@ -108,6 +109,8 @@ A B C D E F G H I J K L M
 N O P Q R S T U V W X Y Z
 
 Turn 3
+
+There are 134 possible matches: ...
 
 Guess: WIMPY
 ```
