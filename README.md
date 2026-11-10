@@ -1,4 +1,4 @@
-# TWIRDLE/WORDLE Solver
+# TWIRDLE/WORDLE Solver and Game
 This tool started as an experiment. I was looking for the best starting word for the game Twirdle based not just on the most common letters in the English language, but also their best locations.
 
 Twirdle is a Wordle clone, hosted on tweet.app, which is a subscription-based Twitter alternative to which I have a lifetime subscription as an early adopter.
@@ -18,9 +18,10 @@ So, I added the following:
 * The ability to define excluded letters.
 * The ability to add multiple, sequential turns.
 * A help screen.
-* And finally, the ability to force the output, even if the resulting number of words was greater than 250.
+* Next, I added the ability to force the output, even if the resulting number of words was greater than 250.
+* And finally, the best feature was recreating the actual game within the tool itself.
 
-Well, I did it.
+So, I did it.
 I proved I could write a script that would solve the puzzles with as little effort as possible.
 I'm actually kind of sad about it.
 While it was fun to develop, "beating" the game can take the fun out of it, if you use it as a cheat.
@@ -57,10 +58,11 @@ Here is a sample output:
 ## Usage
 
 ```text
-Usage: Twirdle -Import <importfile> -TestWords <word1,word2> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force
+Usage: Twirdle -Import <importfile> -TestWords <word1,word2> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play
 ```
 `TestWords` cannot be used with the `Find`/`Exclude`/`Force` parameters.<br>
 `Exclude` and `Force` must be used with the Find parameter.<br>
+`Play` of course, lets you play the game.<br>
 
 For the Find parameter:
 
@@ -82,7 +84,33 @@ Twirdle -Find t_R_s,__RST -Exclude eaud
 Twirdle -Find ___ED -Force
 ```
 ---
+# Game Play
 
+* Correct letters in the correct place will appear in green.
+* Misplaced letters will appear in yellow.
+* Incorrect letters will appear in dark grey.
+* The alphabet at the bottom will do the same, so that you can keep track of what letters are in play and those that are not yet played.
+* The game will not let you replay a word or play an invalid word.
+* You can import a custom dictionary with the `-import` parameter, as well.
+
+```
+         TWORDLE
+-------------------------
+        S L A T E
+        R O U N D
+        _ _ _ _ _
+        _ _ _ _ _
+        _ _ _ _ _
+        _ _ _ _ _
+
+A B C D E F G H I J K L M
+N O P Q R S T U V W X Y Z
+
+Turn 3
+
+Guess: WIMPY
+```
+---
 # How to Solve Twirdle/Wordle 
 
 For best results, apparently we should start with:
