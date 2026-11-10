@@ -167,7 +167,10 @@ for ($turn = 1; $turn -le 6; $turn++) {ShowBoard
 Write-Host -f White "Turn $turn`n"
 
 if ($Cheat -and $turn -gt 1) {$Force = $true; $results = FindWord $patterns $excluded
-if ($results) {Write-Host -f Yellow "There are$($results.Matches) possible matches:" -n; Write-Host -f White $results.Words
+
+if ($results) {$words = ($results.Words -split ', ') | Where-Object {$_ -notin $usedwords}
+$matches = $words.Count
+Write-Host -f Yellow "There are$($results.Matches) possible matches:" -n; Write-Host -f White $results.Words
 Write-Host ""}}
 
 do {$guess = (Read-Host "Guess").ToLower()}
