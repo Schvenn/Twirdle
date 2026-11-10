@@ -19,6 +19,7 @@ So, I added the following:
 * The ability to add multiple, sequential turns.
 * A help screen.
 * Next, I added the ability to force the output, even if the resulting number of words was greater than 250.
+* I extended the word coverage to 3 words for those people who really want to push the boundaries.
 * And finally, the best feature was recreating the actual game within the tool itself.
 
 So, I did it.
@@ -58,7 +59,7 @@ Here is a sample output:
 ## Usage
 
 ```text
-Usage: Twirdle -Import <importfile> -TestWords <word1,word2> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play
+Usage: Twirdle -Import <importfile> -TestWords <word1,word2,word3> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play
 ```
 `TestWords` cannot be used with the `Find`/`Exclude`/`Force` parameters.<br>
 `Exclude` and `Force` must be used with the Find parameter.<br>
