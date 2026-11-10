@@ -1,4 +1,4 @@
-function Twordle ([string[]]$TestWords, [string[]]$Find, [string]$Exclude, [string]$Import, [switch]$Force, [switch]$Play) {# Twordle/Wordle word helper and game.
+function Twordle ([string[]]$TestWords, [string[]]$Find, [string]$Exclude, [string]$Import, [switch]$Force, [switch]$Play, [switch]$Cheat) {# Twordle/Wordle word helper and game.
 
 function TestTwordleWords {param([string[]]$guess)
 if ($guess.Count -gt 3) {Write-Host -f yellow "Ignoring extra words beyond the first three.`n"
@@ -117,8 +117,8 @@ return}
 
 if (-not $Import) {[pscustomobject]@{DictionaryFile = 'twordle.txt'
 WordCount = $script:words.Count}
-Write-Host -f yellow ("-" * 100)
-Write-Host ""}
+if (-not $Cheat) {Write-Host -f yellow ("-" * 100)
+Write-Host ""}}
 
 [pscustomobject]@{Pattern = $Find
 Exclude = $Exclude
@@ -151,6 +151,8 @@ switch ($color) {'Green' {$keyboard[$letter] = 'Green'}
 
 if ($Play) {do {$board = @()
 $keyboard = @{}
+$patterns = @()
+$excluded = ''
 
 if ($Import) {ImportTwordleList $Import}
 else {ImportTwordleList}
@@ -163,6 +165,11 @@ $usedwords = @()
 
 for ($turn = 1; $turn -le 6; $turn++) {ShowBoard
 Write-Host -f White "Turn $turn`n"
+
+if ($Cheat -and $turn -gt 1) {$Force = $true; $results = FindWord $patterns $excluded
+if ($results) {Write-Host -f Yellow "There are$($results.Matches) possible matches:" -n; Write-Host -f White $results.Words
+Write-Host ""}}
+
 do {$guess = (Read-Host "Guess").ToLower()}
 until ($guess -match '^[a-z]{5}$' -and $script:words -contains $guess -and $guess -notin $usedwords)
 
@@ -178,6 +185,18 @@ $idx = [array]::IndexOf($remaining,$guess[$i])
 
 if ($idx -ge 0) {$colors[$i] = 'Yellow'
 $remaining[$idx] = $null}}
+$knownletters = @()
+
+for ($i = 0; $i -lt 5; $i++) {if ($colors[$i] -in 'Green','Yellow') {$knownletters += $guess[$i]}}
+$pattern = ''
+
+for ($i = 0; $i -lt 5; $i++) {switch ($colors[$i]) {'Green' {$pattern += $guess[$i].ToString().ToUpper()}
+'Yellow' {$pattern += $guess[$i]}
+default {$pattern += '_'
+
+if ($guess[$i] -notin $knownletters -and $excluded -notmatch [regex]::Escape($guess[$i])) {$excluded += $guess[$i]}}}}
+
+$patterns += $pattern
 
 $board += [pscustomobject]@{Word = $guess.ToUpper()
 Colors = $colors}
@@ -205,9 +224,10 @@ if (-not $Find -and -not $Exclude -and $Import){Write-Host -f yellow ("-" * 100)
 if ($args.Count -gt 0 -and $args[0] -match '(?i)^[a-z]{5},[a-z]{5}$') {$TestWords = $args[0]}
 if ($TestWords){TestTwordleWords $TestWords}
 if ($Find) {Findword $Find $Exclude | Format-List}
-if (-not $TestWords -and -not $Find) {Write-Host -f cyan "Usage: Twordle -Import <importfile> -TestWords <word1,word2,word3> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play"
+if (-not $TestWords -and -not $Find) {Write-Host -f cyan "Usage: Twordle -Import <importfile> -TestWords <word1,word2,word3> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -Cheat"
 Write-Host -f cyan "`nTestWords" -n; Write-Host -f red " cannot" -n; Write-Host -f white " be used with the " -n; Write-Host -f cyan "Find/Exclude/Force" -n; Write-Host -f white " parameters."
 Write-Host -f cyan "Exclude" -n; Write-Host -f white " and " -n; Write-Host -f cyan "Force" -n; Write-Host -f green " must" -n; Write-Host -f white " be used with the " -n; Write-Host -f cyan "Find" -n; Write-Host -f white " parameter."
+Write-Host -f cyan "Cheat" -n; Write-Host -f green " must" -n; Write-Host -f white " be used with the " -n; Write-Host -f cyan "Play" -n; Write-Host -f white " parameter."
 Write-Host -f cyan "Import" -n; Write-Host -f white " can be used with all parameters, even " -n; Write-Host -f cyan "Play" -n; Write-Host -f white ".`n"
 Write-Host -f yellow "For the " -n; Write-Host -f cyan "Find" -n; Write-Host -f yellow " parameter:`n"
 Write-Host -f white "Uppercase letters" -n; Write-Host -f yellow "`trepresent the correct letters, in the correct position."
