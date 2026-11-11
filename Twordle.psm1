@@ -1,30 +1,6 @@
 function Twordle ([string[]]$TestWords, [string[]]$Find, [string]$Exclude, [string]$Import, [switch]$Force, [switch]$Play, [switch]$Cheat, [string]$First) {# Twordle/Wordle word helper and game.
 
-function TestTwordleWords {param([string[]]$guess)
-if ($guess.Count -gt 3) {Write-Host -f yellow "Ignoring extra words beyond the first three.`n"
-$guess = $guess | Select-Object -First 3}
-$usedletters = @{}
-$positionscore = 0
-$presencescore = 0
-
-$showproceedingwarning = $false
-foreach ($word in $guess) {if ($word.Length -ne 5) {Write-Host -f red "Warning: '$word' is not a 5-letter word."}
-if ($word.ToLower() -notin $script:words) {Write-Host -f red "Warning: '$word' was not found in the Twordle word list."
-$showproceedingwarning = $true}}
-if ($showproceedingwarning) {Write-Host "Exiting.`n"; return}
-
-foreach ($word in $guess) {for ($i = 0; $i -lt 5; $i++) {$letter = $word[$i]
-if (!$usedletters.ContainsKey($letter)) {$usedletters[$letter] = $true
-if ($script:stats.LetterFreq.ContainsKey($letter)) {$presencescore += $script:stats.LetterFreq[$letter]}}
-if ($script:stats.PositionFreq[$i].ContainsKey($letter)) {$positionscore += $script:stats.PositionFreq[$i][$letter]}}}
-
-[pscustomobject]@{Guess = ($guess -join ', ')
-UniqueLetters = $usedletters.Count
-CoveragePct = [math]::Round(($usedletters.Count / 26) * 100,2)
-PresenceScore = $presencescore
-PositionScore = $positionscore
-TotalScore = $presencescore + $positionscore}}
-
+# ----------------- IMPORT & CALCULATE STATISTICS -------------------------------------------------
 function ImportTwordleList {param([string]$path = (Join-Path $PSScriptRoot 'twordle.txt'))
 
 $script:words = Get-Content $path | ForEach-Object {$_.Trim().ToLower()} | Where-Object {$_ -match '^[a-z]{5}$'} | Sort-Object -Unique
@@ -64,6 +40,8 @@ $secondposition = foreach ($i in 0..4) {($positionfreq[$i].GetEnumerator() | Sor
 
 $thirdposition = foreach ($i in 0..4) {($positionfreq[$i].GetEnumerator() | Sort-Object Value -Descending | Select-Object -Skip 2 -First 1).Key}
 
+# ----------------- DISPLAY DICTIONARY STATISTICS ---------
+
 if ($Import -or $TestWords) {[pscustomobject]@{DictionaryFile = Split-Path $path -Leaf
 WordCount = $script:words.Count
 BestFirstGuess = $bestfirst.Word
@@ -78,6 +56,33 @@ SecondPosition = ($secondposition -join ',')
 ThirdPosition = ($thirdposition -join ',')}
 Write-Host -f yellow ("-" * 100)}}
 
+# ----------------- TESTWORDS ---------------------------------------------------------------------
+function TestTwordleWords {param([string[]]$guess)
+if ($guess.Count -gt 3) {Write-Host -f yellow "Ignoring extra words beyond the first three.`n"
+$guess = $guess | Select-Object -First 3}
+$usedletters = @{}
+$positionscore = 0
+$presencescore = 0
+
+$showproceedingwarning = $false
+foreach ($word in $guess) {if ($word.Length -ne 5) {Write-Host -f red "Warning: '$word' is not a 5-letter word."}
+if ($word.ToLower() -notin $script:words) {Write-Host -f red "Warning: '$word' was not found in the Twordle word list."
+$showproceedingwarning = $true}}
+if ($showproceedingwarning) {Write-Host "Exiting.`n"; return}
+
+foreach ($word in $guess) {for ($i = 0; $i -lt 5; $i++) {$letter = $word[$i]
+if (!$usedletters.ContainsKey($letter)) {$usedletters[$letter] = $true
+if ($script:stats.LetterFreq.ContainsKey($letter)) {$presencescore += $script:stats.LetterFreq[$letter]}}
+if ($script:stats.PositionFreq[$i].ContainsKey($letter)) {$positionscore += $script:stats.PositionFreq[$i][$letter]}}}
+
+[pscustomobject]@{Guess = ($guess -join ', ')
+UniqueLetters = $usedletters.Count
+CoveragePct = [math]::Round(($usedletters.Count / 26) * 100,2)
+PresenceScore = $presencescore
+PositionScore = $positionscore
+TotalScore = $presencescore + $positionscore}}
+
+# ----------------- FINDWORDS ---------------------------------------------------------------------
 function FindWord {param([string[]]$Find, [string]$Exclude)
 $patterns = $Find
 $correctpositions = @{}
@@ -125,28 +130,37 @@ Exclude = $Exclude
 Matches = $results.Count
 Words   = $results -join ', '}}
 
+# ----------------- GAME --------------------------------------------------------------------------
+if ($Play) {$Wins = 0
+$Losses = 0
+$script:Hints = 0
+
+# ----------------- DISPLAY PLAY FIELD ------------------------------------------------------------
 function ShowBoard {Clear-Host
 $games = $Wins + $Losses
-if ($games) {$Percentage = [math]::Round(($Wins / $games) * 100,2)}
-else {$Percentage = 0}
 
-Write-Host -f yellow "`t TWORDLE"
-Write-Host -f yellow "$Wins Wins / $Losses Losses ($Percentage%)"
-Write-Host -f yellow ("-" * 25)
+$hinttext = ''
+if ($hintlevel -gt 0) {$hinttext = $answer.Substring(0,$hintlevel).PadRight(5,'_')}
+else {$hinttext = '(F4:Hint)'}
 
-foreach ($row in $board) {Write-Host "`t" -n
+Write-Host -f yellow ("TWORDLE".PadLeft(19)) -n; Write-Host -f green ($hinttext.ToUpper().PadLeft(12))
+Write-Host -f yellow (" {0,2} Wins / {1,2} Losses / {2,2} Hints" -f $Wins,$Losses,$script:Hints)
+Write-Host -f yellow ("-" * 32)
+
+foreach ($row in $board) {Write-Host "`t    " -n
 for ($i = 0; $i -lt 5; $i++) {Write-Host "$($row.Word[$i]) " -f $row.Colors[$i] -n}
 Write-Host}
 
-for ($i = $board.Count; $i -lt 6; $i++) {Write-Host "`t_ _ _ _ _"}
+for ($i = $board.Count; $i -lt 6; $i++) {Write-Host "`t    _ _ _ _ _"}
 Write-Host ""
 
-foreach ($row in @('ABCDEFGHIJKLM','NOPQRSTUVWXYZ')) {foreach ($letter in $row.ToCharArray()) {$color = $keyboard[$letter.ToString().ToLower()]
+foreach ($row in @('  ABCDEFGHIJKLM','  NOPQRSTUVWXYZ')) {foreach ($letter in $row.ToCharArray()) {$color = $keyboard[$letter.ToString().ToLower()]
 if (!$color) {$color = 'White'}
 Write-Host "$letter " -f $color -n}
 Write-Host ""}
 Write-Host ""}
 
+# ----------------- COLOURIZE ALPHABET ------------------------------------------------------------
 function UpdateKeyboard {param($guess,$colors)
 for ($i = 0; $i -lt 5; $i++) {$letter = $guess[$i].ToString().ToLower()
 $color  = $colors[$i]
@@ -154,8 +168,28 @@ switch ($color) {'Green' {$keyboard[$letter] = 'Green'}
 'Yellow' {if ($keyboard[$letter] -ne 'Green') {$keyboard[$letter] = 'Yellow'}}
 'DarkGray' {if ($keyboard[$letter] -notin 'Green','Yellow') {$keyboard[$letter] = 'DarkGray'}}}}}
 
-if ($Play) {$Wins = 0
-$Losses = 0
+# ----------------- INPUT -------------------------------------------------------------------------
+function ReadTwordleInput {param([string]$Prompt, [int]$Length = 5, [switch]$YesNo)
+Write-Host -f White $Prompt -n
+$text = ''
+while ($true) {$key = [Console]::ReadKey($true)
+switch ($key.Key) {'Escape' {return '__QUIT__'}
+
+'F4' {if ($Play -and $hintlevel -lt 5) {$hintlevel++; $script:Hints++; ShowBoard
+Write-Host -f White "Turn $turn`n"; Write-Host -f White "$Prompt$text" -n}; continue}
+
+'Backspace' {if ($text.Length) {$text = $text.Substring(0,$text.Length - 1)
+Write-Host "`b `b" -n}}
+
+'Enter' {if ($YesNo) {Write-Host ""; return $text}
+if ($text.Length -eq $Length) {Write-Host ""; return $text.ToLower()}}
+
+default {if ($YesNo) {if ($key.KeyChar) {$text += $key.KeyChar.ToString().ToLower()
+Write-Host -f Cyan $key.KeyChar.ToString().ToUpper() -n}}
+
+elseif ($key.KeyChar -match '[a-zA-Z]' -and $text.Length -lt $Length) {$text += $key.KeyChar
+Write-Host -f Cyan $key.KeyChar.ToString().ToUpper() -n}}}}}
+
 do {$board = @()
 $keyboard = @{}
 $patterns = @()
@@ -184,10 +218,12 @@ elseif ($matches -gt 250 -and $Force) {Write-Host -f White ($words -join ', ')}
 Write-Host ""}}
 
 if ($turn -eq 1 -and $First.ToLower() -in $script:words) {$guess = $First.ToLower()}
-elseif ($turn -eq 1 -and $First) {do {$guess = (Read-Host "First Guess").ToLower()}
+elseif ($turn -eq 1 -and $First) {do {$guess = (ReadTwordleInput "First Guess: ")
+if ($guess -eq '__QUIT__') {Write-Host -f Cyan "`n`nExiting.`n"; return}}
 until ($guess -match '^[a-z]{5}$' -and $script:words -contains $guess)
 $First = $guess}
-else {do {$guess = (Read-Host "Guess").ToLower()}
+else {do {$guess = (ReadTwordleInput "Guess: ")
+if ($guess -eq '__QUIT__') {Write-Host -f Cyan "`n`nExiting.`n"; return}}
 until ($guess -match '^[a-z]{5}$' -and $script:words -contains $guess -and $guess -notin $usedwords)}
 
 $usedwords += $guess
@@ -227,10 +263,14 @@ if (!$won) {$Losses++
 ShowBoard
 Write-Host -f White "Answer: " -n
 Write-Host -f Red "$($answer.ToUpper())`n"}
-Write-Host -f White "Play again? (Y/N) " -n; $playagain = Read-Host} until ($playagain -notmatch '^(?i)y(es)?$')
-Write-Host ""
-return}
+$playagain = ReadTwordleInput "Play again? (Y/N) " -YesNo
 
+if ($guess -eq '__QUIT__') {Write-Host -f Cyan "`n`nExiting.`n"; return}} 
+until ($playagain -notmatch '^(?i)y(es)?$')
+
+Write-Host ""; return}
+
+# ----------------- CALL UTILITIES ----------------------------------------------------------------
 Write-Host -f yellow "`n`t`t`t`tTWIRDLE/WORDLE Solver"
 Write-Host -f yellow ("-" * 100)
 
@@ -241,6 +281,8 @@ if (-not $Find -and -not $Exclude -and $Import){Write-Host -f yellow ("-" * 100)
 if ($args.Count -gt 0 -and $args[0] -match '(?i)^[a-z]{5},[a-z]{5}$') {$TestWords = $args[0]}
 if ($TestWords){TestTwordleWords $TestWords}
 if ($Find) {Findword $Find $Exclude | Format-List}
+
+# ----------------- HELP SCREEN -------------------------------------------------------------------
 if (-not $TestWords -and -not $Find) {Write-Host -f cyan "Usage: Twordle -Import <importfile> -TestWords <word1,word2,word3> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -Cheat -First <word>`n"
 Write-Host -f cyan "Import" -n; Write-Host -f white " can be used universally to specify a custom word list.`n"
 Write-Host -f cyan "TestWords" -n; Write-Host -f white " is a stand-alone parameter that allows you score and compare up to 3 opening turns.`n"
