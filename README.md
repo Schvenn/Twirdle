@@ -109,24 +109,25 @@ Twordle -Play -First slate -Cheat -Force
 * Possible matches will only appear if the `-cheat` parameter is used.
 
 ```
-         TWORDLE
-1 Wins / 0 Losses (100%)
--------------------------
-        S L A T E
-        R O U N D
-        _ _ _ _ _
-        _ _ _ _ _
-        _ _ _ _ _
-        _ _ _ _ _
+            TWORDLE   (F4:HINT)
+  0 Wins /  0 Losses /  0 Hints
+--------------------------------
+            S L A T E
+            R O U N D
+            _ _ _ _ _
+            _ _ _ _ _
+            _ _ _ _ _
+            _ _ _ _ _
 
-A B C D E F G H I J K L M
-N O P Q R S T U V W X Y Z
+    A B C D E F G H I J K L M
+    N O P Q R S T U V W X Y Z
 
 Turn 3
 
-There are 48 possible matches: ...
+There are 22 possible matches: ...
 
 Guess: WIMPY
+
 ```
 ---
 # How to Solve Twirdle/Wordle 
