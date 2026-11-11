@@ -100,19 +100,31 @@ Twordle -Play -First slate -Cheat -Force
 # Game Play
 
 * Guess the correct 5 letter word by round 6 in order to win.
+* The scoreboard at the top of the screen keeps track of your wins, losses and the number of hints used this session.
+* The game will not let you replay a word.
+* If you guess 5 invalid words within 1 game, you lose.
+* If you fail to guess the word by the 6th round, you lose.
+* If you think about The Game, you lose. IYKYK.
+<br>
+
 * Correct letters in the correct place will appear in green.
 * Misplaced letters will appear in yellow.
 * Incorrect letters will appear in dark grey.
 * The alphabet at the bottom will do the same, so that you can keep track of what letters are in play and those that are not yet played.
-* The game will not let you replay a word or play an invalid word.
-* You can import a custom dictionary with the `-import` parameter.
+<br>
+
+* You can import a custom dictionary with the -Import parameter.
 * The default dictionary ships with over 5700 words.
-* Possible matches will dynamically appear on screen each turn, if the `-cheat` parameter is used.
-* F4 will display each unguessed letter in its correct position sequentially, but the scoreboard at the top of the screen will keep track of this.
-* F4 will not display all 5 letters.
-* If you guess 5 invalid words within one game, you lose.
-* If you fail to guess the word by the sixth round, you lose.
-* If you think about The Game, you lose. IYKYK.
+<br>
+
+* The first 250 dictionary matches will dynamically appear on screen each turn, if the -Cheat parameter is used.
+* All dictionary matches will dynamically appear on screen each turn, if the -Force parameter is also used.
+<br>
+
+* The hint function is accessed by pressing F4.
+* Pressing F4 will display each unguessed letter in its correct position sequentially.
+* You cannot use the hint function to display all 5 letters.
+<br>
 
 ```
             TWORDLE   (F4:HINT)
