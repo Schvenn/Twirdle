@@ -94,7 +94,7 @@ Twirdle -TestWords slate,round
 Twirdle -Find t_R_s,__RST
 Twirdle -Find t_R_s,__RST -Exclude eaud
 Twirdle -Find ___ED -Force
-Twordle -Play -Cheat -Force -First slate
+Twordle -Play -First slate -Cheat -Force 
 ```
 ---
 
