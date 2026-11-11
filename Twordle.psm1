@@ -245,7 +245,7 @@ if (-not $TestWords -and -not $Find) {Write-Host -f cyan "Usage: Twordle -Import
 Write-Host -f cyan "Import" -n; Write-Host -f white " can be used universally to specify a custom word list.`n"
 Write-Host -f cyan "TestWords" -n; Write-Host -f white " is a stand-alone parameter that allows you score and compare up to 3 opening turns.`n"
 Write-Host -f cyan "Find, Exclude," -n; Write-Host -f white " and " -n; Write-Host -f cyan "Force" -n; Write-Host -f white " work together."
-Write-Host -f cyan "Play, Cheat, First," -n; Write-Host -f white " and " -n; Write-Host -f cyan "Force" -n; Write-Host -f white " also work together.`n"
+Write-Host -f cyan "Play, First, Cheat," -n; Write-Host -f white " and " -n; Write-Host -f cyan "Force" -n; Write-Host -f white " also work together.`n"
 Write-Host -f yellow ("-"*80)
 Write-Host -f yellow "`nFor the " -n; Write-Host -f cyan "Find" -n; Write-Host -f yellow " parameter:`n"
 Write-Host -f white "Uppercase letters" -n; Write-Host -f yellow "`trepresent the correct letters, in the correct position."
@@ -255,13 +255,13 @@ Write-Host -f white "Commas" -n; Write-Host -f yellow "`t`t`tseparates multiple,
 Write-Host -f cyan "Exclude" -n; Write-Host -f yellow "`t`t`tlists letters that cannot be included in the results."
 Write-Host -f cyan "Force" -n; Write-Host -f yellow "`t`t`tforces the display of all results, even if they exceed 250.`n"
 Write-Host -f yellow ("-"*80)
-Write-Host -f green "`nCheat" -n; Write-Host -f yellow "`tdisplays  possible results after each turn."
-Write-Host -f green "Play" -n; Write-Host -f yellow "`tallows you to play the game."
-Write-Host -f green "Force" -n; Write-Host -f yellow "`tforces the display of all results, even if they exceed 250."
-Write-Host -f green "First" -n; Write-Host -f yellow "`tdefines the first play to always use for every game.`n"
+Write-Host -f green "`nPlay" -n; Write-Host -f yellow "`tallows you to play the game."
+Write-Host -f green "First" -n; Write-Host -f yellow "`tdefines the first play to always use for every game."
+Write-Host -f green "Cheat" -n; Write-Host -f yellow "`tdisplays  possible results after each turn."
+Write-Host -f green "Force" -n; Write-Host -f yellow "`tforces the display of all results, even if they exceed 250.`n"
 Write-Host -f yellow ("-"*80)
 Write-Host -f white "`nExample Usage:`n"
-Write-Host -f gray "Twordle -TestWords slate,round`nTwordle -Find t_R_s,__RST`nTwordle -Find t_R_s,__RST -Exclude eaud`nTwordle -Find ___ED -Force`nTwordle -Play -Cheat -Force -First slate`n"
+Write-Host -f gray "Twordle -TestWords slate,round`nTwordle -Find t_R_s,__RST`nTwordle -Find t_R_s,__RST -Exclude eaud`nTwordle -Find ___ED -Force`nTwordle -Play -First slate -Cheat -Force`n"
 Write-Host -f yellow ("-" * 100)
 Write-Host ""
 return}}
