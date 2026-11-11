@@ -1,4 +1,88 @@
-function Twordle ([string[]]$TestWords, [string[]]$Find, [string]$Exclude, [string]$Import, [switch]$Force, [switch]$Play, [switch]$Cheat, [string]$First) {# Twordle/Wordle word helper and game.
+function Twordle ([string[]]$TestWords, [string[]]$Find, [string]$Exclude, [string]$Import, [switch]$Force, [switch]$Play, [switch]$Cheat, [string]$First, [switch]$Help) {# Twordle/Wordle word helper and game.
+
+# ----------------- HELP --------------------------------------------------------------------------
+function help {# Inline help.
+# Select content.
+$scripthelp = Get-Content -Raw -Path $PSCommandPath; $sections = [regex]::Matches($scripthelp, "(?im)^## (.+?)(?=\r?\n)"); $selection = $null; $lines = @(); $wrappedLines = @(); $position = 0; $pageSize = 30; $inputBuffer = ""
+
+# Modify fields sent to it with proper word wrapping.
+function wordwrap ($field, $maximumlinelength) {if ($null -eq $field) {return $null}
+$breakchars = ',.;?!\/ '; $wrapped = @()
+if (-not $maximumlinelength) {[int]$maximumlinelength = (100, $Host.UI.RawUI.WindowSize.Width | Measure-Object -Maximum).Maximum}
+if ($maximumlinelength -lt 60) {[int]$maximumlinelength = 60}
+if ($maximumlinelength -gt $Host.UI.RawUI.BufferSize.Width) {[int]$maximumlinelength = $Host.UI.RawUI.BufferSize.Width}
+foreach ($line in $field -split "`n", [System.StringSplitOptions]::None) {if ($line -eq "") {$wrapped += ""; continue}
+$remaining = $line
+while ($remaining.Length -gt $maximumlinelength) {$segment = $remaining.Substring(0, $maximumlinelength); $breakIndex = -1
+foreach ($char in $breakchars.ToCharArray()) {$index = $segment.LastIndexOf($char)
+if ($index -gt $breakIndex) {$breakIndex = $index}}
+if ($breakIndex -lt 0) {$breakIndex = $maximumlinelength - 1}
+$chunk = $segment.Substring(0, $breakIndex + 1); $wrapped += $chunk; $remaining = $remaining.Substring($breakIndex + 1)}
+if ($remaining.Length -gt 0 -or $line -eq "") {$wrapped += $remaining}}
+return ($wrapped -join "`n")}
+
+# Display a horizontal line.
+function line ($colour, $length, [switch]$pre, [switch]$post, [switch]$double) {if (-not $length) {[int]$length = (100, $Host.UI.RawUI.WindowSize.Width | Measure-Object -Maximum).Maximum}
+if ($length) {if ($length -lt 60) {[int]$length = 60}
+if ($length -gt $Host.UI.RawUI.BufferSize.Width) {[int]$length = $Host.UI.RawUI.BufferSize.Width}}
+if ($pre) {Write-Host ""}
+$character = if ($double) {"="} else {"-"}
+Write-Host -f $colour ($character * $length)
+if ($post) {Write-Host ""}}
+
+
+function scripthelp ($section) {$pattern = "(?ims)^## ($([regex]::Escape($section)).*?)(?=^##|\z)"; $match = [regex]::Match($scripthelp, $pattern); $lines = $match.Groups[1].Value.TrimEnd() -split "`r?`n", 2; if ($lines.Count -gt 1) {$wrappedLines = (wordwrap $lines[1] 100) -split "`n", [System.StringSplitOptions]::None}
+else {$wrappedLines = @()}
+$position = 0}
+
+# Display Table of Contents.
+while ($true) {cls; Write-Host -f cyan "$(Get-ChildItem (Split-Path $PSCommandPath) | Where-Object { $_.FullName -ieq $PSCommandPath } | Select-Object -ExpandProperty BaseName) Help Sections:`n"
+
+if ($sections.Count -gt 7) {$half = [Math]::Ceiling($sections.Count / 2)
+for ($i = 0; $i -lt $half; $i++) {$leftIndex = $i; $rightIndex = $i + $half; $leftNumber  = "{0,2}." -f ($leftIndex + 1); $leftLabel   = " $($sections[$leftIndex].Groups[1].Value)"; $leftOutput  = [string]::Empty
+
+if ($rightIndex -lt $sections.Count) {$rightNumber = "{0,2}." -f ($rightIndex + 1); $rightLabel  = " $($sections[$rightIndex].Groups[1].Value)"; Write-Host -f cyan $leftNumber -n; Write-Host -f white $leftLabel -n; $pad = 40 - ($leftNumber.Length + $leftLabel.Length)
+if ($pad -gt 0) {Write-Host (" " * $pad) -n}; Write-Host -f cyan $rightNumber -n; Write-Host -f white $rightLabel}
+else {Write-Host -f cyan $leftNumber -n; Write-Host -f white $leftLabel}}}
+
+else {for ($i = 0; $i -lt $sections.Count; $i++) {Write-Host -f cyan ("{0,2}. " -f ($i + 1)) -n; Write-Host -f white "$($sections[$i].Groups[1].Value)"}}
+
+# Display Header.
+line yellow 100
+if ($lines.Count -gt 0) {Write-Host  -f yellow $lines[0]}
+else {Write-Host "Choose a section to view." -f darkgray}
+line yellow 100
+
+# Display content.
+$end = [Math]::Min($position + $pageSize, $wrappedLines.Count)
+for ($i = $position; $i -lt $end; $i++) {Write-Host -f white $wrappedLines[$i]}
+
+# Pad display section with blank lines.
+for ($j = 0; $j -lt ($pageSize - ($end - $position)); $j++) {Write-Host ""}
+
+# Display menu options.
+line yellow 100; Write-Host -f white "[↑/↓]  [PgUp/PgDn]  [Home/End]  |  [#] Select section  |  [Q] Quit  " -n; if ($inputBuffer.length -gt 0) {Write-Host -f cyan "section: $inputBuffer" -n}; $key = [System.Console]::ReadKey($true)
+
+# Define interaction.
+switch ($key.Key) {'UpArrow' {if ($position -gt 0) { $position-- }; $inputBuffer = ""}
+'DownArrow' {if ($position -lt ($wrappedLines.Count - $pageSize)) { $position++ }; $inputBuffer = ""}
+'PageUp' {$position -= 30; if ($position -lt 0) {$position = 0}; $inputBuffer = ""}
+'PageDown' {$position += 30; $maxStart = [Math]::Max(0, $wrappedLines.Count - $pageSize); if ($position -gt $maxStart) {$position = $maxStart}; $inputBuffer = ""}
+'Home' {$position = 0; $inputBuffer = ""}
+'End' {$maxStart = [Math]::Max(0, $wrappedLines.Count - $pageSize); $position = $maxStart; $inputBuffer = ""}
+
+'Enter' {if ($inputBuffer -eq "") {"`n"; return}
+elseif ($inputBuffer -match '^\d+$') {$index = [int]$inputBuffer
+if ($index -ge 1 -and $index -le $sections.Count) {$selection = $index; $pattern = "(?ims)^## ($([regex]::Escape($sections[$selection-1].Groups[1].Value)).*?)(?=^##|\z)"; $match = [regex]::Match($scripthelp, $pattern); $block = $match.Groups[1].Value.TrimEnd(); $lines = $block -split "`r?`n", 2
+if ($lines.Count -gt 1) {$wrappedLines = (wordwrap $lines[1] 100) -split "`n", [System.StringSplitOptions]::None}
+else {$wrappedLines = @()}
+$position = 0}}
+$inputBuffer = ""}
+
+default {$char = $key.KeyChar
+if ($char -match '^[Qq]$') {"`n"; return}
+elseif ($char -match '^\d$') {$inputBuffer += $char}
+else {$inputBuffer = ""}}}}}
 
 # ----------------- IMPORT & CALCULATE STATISTICS -------------------------------------------------
 function ImportTwordleList {param([string]$path = (Join-Path $PSScriptRoot 'twordle.txt'))
@@ -271,6 +355,7 @@ until ($playagain -notmatch '^(?i)y(es)?$')
 Write-Host ""; return}
 
 # ----------------- CALL UTILITIES ----------------------------------------------------------------
+if ($help) {help; return}
 Write-Host -f yellow "`n`t`t`t`tTWIRDLE/WORDLE Solver"
 Write-Host -f yellow ("-" * 100)
 
@@ -283,7 +368,7 @@ if ($TestWords){TestTwordleWords $TestWords}
 if ($Find) {Findword $Find $Exclude | Format-List}
 
 # ----------------- HELP SCREEN -------------------------------------------------------------------
-if (-not $TestWords -and -not $Find) {Write-Host -f cyan "Usage: Twordle -Import <importfile> -TestWords <word1,word2,word3> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -Cheat -First <word>`n"
+if (-not $TestWords -and -not $Find) {Write-Host -f cyan "Usage: Twordle -Import <importfile> -TestWords <word1,word2,word3> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -First <word> -Cheat -Help`n"
 Write-Host -f cyan "Import" -n; Write-Host -f white " can be used universally to specify a custom word list.`n"
 Write-Host -f cyan "TestWords" -n; Write-Host -f white " is a stand-alone parameter that allows you score and compare up to 3 opening turns.`n"
 Write-Host -f cyan "Find, Exclude," -n; Write-Host -f white " and " -n; Write-Host -f cyan "Force" -n; Write-Host -f white " work together."
@@ -302,8 +387,127 @@ Write-Host -f green "First" -n; Write-Host -f yellow "`tdefines the first play t
 Write-Host -f green "Cheat" -n; Write-Host -f yellow "`tdisplays  possible results after each turn."
 Write-Host -f green "Force" -n; Write-Host -f yellow "`tforces the display of all results, even if they exceed 250.`n"
 Write-Host -f yellow ("-"*80)
-Write-Host -f white "`nExample Usage:`n"
+Write-Host -f white "`nExample Usages:`n"
 Write-Host -f gray "Twordle -TestWords slate,round`nTwordle -Find t_R_s,__RST`nTwordle -Find t_R_s,__RST -Exclude eaud`nTwordle -Find ___ED -Force`nTwordle -Play -First slate -Cheat -Force`n"
 Write-Host -f yellow ("-" * 100)
 Write-Host ""
 return}}
+
+# Helptext.
+
+<#
+## Twordle
+This module serves two purposes:
+
+* The first is to provide a number of utilities to help play Wordle/Twirdle.
+* The second is to actually play an offline version of the game called Twordle.
+
+Usage: Twordle  -Import <importfile> 
+		-TestWords <word1,word2,word3> 
+		-Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force 
+		-Play -First <word> -Cheat -Force
+		-Help
+
+You can use -Import to define a custom dictionary file.
+The TestWords option provides a weighted statistical analysis of various plays.
+The Find option is a cheat tool to assist in solving the puzzle.
+The Play option lets you play an offline version of the game.
+
+---------------------------------------------------------------------------------------------------
+TestWords allows you to evaluate from one to three opening plays to determine their mathematical effectiveness against other words.
+
+Example Usages:
+
+Twordle -TestWords slate
+Twordle -TestWords slate,round,wimpy
+
+---------------------------------------------------------------------------------------------------
+FindWords allows you to display a list of words that match a specific pattern:
+
+	Uppercase letters       represent the correct letters, in the correct position.
+	Underscores             represent unknowns.
+	Lowercase letters       represent the correct letters, but incorrect location.
+	Commas                  separates multiple, sequential guesses.
+
+* Exclude is used in conjunction with Find to define which letters have already been ruled out, in order to further reduce the resulting set of possibilities.
+* Force will display all results, even if there are more than 250.
+
+Example Usages:
+
+Twordle -Find t_R_s,__RST
+Twordle -Find t_R_s,__RST -Exclude eaud
+Twordle -Find ___ED -Force
+
+---------------------------------------------------------------------------------------------------
+If you choose to play the game there are a few options that can be configured:
+
+	* First defines the first word to play in every game, useful for long sessions.
+	* Cheat dynamically displays all the possible word matches after your first turn.
+	* Force will display all results, even if there are more than 250.
+
+During gameplay, pressing F4 will reveal each subsequent letter, but the scoreboard at the top will keep track of this. This hint function is independent of the Cheat function.
+## Sample TestWords Screen
+C:\Users\Public\Desktop> Twordle -TestWords slate,round,punch
+
+                                TWIRDLE/WORDLE Solver
+----------------------------------------------------------------------------------------------------
+
+DictionaryFile          : twordle.txt
+WordCount               : 5757
+BestFirstGuess          : tares
+FirstScore              : 15547
+BestSecondGuess         : doily
+SecondScore             : 9392
+BestThirdGuess          : punch
+ThirdScore              : 6625
+TotalScore              : 31564
+MostCommonFirstPosition : s,a,a,e,s
+SecondPosition          : c,o,i,t,y
+ThirdPosition           : b,i,o,n,e
+
+----------------------------------------------------------------------------------------------------
+Guess         : slate, round, punch
+UniqueLetters : 13
+CoveragePct   : 50
+PresenceScore : 19884
+PositionScore : 6772
+TotalScore    : 26656
+
+## Sample Find Screen
+C:\Users\Public\Desktop> Twordle -find __a_e,ra__y,_rea_ -exclude dmnqstlz
+
+                                TWIRDLE/WORDLE Solver
+----------------------------------------------------------------------------------------------------
+
+DictionaryFile : twordle.txt
+WordCount      : 5757
+
+----------------------------------------------------------------------------------------------------
+
+Pattern : {__a_e, ra__y, _rea_}
+Exclude : dmnqstlz
+Matches : 1
+Words   : yerba
+## License
+MIT License
+
+Copyright (c) 2026 Craig Plath
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+##>
