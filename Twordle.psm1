@@ -1,4 +1,4 @@
-function Twordle ([string[]]$TestWords, [string[]]$Find, [string]$Exclude, [string]$Import, [switch]$Force, [switch]$Play, [switch]$Cheat) {# Twordle/Wordle word helper and game.
+function Twordle ([string[]]$TestWords, [string[]]$Find, [string]$Exclude, [string]$Import, [switch]$Force, [switch]$Play, [switch]$Cheat, [string]$First) {# Twordle/Wordle word helper and game.
 
 function TestTwordleWords {param([string[]]$guess)
 if ($guess.Count -gt 3) {Write-Host -f yellow "Ignoring extra words beyond the first three.`n"
@@ -126,7 +126,12 @@ Matches = $results.Count
 Words   = $results -join ', '}}
 
 function ShowBoard {Clear-Host
-Write-Host -f yellow "`n`t TWORDLE"
+$games = $Wins + $Losses
+if ($games) {$Percentage = [math]::Round(($Wins / $games) * 100,2)}
+else {$Percentage = 0}
+
+Write-Host -f yellow "`t TWORDLE"
+Write-Host -f yellow "$Wins Wins / $Losses Losses ($Percentage%)"
 Write-Host -f yellow ("-" * 25)
 
 foreach ($row in $board) {Write-Host "`t" -n
@@ -149,7 +154,9 @@ switch ($color) {'Green' {$keyboard[$letter] = 'Green'}
 'Yellow' {if ($keyboard[$letter] -ne 'Green') {$keyboard[$letter] = 'Yellow'}}
 'DarkGray' {if ($keyboard[$letter] -notin 'Green','Yellow') {$keyboard[$letter] = 'DarkGray'}}}}}
 
-if ($Play) {do {$board = @()
+if ($Play) {$Wins = 0
+$Losses = 0
+do {$board = @()
 $keyboard = @{}
 $patterns = @()
 $excluded = ''
@@ -166,15 +173,22 @@ $usedwords = @()
 for ($turn = 1; $turn -le 6; $turn++) {ShowBoard
 Write-Host -f White "Turn $turn`n"
 
-if ($Cheat -and $turn -gt 1) {$Force = $true; $results = FindWord $patterns $excluded
+if ($Cheat -and $turn -gt 1) {$results = FindWord $patterns $excluded
 
-if ($results) {$words = ($results.Words -split ', ') | Where-Object {$_ -notin $usedwords}
+if ($results) {$words = ($results.Words -split ', ') | Where-Object {$_ -and $_ -notin $usedwords}
 $matches = $words.Count
-Write-Host -f Yellow "There are$($results.Matches) possible matches:" -n; Write-Host -f White $results.Words
+Write-Host -f Yellow "There are$($results.Matches) possible matches: " -n
+
+if ($matches -le 250) {Write-Host -f White ($words -join ', ')}
+elseif ($matches -gt 250 -and $Force) {Write-Host -f White ($words -join ', ')}
 Write-Host ""}}
 
-do {$guess = (Read-Host "Guess").ToLower()}
-until ($guess -match '^[a-z]{5}$' -and $script:words -contains $guess -and $guess -notin $usedwords)
+if ($turn -eq 1 -and $First.ToLower() -in $script:words) {$guess = $First.ToLower()}
+elseif ($turn -eq 1 -and $First) {do {$guess = (Read-Host "First Guess").ToLower()}
+until ($guess -match '^[a-z]{5}$' -and $script:words -contains $guess)
+$First = $guess}
+else {do {$guess = (Read-Host "Guess").ToLower()}
+until ($guess -match '^[a-z]{5}$' -and $script:words -contains $guess -and $guess -notin $usedwords)}
 
 $usedwords += $guess
 $colors = @('DarkGray','DarkGray','DarkGray','DarkGray','DarkGray')
@@ -198,21 +212,21 @@ for ($i = 0; $i -lt 5; $i++) {switch ($colors[$i]) {'Green' {$pattern += $guess[
 default {$pattern += '_'
 
 if ($guess[$i] -notin $knownletters -and $excluded -notmatch [regex]::Escape($guess[$i])) {$excluded += $guess[$i]}}}}
-
 $patterns += $pattern
-
 $board += [pscustomobject]@{Word = $guess.ToUpper()
 Colors = $colors}
 UpdateKeyboard $guess $colors
 
 if ($guess -eq $answer) {$won = $true
+$Wins++
 ShowBoard
 Write-Host -f green "Solved in $turn guesses!`n"
 break}}
 
-if (!$won) {ShowBoard
+if (!$won) {$Losses++
+ShowBoard
 Write-Host -f White "Answer: " -n
-Write-Host -f Green "$($answer.ToUpper())`n"}
+Write-Host -f Red "$($answer.ToUpper())`n"}
 Write-Host -f White "Play again? (Y/N) " -n; $playagain = Read-Host} until ($playagain -notmatch '^(?i)y(es)?$')
 Write-Host ""
 return}
