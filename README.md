@@ -105,6 +105,7 @@ Twordle -Play -First slate -Cheat -Force
 * If you guess 5 invalid words within 1 game, you lose.
 * If you fail to guess the word by the 6th round, you lose.
 * If you think about The Game, you lose. IYKYK.
+* Press ESC to quit.
 <br>
 
 * Correct letters in the correct place will appear in green.
