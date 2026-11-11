@@ -292,13 +292,13 @@ if (-not $known) {$i}}
 
 if ($unknown.Count -le 1) {ShowBoard
 Write-Host -f Red "No more hints available.`n"
-Write-Host -f White "$Prompt$text" -n
+Write-Host -f White $Prompt -n; Write-Host -f Cyan $text.ToUpper() -n
 continue}
 
 $script:hintedpositions[$unknown[0]] = $true
 $script:Hints++
 ShowBoard
-Write-Host -f White "$Prompt$text" -n
+Write-Host -f White $Prompt -n; Write-Host -f Cyan $text.ToUpper() -n
 continue}
 
 'Backspace' {if ($text.Length) {$text = $text.Substring(0,$text.Length - 1)
@@ -317,6 +317,7 @@ do {$board = @()
 $keyboard = @{}
 $patterns = @()
 $excluded = ''
+$failedword = 0
 
 if ($Import) {ImportTwordleList $Import}
 else {ImportTwordleList}
@@ -329,15 +330,36 @@ $usedwords = @()
 
 for ($turn = 1; $turn -le 6; $turn++) {ShowBoard
 
+# ----------------- VALIDATE FIRST WORD PARAMETER -------------------------------------------------
 if ($turn -eq 1 -and $First.ToLower() -in $script:words) {$guess = $First.ToLower()}
-elseif ($turn -eq 1 -and $First) {do {$guess = (ReadTwordleInput "First Guess: ")
-if ($guess -eq '__QUIT__') {Write-Host -f Cyan "`n`nExiting.`n"; return}}
+elseif ($turn -eq 1 -and $First) {do {$guess = ReadTwordleInput "First Guess: "
+
+if ($guess -eq '__QUIT__') {Write-Host -f Cyan "`n`nExiting.`n"
+return}
+
+if ($guess -notin $script:words) {ShowBoard
+Write-Host -f Red "That word is not in this game dictionary.`n"}}
+
 until ($guess -match '^[a-z]{5}$' -and $script:words -contains $guess)
 $First = $guess}
-else {do {$guess = (ReadTwordleInput "Guess: ")
-if ($guess -eq '__QUIT__') {Write-Host -f Cyan "`n`nExiting.`n"; return}}
-until ($guess -match '^[a-z]{5}$' -and $script:words -contains $guess -and $guess -notin $usedwords)}
 
+# ----------------- VALIDATE WORD INPUTS ----------------------------------------------------------
+else {do {$guess = ReadTwordleInput "Guess: "
+if ($guess -eq '__QUIT__') {Write-Host -f Cyan "`n`nExiting.`n"
+return}
+
+if ($guess -notin $script:words) {ShowBoard
+$failedword++
+Write-Host -f cyan ($guess.ToUpper()) -n; Write-Host -f Yellow " is not found in this dictionary.`nIf you make " -n; Write-Host -f red (5 - $failedword) -n; Write-Host -f Yellow " more you lose the round.`n"}
+
+if ($failedword -gt 4) {$forfeit = $true
+break}
+
+if ($guess -in $usedwords) {Showboard
+Write-Host -f Red "You already guessed " -n; Write-Host -f Cyan "$guess" -n; Write-Host -f Red ".`n"}}
+
+until ($guess -match '^[a-z]{5}$' -and $script:words -contains $guess -and $guess -notin $usedwords)}
+if ($forfeit) {break}
 $usedwords += $guess
 $colors = @('DarkGray','DarkGray','DarkGray','DarkGray','DarkGray')
 $remaining = $answer.ToCharArray()
@@ -373,10 +395,13 @@ break}}
 
 if (!$won) {$Losses++
 ShowBoard
+if ($forfeit) {Write-Host -f Red "Too many invalid words guessed.`n"}
 Write-Host -f White "Answer: " -n
 Write-Host -f Red "$($answer.ToUpper())`n"}
 $playagain = ReadTwordleInput "Play again? (Y/N) " -YesNo
 $script:hintedpositions = @{}
+$failedword = 0
+$forfeit = $false
 
 if ($guess -eq '__QUIT__') {Write-Host -f Cyan "`n`nExiting.`n"; return}} 
 until ($playagain -notmatch '^(?i)y(es)?$')
