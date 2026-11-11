@@ -59,7 +59,7 @@ Here is a sample output:
 ## Usage
 
 ```text
-Usage: Twirdle -Import <importfile> -TestWords <word1,word2,word3> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -Cheat -First <word>
+Usage: Twirdle -Import <importfile> -TestWords <word1,word2,word3> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -First <word> -Cheat -Help
 ```
 `Import` can be used universally to specify a custom word list.<br><br>
 `TestWords` is a stand-alone parameter that allows you score and compare up to 3 opening turns.<br><br>
@@ -107,6 +107,7 @@ Twordle -Play -First slate -Cheat -Force
 * The game will not let you replay a word or play an invalid word.
 * You can import a custom dictionary with the `-import` parameter, as well.
 * Possible matches will only appear if the `-cheat` parameter is used.
+* F4 will display each letter sequentially, every time it is pressed, but the scoreboard at the top of the screen will keep track of this.
 
 ```
             TWORDLE   (F4:HINT)
