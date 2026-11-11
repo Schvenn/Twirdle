@@ -539,6 +539,52 @@ Pattern : {__a_e, ra__y, _rea_}
 Exclude : dmnqstlz
 Matches : 1
 Words   : yerba
+
+## Gameplay
+* Guess the correct 5 letter word by round 6 in order to win.
+* The scoreboard at the top of the screen keeps track of your wins, losses and the number of hints used this session.
+* The game will not let you replay a word.
+* If you guess 5 invalid words within 1 game, you lose.
+* If you fail to guess the word by the 6th round, you lose.
+* If you think about The Game, you lose. IYKYK.
+
+* Correct letters in the correct place will appear in green.
+* Misplaced letters will appear in yellow.
+* Incorrect letters will appear in dark grey.
+* The alphabet at the bottom will do the same, so that you can keep track of what letters are in play and those that are not yet played.
+
+* You can import a custom dictionary with the -Import parameter.
+* The default dictionary ships with over 5700 words.
+
+* The first 250 dictionary matches will dynamically appear on screen each turn, if the -Cheat parameter is used.
+* All dictionary matches will dynamically appear on screen each turn, if the -Force parameter is also used.
+
+* The hint function is accessed by pressing F4.
+* Pressing F4 will display each unguessed letter in its correct position sequentially.
+* You cannot use the hint function to display all 5 letters.
+
+----------------------------------------------------------------------------------------------------
+Sample Game Screen:
+
+            TWORDLE       LATER
+  1 Wins /  0 Losses /  1 Hints
+--------------------------------
+            S L A T E
+            R O U N D
+            W I M P Y
+            L A T E R
+            _ _ _ _ _
+            _ _ _ _ _
+
+    A B C D E F G H I J K L M
+    N O P Q R S T U V W X Y Z
+
+Turn 4
+
+Solved in 4 guesses!
+
+Play again? (Y/N)
+
 ## License
 MIT License
 
