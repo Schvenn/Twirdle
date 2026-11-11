@@ -124,7 +124,7 @@ N O P Q R S T U V W X Y Z
 
 Turn 3
 
-There are 134 possible matches: ...
+There are 48 possible matches: ...
 
 Guess: WIMPY
 ```
