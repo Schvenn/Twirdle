@@ -59,14 +59,14 @@ Here is a sample output:
 ## Usage
 
 ```text
-Usage: Twirdle -Import <importfile> -TestWords <word1,word2,word3> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -Cheat
+Usage: Twirdle -Import <importfile> -TestWords <word1,word2,word3> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -Cheat -First <word>
 ```
-`TestWords` cannot be used with the `Find`/`Exclude`/`Force` parameters.<br>
-`Exclude` and `Force` must be used with the Find parameter.<br>
-`Play` of course, lets you play the game, and if you so choose, you can do so with the `Cheat` switch enabled.<br>
+`Import` can be used universally to specify a custom word list.<br><br>
+`TestWords` is a stand-alone parameter that allows you score and compare up to 3 opening turns.<br><br>
+`Find`, `Exclude`, and `Force` work together.<br>
+`Play`, `Cheat`, `First`, and `Force` also work together.<br>
 
 For the Find parameter:
-
 |Parameter/Format|Description|
 |---|---|
 |Uppercase letters|represent the correct letters, in the correct position.|
@@ -76,15 +76,28 @@ For the Find parameter:
 |Exclude|lists letters that cannot be included in the results.|
 |Force|forces the display of all results, even if they exceed 250.|
 
-Examples:
+---
+
+|Parameter|Description|
+|---|---|
+|Play|allows you to play the game.|
+|First|defines the first play to always use for every game.|
+|Cheat|displays  possible results after each turn.|
+|Force|forces the display of all results, even if they exceed 250.|
+
+---
+
+Example Usage:
 
 ```
 Twirdle -TestWords slate,round
 Twirdle -Find t_R_s,__RST
 Twirdle -Find t_R_s,__RST -Exclude eaud
 Twirdle -Find ___ED -Force
+Twordle -Play -Cheat -Force -First slate
 ```
 ---
+
 # Game Play
 
 * Correct letters in the correct place will appear in green.
@@ -97,6 +110,7 @@ Twirdle -Find ___ED -Force
 
 ```
          TWORDLE
+1 Wins / 0 Losses (100%)
 -------------------------
         S L A T E
         R O U N D
