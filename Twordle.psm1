@@ -218,15 +218,25 @@ Words   = $results -join ', '}}
 if ($Play) {$Wins = 0
 $Losses = 0
 $script:Hints = 0
-$script:hintlevel = 0
+$script:hintedpositions = @{}
+
+#------------------ GENERATE CONTEXTUAL HINT ------------------------------------------------------
+$knownpositions = @(0,0,0,0,0)
+foreach ($row in $board) {for ($i = 0; $i -lt 5; $i++) {if ($row.Colors[$i] -eq 'Green') {$knownpositions[$i] = 1}}}
 
 # ----------------- DISPLAY PLAY FIELD ------------------------------------------------------------
 function ShowBoard {Clear-Host
 $games = $Wins + $Losses
 
 $hinttext = ''
-if ($script:hintlevel -gt 0) {$hinttext = $answer.Substring(0,$script:hintlevel).PadRight(5,'_')}
-else {$hinttext = '(F4:Hint)'}
+for ($i = 0; $i -lt 5; $i++) {$known = $false
+foreach ($row in $board) {if ($row.Colors[$i] -eq 'Green') {$known = $true
+break}}
+
+if ($known -or $script:hintedpositions.ContainsKey($i)) {$hinttext += $answer[$i]}
+else {$hinttext += '_'}}
+
+if ($hinttext -eq '_____') {$hinttext = '(F4:Hint)'}
 
 Write-Host -f yellow ("TWORDLE".PadLeft(19)) -n; Write-Host -f green ($hinttext.ToUpper().PadLeft(12))
 Write-Host -f yellow (" {0,2} Wins / {1,2} Losses / {2,2} Hints" -f $Wins,$Losses,$script:Hints)
@@ -272,8 +282,24 @@ $text = ''
 while ($true) {$key = [Console]::ReadKey($true)
 switch ($key.Key) {'Escape' {return '__QUIT__'}
 
-'F4' {if ($Play -and $script:hintlevel -lt 5) {$script:hintlevel++; $script:Hints++; ShowBoard
-Write-Host -f White "$Prompt$text" -n}; continue}
+'F4' {$unknown = foreach ($i in 0..4) {if ($script:hintedpositions.ContainsKey($i)) {continue}
+$known = $false
+
+foreach ($row in $board) {if ($row.Colors[$i] -eq 'Green') {$known = $true
+break}}
+
+if (-not $known) {$i}}
+
+if ($unknown.Count -le 1) {ShowBoard
+Write-Host -f Red "No more hints available.`n"
+Write-Host -f White "$Prompt$text" -n
+continue}
+
+$script:hintedpositions[$unknown[0]] = $true
+$script:Hints++
+ShowBoard
+Write-Host -f White "$Prompt$text" -n
+continue}
 
 'Backspace' {if ($text.Length) {$text = $text.Substring(0,$text.Length - 1)
 Write-Host "`b `b" -n}}
@@ -350,7 +376,7 @@ ShowBoard
 Write-Host -f White "Answer: " -n
 Write-Host -f Red "$($answer.ToUpper())`n"}
 $playagain = ReadTwordleInput "Play again? (Y/N) " -YesNo
-$script:hintlevel = 0
+$script:hintedpositions = @{}
 
 if ($guess -eq '__QUIT__') {Write-Host -f Cyan "`n`nExiting.`n"; return}} 
 until ($playagain -notmatch '^(?i)y(es)?$')
