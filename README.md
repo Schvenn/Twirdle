@@ -64,7 +64,7 @@ Usage: Twirdle -Import <importfile> -TestWords <word1,word2,word3> -Find <_r_wS,
 `Import` can be used universally to specify a custom word list.<br><br>
 `TestWords` is a stand-alone parameter that allows you score and compare up to 3 opening turns.<br><br>
 `Find`, `Exclude`, and `Force` work together.<br>
-`Play`, `Cheat`, `First`, and `Force` also work together.<br>
+`Play`, `First`, `Cheat`, and `Force` also work together.<br>
 
 For the Find parameter:
 |Parameter/Format|Description|
