@@ -224,7 +224,7 @@ function ShowBoard {Clear-Host
 $games = $Wins + $Losses
 
 $hinttext = ''
-if ($hintlevel -gt 0) {$hinttext = $answer.Substring(0,$hintlevel).PadRight(5,'_')}
+if ($script:hintlevel -gt 0) {$hinttext = $answer.Substring(0,$script:hintlevel).PadRight(5,'_')}
 else {$hinttext = '(F4:Hint)'}
 
 Write-Host -f yellow ("TWORDLE".PadLeft(19)) -n; Write-Host -f green ($hinttext.ToUpper().PadLeft(12))
@@ -242,7 +242,19 @@ foreach ($row in @('  ABCDEFGHIJKLM','  NOPQRSTUVWXYZ')) {foreach ($letter in $r
 if (!$color) {$color = 'White'}
 Write-Host "$letter " -f $color -n}
 Write-Host ""}
-Write-Host ""}
+Write-Host ""
+
+Write-Host -f White "Turn $turn`n"
+
+if ($Cheat -and $turn -gt 1) {$results = FindWord $patterns $excluded
+
+if ($results) {$words = ($results.Words -split ', ') | Where-Object {$_ -and $_ -notin $usedwords}
+$matches = $words.Count
+Write-Host -f Yellow "There are$($results.Matches) possible matches: " -n
+
+if ($matches -le 250) {Write-Host -f White ($words -join ', ')}
+elseif ($matches -gt 250 -and $Force) {Write-Host -f White ($words -join ', ')}
+Write-Host ""}}}
 
 # ----------------- COLOURIZE ALPHABET ------------------------------------------------------------
 function UpdateKeyboard {param($guess,$colors)
@@ -259,7 +271,7 @@ $text = ''
 while ($true) {$key = [Console]::ReadKey($true)
 switch ($key.Key) {'Escape' {return '__QUIT__'}
 
-'F4' {if ($Play -and $hintlevel -lt 5) {$hintlevel++; $script:Hints++; ShowBoard
+'F4' {if ($Play -and $script:hintlevel -lt 5) {$script:hintlevel++; $script:Hints++; ShowBoard
 Write-Host -f White "Turn $turn`n"; Write-Host -f White "$Prompt$text" -n}; continue}
 
 'Backspace' {if ($text.Length) {$text = $text.Substring(0,$text.Length - 1)
@@ -289,17 +301,6 @@ $won = $false
 $usedwords = @()
 
 for ($turn = 1; $turn -le 6; $turn++) {ShowBoard
-Write-Host -f White "Turn $turn`n"
-
-if ($Cheat -and $turn -gt 1) {$results = FindWord $patterns $excluded
-
-if ($results) {$words = ($results.Words -split ', ') | Where-Object {$_ -and $_ -notin $usedwords}
-$matches = $words.Count
-Write-Host -f Yellow "There are$($results.Matches) possible matches: " -n
-
-if ($matches -le 250) {Write-Host -f White ($words -join ', ')}
-elseif ($matches -gt 250 -and $Force) {Write-Host -f White ($words -join ', ')}
-Write-Host ""}}
 
 if ($turn -eq 1 -and $First.ToLower() -in $script:words) {$guess = $First.ToLower()}
 elseif ($turn -eq 1 -and $First) {do {$guess = (ReadTwordleInput "First Guess: ")
@@ -348,6 +349,7 @@ ShowBoard
 Write-Host -f White "Answer: " -n
 Write-Host -f Red "$($answer.ToUpper())`n"}
 $playagain = ReadTwordleInput "Play again? (Y/N) " -YesNo
+$script:hintlevel = 0
 
 if ($guess -eq '__QUIT__') {Write-Host -f Cyan "`n`nExiting.`n"; return}} 
 until ($playagain -notmatch '^(?i)y(es)?$')
