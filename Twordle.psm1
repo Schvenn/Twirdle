@@ -393,6 +393,8 @@ Write-Host -f yellow ("-" * 100)
 Write-Host ""
 return}}
 
+Export-ModuleMember -function Twordle
+
 # Helptext.
 
 <#
