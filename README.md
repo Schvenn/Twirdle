@@ -99,14 +99,20 @@ Twordle -Play -First slate -Cheat -Force
 
 # Game Play
 
+* Guess the correct 5 letter word by round 6 in order to win.
 * Correct letters in the correct place will appear in green.
 * Misplaced letters will appear in yellow.
 * Incorrect letters will appear in dark grey.
 * The alphabet at the bottom will do the same, so that you can keep track of what letters are in play and those that are not yet played.
 * The game will not let you replay a word or play an invalid word.
-* You can import a custom dictionary with the `-import` parameter, as well.
-* Possible matches will only appear if the `-cheat` parameter is used.
-* F4 will display each letter sequentially, every time it is pressed, but the scoreboard at the top of the screen will keep track of this.
+* You can import a custom dictionary with the `-import` parameter.
+* The default dictionary ships with over 5700 words.
+* Possible matches will dynamically appear on screen each turn, if the `-cheat` parameter is used.
+* F4 will display each unguessed letter in its correct position sequentially, but the scoreboard at the top of the screen will keep track of this.
+* F4 will not display all 5 letters.
+* If you guess 5 invalid words within one game, you lose.
+* If you fail to guess the word by the sixth round, you lose.
+* If you think about The Game, you lose. IYKYK.
 
 ```
             TWORDLE   (F4:HINT)
