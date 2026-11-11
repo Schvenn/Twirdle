@@ -220,13 +220,8 @@ $Losses = 0
 $script:Hints = 0
 $script:hintedpositions = @{}
 
-#------------------ GENERATE CONTEXTUAL HINT ------------------------------------------------------
-$knownpositions = @(0,0,0,0,0)
-foreach ($row in $board) {for ($i = 0; $i -lt 5; $i++) {if ($row.Colors[$i] -eq 'Green') {$knownpositions[$i] = 1}}}
-
 # ----------------- DISPLAY PLAY FIELD ------------------------------------------------------------
 function ShowBoard {Clear-Host
-$games = $Wins + $Losses
 
 $hinttext = ''
 for ($i = 0; $i -lt 5; $i++) {$known = $false
