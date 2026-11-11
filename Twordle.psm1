@@ -351,7 +351,7 @@ if ($failedword -gt 4) {$forfeit = $true
 break}
 
 if ($guess -in $usedwords) {Showboard
-Write-Host -f Red "You already guessed " -n; Write-Host -f Cyan "$guess" -n; Write-Host -f Red ".`n"}}
+Write-Host -f Red "You already guessed " -n; Write-Host -f Cyan "$($guess.ToUpper())" -n; Write-Host -f Red ".`n"}}
 
 until ($guess -match '^[a-z]{5}$' -and $script:words -contains $guess -and $guess -notin $usedwords)}
 if ($forfeit) {break}
