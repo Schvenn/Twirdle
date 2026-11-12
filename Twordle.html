@@ -338,6 +338,8 @@ document
 .getElementById("guess")
 .addEventListener("keydown",e=>{if(e.key === "Enter"){submitGuess();}});
 
+document.addEventListener("click",e=>{if(e.target.closest("button")){document.getElementById("guess").focus();}});
+
 loadStats();
 newGame();
 </script>
