@@ -1,5 +1,5 @@
 @{RootModule = 'Twordle.psm1'
-ModuleVersion = '2.5'
+ModuleVersion = '3.0'
 GUID = '2142cd1d-2094-4732-b946-91950dcb7e1d'
 Author = 'Craig Plath'
 CompanyName = 'Plath Consulting Incorporated'
@@ -10,9 +10,9 @@ FunctionsToExport = @('Twordle')
 CmdletsToExport = @()
 VariablesToExport = @()
 AliasesToExport = @()
-FileList = @('Twordle.txt', 'Twordle.psm1')
+FileList = @('Twordle.txt', 'Twordle.psm1', 'Twordle.html')
 
 PrivateData = @{PSData = @{Tags = @('game', 'solver', 'tweet.app', 'twirdle', 'wordle')
 LicenseUri = 'https://github.com/Schvenn/Twirdle/blob/main/license.txt'
 ProjectUri = 'https://github.com/Schvenn/Twirdle'
-ReleaseNotes = 'Added extended help.'}}}
+ReleaseNotes = 'Added Twordle self-contained web browser game.'}}}
