@@ -194,8 +194,8 @@ losses = Number(data.losses) || 0;
 totalHints = Number(data.totalHints) || 0;
 totalInvalidWords = Number(data.totalInvalidWords) || 0;}catch(e){console.warn("Unable to load TWORDLE stats.");}}}
 
-function clearCookie(){document.cookie = "twordleStats=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-localStorage.removeItem("twordleStats");
+function clearCookie(){try{document.cookie = "twordleStats=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
+try{localStorage.removeItem("twordleStats");}catch(e){}
 location.reload();}
 
 function updateStats(){document
@@ -241,15 +241,16 @@ if(revealed.length >= 4){setMessage("No more hints available.","warning");
 return;}
 
 for(let i=0;i<4;i++){if(!revealed.includes(i)){hintedPositions.push(i);
-gameHints++;
 totalHints++;
 updateStats();
+updatePossibleWords();
 setMessage("Hint revealed.","notice");
 return;}}}
 
 function wordMatchesBoard(word){for(const row of board){const test = scoreGuess(row.word.toLowerCase(), word);
-
 for(let i=0;i<5;i++){if(test[i] !== row.colors[i]){return false;}}}
+
+for(const i of hintedPositions){if(word[i] !== answer[i]){return false;}}
 return true;}
 
 function buildKeyboard(){const rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
@@ -377,7 +378,6 @@ usedWords = [];
 invalidWords = 0;
 turn = 0;
 gameover = false;
-gameHints = 0;
 hintedPositions = [];
 
 document
