@@ -1,6 +1,12 @@
 # TWIRDLE/WORDLE Solver and Game
 
-New! On 11/12/2026 I added the HTML recreation of the game. It runs Javascript in your browser, is one file, completely self-contained, endless plays, no ads, no limitations, cookies to only store your stats, which you can clear whenever you like. Have fun!
+*New!* On 11/12/2026, I added the HTML recreation of the game. It runs Javascript in your browser, is one file, completely self-contained, endless plays, no ads, no limitations, cookies to only store your stats, which you can clear whenever you like.
+
+If you don't want to save it to your computer, you can play it here: <a href="http://schvenn.byethost14.com/Twordle.html">http://schvenn.byethost14.com/Twordle.html</a>
+
+Have fun!
+
+---
 
 This tool started as an experiment. I was looking for the best starting word for the game Twirdle based not just on the most common letters in the English language, but also their best locations.
 
