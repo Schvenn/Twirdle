@@ -1,4 +1,7 @@
 # TWIRDLE/WORDLE Solver and Game
+
+New! On 11/12/2026 I added the HTML recreation of the game. It runs Javascript in your browser, is one file, completely self-contained, endless plays, no ads, no limitations, cookies to only store your stats, which you can clear whenever you like. Have fun!
+
 This tool started as an experiment. I was looking for the best starting word for the game Twirdle based not just on the most common letters in the English language, but also their best locations.
 
 Twirdle is a Wordle clone, hosted on tweet.app, which is a subscription-based Twitter alternative to which I have a lifetime subscription as an early adopter.
