@@ -215,7 +215,7 @@ document
 .textContent = answer.split("").map((letter,i) =>
 hintedPositions.includes(i) || board.some(row => row.colors[i] === "green")
 ? letter.toUpperCase()
-: "_").join(" ");
+: "_").join("");
 
 document
 .getElementById("invalidcount")
