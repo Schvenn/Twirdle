@@ -116,7 +116,8 @@ body.keyboardOpen #keyboard{display:none;}
 <ul>
 <li>Hint will reveal the first unguessed letter, but not the whole word. This is the least offensive cheat.</li>
 <li>Evaluate will test a word to see how much it reduces the results, but be careful. It let's you test invalid words.</li>
-<li>Cheat Shows you all possible matches. This is the most egregious cheat.</li>
+<li>Cheat Shows you all possible matches. You have to be really stumped to use this.</li>
+<li>Undo removes the last played word. This is the most egregious cheat.</li>
 </ul>
 <h3>Privacy</h3>
 <p>This page uses localStorage/cookies to save those stats and for no other reason.</p>
@@ -137,7 +138,9 @@ body.keyboardOpen #keyboard{display:none;}
 <br>
 <div>Wins: <span id="wins">0</span></div>
 <div>Losses: <span id="losses">0</span></div>
+<br>
 <div>Win %: <span id="winpct">0</span></div>
+<div>Turns/Win: <span id="winavg">0</span></div>
 <br>
 <div>Hints: <span id="hintcount">0</span></div>
 <div>Invalid Words: <span id="invalidcount">0</span></div>
@@ -152,7 +155,7 @@ body.keyboardOpen #keyboard{display:none;}
 <div id="board"></div>
 
 <div id="controls"><input id="guess" maxlength="5" autocomplete="off"> <button onclick="submitGuess()">Guess</button></div>
-<div id="secondaryButtons"><button id="hintButton" onclick="giveHint()">Hint</button><button id="evaluateButton" onclick="evaluateGuess()">Evaluate</button><button onclick="toggleCheat()">Cheat</button></div>
+<div id="secondaryButtons"><button id="hintButton" onclick="giveHint()">Hint</button><button id="evaluateButton" onclick="evaluateGuess()">Evaluate</button><button onclick="toggleCheat()">Cheat</button><button id="undoButton" onclick="undo()">Undo</button></div>
 <div id="keyboard"></div>
 <button id="playagain" onclick="newGame()">Play Again</button></div>
 
@@ -186,6 +189,7 @@ let invalidWords = 0;
 let cheatEnabled = false;
 let wins = 0;
 let losses = 0;
+let totalWinTurns = 0;
 let totalHints = 0;
 let hintedPositions = [];
 let previousMatches = dictionary.length;
@@ -200,7 +204,7 @@ document
 : "none";
 updatePossibleWords();}
 
-function saveStats(){const stats = JSON.stringify({wins:wins,losses:losses,totalHints:totalHints,totalInvalidWords:totalInvalidWords});
+function saveStats(){const stats = JSON.stringify({wins:wins,losses:losses,totalHints:totalHints,totalInvalidWords:totalInvalidWords,totalWinTurns:totalWinTurns});
 try{localStorage.setItem("twordleStats",stats);}catch(e){console.warn("Unable to save TWORDLE stats to localStorage.");}
 try{document.cookie = "twordleStats=" + encodeURIComponent(stats) + "; max-age=31536000; path=/; SameSite=Lax";}catch(e){console.warn("Unable to save TWORDLE stats cookie.");}}
 
@@ -211,6 +215,7 @@ if(cookie){stats = decodeURIComponent(cookie.substring("twordleStats=".length));
 if(stats){try{const data = JSON.parse(stats);
 wins = Number(data.wins) || 0;
 losses = Number(data.losses) || 0;
+totalWinTurns = Number(data.totalWinTurns) || 0;
 totalHints = Number(data.totalHints) || 0;
 totalInvalidWords = Number(data.totalInvalidWords) || 0;}catch(e){console.warn("Unable to load TWORDLE stats.");}}}
 
@@ -227,6 +232,10 @@ function updateStats(){document
 document
 .getElementById("losses")
 .textContent = losses;
+
+document
+.getElementById("winavg")
+.textContent = wins? (totalWinTurns / wins).toFixed(1): "0";
 
 document
 .getElementById("hintcount")
@@ -304,6 +313,18 @@ for(let i=0;i<5;i++){if(test[i] !== row.colors[i]){return false;}}}
 
 for(const i of hintedPositions){if(word[i] !== answer[i]){return false;}}
 return true;}
+
+function undo(){if(gameover || board.length === 0) {return;}
+board.pop();
+usedWords.pop();
+turn = Math.max(0, turn - 1);
+keyboard = {};
+buildKeyboard();
+for(const row of board){updateKeyboard(row.word.toLowerCase(), row.colors);}
+renderBoard();
+updatePossibleWords();
+updateStats();
+setMessage("Last guess removed.","notice");}
 
 function buildKeyboard(){const rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
 let html = "";
@@ -409,6 +430,7 @@ document
 
 gameover = true;
 wins++;
+totalWinTurns += board.length;
 updateStats();
 return;}
 turn++;
