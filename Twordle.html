@@ -30,6 +30,12 @@ h1{margin-bottom:10px;}
 #helpContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
 #helpContent p{margin:12px 0;}
 
+#confirmPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
+#confirmContent{background:#222; border:1px solid #555; border-radius:8px; padding:10px; max-width:350px; width:100%; box-sizing:border-box; text-align:center;}
+#confirmContent h3{margin-top:10px; margin-bottom:15px;}
+#confirmContent p{margin:5px 0 12px;}
+#confirmContent button{margin:0 5px;}
+
 #statsPanel{text-align:left;}
 
 #gamePanel{text-align:center;}
@@ -109,8 +115,15 @@ body.keyboardOpen #keyboard{display:none;}
 <h3>Privacy</h3>
 <p>This page uses localStorage/cookies to save those stats and for no other reason.</p>
 <p style="text-align:center; font-weight:bold; margin-top:20px;">Have fun!</p>
-</div>
-</div>
+</div></div>
+
+<div id="confirmPopup" onclick="if(event.target===this)toggleConfirm()">
+<div id="confirmContent">
+<h3>Are you sure you want to clear your statistics?</h3>
+<p>This will permanently erase all your wins, losses, hints and invalid words.</p>
+<button onclick="clearCookie()">Yes, Clear Stats</button>
+<button onclick="toggleConfirm()">Cancel</button>
+</div></div>
 
 <div id="layout">
 <div id="statsPanel">
@@ -125,7 +138,7 @@ body.keyboardOpen #keyboard{display:none;}
 <br>
 <div>Current Word: <span id="currentWord"></span></div>
 <br>
-<div><button onclick="clearCookie()" style="font-size:12px;">Clear Stats</button></div>
+<div><button onclick="toggleConfirm()" style="font-size:12px;">Clear Stats</button></div>
 </div>
 
 <div id="gamePanel">
@@ -193,6 +206,8 @@ wins = Number(data.wins) || 0;
 losses = Number(data.losses) || 0;
 totalHints = Number(data.totalHints) || 0;
 totalInvalidWords = Number(data.totalInvalidWords) || 0;}catch(e){console.warn("Unable to load TWORDLE stats.");}}}
+
+function toggleConfirm(){const popup=document.getElementById("confirmPopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
 
 function clearCookie(){try{document.cookie = "twordleStats=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
 try{localStorage.removeItem("twordleStats");}catch(e){}
