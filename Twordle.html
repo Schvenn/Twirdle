@@ -141,9 +141,13 @@ body.keyboardOpen #keyboard{display:none;}
 <br>
 <div>Win %: <span id="winpct">0</span></div>
 <div>Turns/Win: <span id="winavg">0</span></div>
-<br>
-<div>Hints: <span id="hintcount">0</span></div>
 <div>Invalid Words: <span id="invalidcount">0</span></div>
+<br>
+<div style = "color:#ff0000;">Cheats Used:</div>
+<div>Hints: <span id="hintcount">0</span></div>
+<div>Cheats: <span id="cheatcount">0</span></div>
+<div>Undo: <span id="undocount">0</span></div>
+
 <br>
 <div>Current Word: <span id="currentWord"></span></div>
 <br>
@@ -187,10 +191,13 @@ let usedWords = [];
 let totalInvalidWords = 0;
 let invalidWords = 0;
 let cheatEnabled = false;
+let lastCheatTurn = -1;
 let wins = 0;
 let losses = 0;
 let totalWinTurns = 0;
 let totalHints = 0;
+let totalCheats = 0;
+let totalUndos = 0;
 let hintedPositions = [];
 let previousMatches = dictionary.length;
 
@@ -202,9 +209,15 @@ document
 .style.display = cheatEnabled
 ? "block"
 : "none";
-updatePossibleWords();}
 
-function saveStats(){const stats = JSON.stringify({wins:wins,losses:losses,totalHints:totalHints,totalInvalidWords:totalInvalidWords,totalWinTurns:totalWinTurns});
+if(cheatEnabled && turn > 0 && lastCheatTurn !== turn){totalCheats++;
+lastCheatTurn = turn;
+updateStats();}
+
+updatePossibleWords();
+updateStats();}
+
+function saveStats(){const stats = JSON.stringify({wins:wins,losses:losses,totalHints:totalHints,totalInvalidWords:totalInvalidWords,totalWinTurns:totalWinTurns,totalCheats:totalCheats,totalUndos:totalUndos});
 try{localStorage.setItem("twordleStats",stats);}catch(e){console.warn("Unable to save TWORDLE stats to localStorage.");}
 try{document.cookie = "twordleStats=" + encodeURIComponent(stats) + "; max-age=31536000; path=/; SameSite=Lax";}catch(e){console.warn("Unable to save TWORDLE stats cookie.");}}
 
@@ -217,7 +230,9 @@ wins = Number(data.wins) || 0;
 losses = Number(data.losses) || 0;
 totalWinTurns = Number(data.totalWinTurns) || 0;
 totalHints = Number(data.totalHints) || 0;
-totalInvalidWords = Number(data.totalInvalidWords) || 0;}catch(e){console.warn("Unable to load TWORDLE stats.");}}}
+totalInvalidWords = Number(data.totalInvalidWords) || 0;
+totalCheats = Number(data.totalCheats) || 0;
+totalUndos = Number(data.totalUndos) || 0;}catch(e){console.warn("Unable to load TWORDLE stats.");}}}
 
 function toggleConfirm(){const popup=document.getElementById("confirmPopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
 
@@ -259,6 +274,15 @@ document
 .textContent =
 total
 ? Math.round(wins / total * 100): 0;
+
+document
+.getElementById("cheatcount")
+.textContent = totalCheats;
+
+document
+.getElementById("undocount")
+.textContent = totalUndos;
+
 saveStats();}
 
 function giveHint(){if(gameover)
@@ -315,6 +339,7 @@ for(const i of hintedPositions){if(word[i] !== answer[i]){return false;}}
 return true;}
 
 function undo(){if(gameover || board.length === 0) {return;}
+totalUndos++;
 board.pop();
 usedWords.pop();
 turn = Math.max(0, turn - 1);
@@ -420,7 +445,15 @@ updateKeyboard(guess,colors);
 renderBoard();
 updatePossibleWords();
 updateStats();
-document.getElementById("guess").value = "";
+
+document
+.getElementById("cheatPanel")
+.style.display = "none";
+cheatEnabled = false;
+
+document
+.getElementById("guess")
+.value = "";
 
 if(guess === answer){setMessage("Solved!","solved");
 
@@ -453,6 +486,12 @@ invalidWords = 0;
 turn = 0;
 gameover = false;
 hintedPositions = [];
+lastCheatTurn = -1;
+
+document
+.getElementById("cheatPanel")
+.style.display = "none";
+cheatEnabled = false;
 
 document
 .getElementById("playagain")
