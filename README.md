@@ -158,7 +158,14 @@ Guess: WIMPY
 
 ```
 ---
-# How to Solve Twirdle/Wordle 
+## [Twordle Online](http://schvenn.byethost14.com/Twordle.html)
+
+As you can see, it has lots of cheat features, making it a great tool for learning, testing and playing. You choose the level of effort you want to put into the game by deciding which cheats if any, that you use.
+
+<img width="740" height="635" alt="image" src="https://github.com/user-attachments/assets/18df98c3-52c2-4e7d-87ac-79845f323786" />
+
+---
+# How to Solve Twordle 
 
 For best results, apparently we should start with:
 
