@@ -15,4 +15,4 @@ FileList = @('Twordle.txt', 'Twordle.psm1', 'Twordle.html')
 PrivateData = @{PSData = @{Tags = @('game', 'solver', 'tweet.app', 'twirdle', 'wordle')
 LicenseUri = 'https://github.com/Schvenn/Twirdle/blob/main/license.txt'
 ProjectUri = 'https://github.com/Schvenn/Twirdle'
-ReleaseNotes = 'Added evaluate button.'}}}
+ReleaseNotes = 'Added evaluate and undo buttons.'}}}
