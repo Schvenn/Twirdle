@@ -413,7 +413,7 @@ document.getElementById("possibleWords").innerHTML = "";}
 
 document
 .getElementById("guess")
-.addEventListener("keydown",e=>{if(e.key === "Enter"){submitGuess();}});
+.addEventListener("keydown",e=>{if(e.key === "Enter"){if(gameover){newGame();}else{submitGuess();}}});
 
 document.addEventListener("click",e=>{if(e.target.closest("button")){document.getElementById("guess").focus();}});
 
