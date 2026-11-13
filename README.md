@@ -162,7 +162,7 @@ Guess: WIMPY
 
 As you can see, it has lots of cheat features, making it a great tool for learning, testing and playing. You choose the level of effort you want to put into the game by deciding which cheats if any, that you use.
 
-<img width="740" height="635" alt="image" src="https://github.com/user-attachments/assets/18df98c3-52c2-4e7d-87ac-79845f323786" />
+<img width="1504" height="1332" alt="image" src="https://github.com/user-attachments/assets/2ffe4e22-34c8-4d6f-969c-fa0df726c7fc" />
 
 ---
 # How to Solve Twordle 
