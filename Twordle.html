@@ -297,7 +297,7 @@ totalRemaining += remaining;}
 const averageRemaining = Math.round(totalRemaining / before);
 const reduction = before - averageRemaining;
 const percent = before ? Math.round(reduction / before * 100): 0;
-setMessage(`${guess.toUpperCase()} will reduce possible matches to ` + `${averageRemaining} from ${before} (🡓${percent}%).`,"message");}
+setMessage(`${guess.toUpperCase()} is expected to reduce ` + `${before} possibilites to about ${averageRemaining} ` +  `(↓${percent}%).`,"message");}
 
 function wordMatchesBoard(word){for(const row of board){const test = scoreGuess(row.word.toLowerCase(), word);
 for(let i=0;i<5;i++){if(test[i] !== row.colors[i]){return false;}}}
