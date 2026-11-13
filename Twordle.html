@@ -70,7 +70,7 @@ button{padding:8px 14px; font-size:16px; font-weight:bold; cursor:pointer; backg
 
 #footer{margin-top:100px; padding-bottom:20px; font-size:8px;}
 
-@media(max-width:1000px){body{padding:10px;} 
+@media(max-width:1000px){body{padding:10px;}
 body.keyboardOpen #board .tile{width:18px; height:18px; font-size:14px;}
 body.keyboardOpen #keyboard{display:none;}
 #headerRow{grid-template-columns:minmax(0,1fr);}
@@ -94,7 +94,7 @@ body.keyboardOpen #keyboard{display:none;}
 <div id="helpPopup" onclick="if(event.target===this)toggleHelp()">
 <div id="helpContent">
 <button onclick="toggleHelp()">✕</button>
-<h2>How to Play Twordle</h2>
+<h2>How to Play Twordle v3.1</h2>
 <p>Guess the hidden five-letter word in six attempts.</p>
 <ul>
 <li>Enter any valid five-letter word.</li>
@@ -111,6 +111,12 @@ body.keyboardOpen #keyboard{display:none;}
 <li>Current Word lets you keep track of correctly guessed letters in their right spots.</li>
 <li>If you guess 5 invalid words in the same round, you lose that game.</li>
 <li>Clear Stats to erase your history and start again.</li>
+</ul>
+<h3>Cheat Features</h3>
+<ul>
+<li>Hint will reveal the first unguessed letter, but not the whole word. This is the least offensive cheat.</li>
+<li>Evaluate will test a word to see how much it reduces the results, but be careful. It let's you test invalid words.</li>
+<li>Cheat Shows you all possible matches. This is the most egregious cheat.</li>
 </ul>
 <h3>Privacy</h3>
 <p>This page uses localStorage/cookies to save those stats and for no other reason.</p>
@@ -146,7 +152,7 @@ body.keyboardOpen #keyboard{display:none;}
 <div id="board"></div>
 
 <div id="controls"><input id="guess" maxlength="5" autocomplete="off"> <button onclick="submitGuess()">Guess</button></div>
-<div id="secondaryButtons"><button id="hintButton" onclick="giveHint()">Hint</button><button onclick="toggleCheat()">Cheat</button></div>
+<div id="secondaryButtons"><button id="hintButton" onclick="giveHint()">Hint</button><button id="evaluateButton" onclick="evaluateGuess()">Evaluate</button><button onclick="toggleCheat()">Cheat</button></div>
 <div id="keyboard"></div>
 <button id="playagain" onclick="newGame()">Play Again</button></div>
 
@@ -182,6 +188,7 @@ let wins = 0;
 let losses = 0;
 let totalHints = 0;
 let hintedPositions = [];
+let previousMatches = dictionary.length;
 
 function toggleHelp(){const popup=document.getElementById("helpPopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
 
@@ -261,6 +268,36 @@ updateStats();
 updatePossibleWords();
 setMessage("Hint revealed.","notice");
 return;}}}
+
+function evaluateGuess(){const guess = document
+.getElementById("guess")
+.value
+.trim()
+.toLowerCase();
+
+if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word to evaluate.");
+return;}
+const candidates = dictionary.filter(word => wordMatchesBoard(word));
+const before = candidates.length;
+let totalRemaining = 0;
+
+for(const possibleAnswer of candidates){const pattern = scoreGuess(guess, possibleAnswer);
+let remaining = 0;
+
+for(const candidate of candidates){const test = scoreGuess(guess, candidate);
+let same = true;
+
+for(let i = 0; i < 5; i++){ if(test[i] !== pattern[i]){same = false;
+break;}}
+
+if(same)
+remaining++;}
+
+totalRemaining += remaining;}
+const averageRemaining = Math.round(totalRemaining / before);
+const reduction = before - averageRemaining;
+const percent = before ? Math.round(reduction / before * 100): 0;
+setMessage(`${guess.toUpperCase()} will reduce possible matches to ` + `${averageRemaining} from ${before} (🡓${percent}%).`,"message");}
 
 function wordMatchesBoard(word){for(const row of board){const test = scoreGuess(row.word.toLowerCase(), word);
 for(let i=0;i<5;i++){if(test[i] !== row.colors[i]){return false;}}}
