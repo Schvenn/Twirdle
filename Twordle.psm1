@@ -155,6 +155,11 @@ $OtherFirstWordCandidates = ($topfirst.Word | Where-Object {$_ -ne $bestfirst.Ca
 $OtherSecondWordCandidates = ($topsecond.Word | Where-Object {$_ -ne $bestsecond.Candidate}) -join ', '
 $OtherThirdWordCandidates = ($topthird.Word | Where-Object {$_ -ne $bestthird.Candidate}) -join ', '
 
+if ($TestWords) {Write-Host -f green "`nPresence" -n; Write-Host -f white " is the sum of all occurrences of the letters in the word present within the dictionary."
+Write-Host -f green "Position" -n; Write-Host -f white " is the sum of all occurrences of the letters in their current positions within the dictionary."
+Write-Host -f green "TotalScore" -n; Write-Host -f white " is the sum of these two values."
+Write-Host -f white "`nTop-scoring candidates are further ranked by their ability to reduce the remaining word pool."}
+
 if ($Import -or $TestWords -and !$MoreDetails) {[pscustomobject]@{DictionaryFile = Split-Path $path -Leaf
 WordCount = $script:words.Count
 BestFirstGuess = $bestfirst.Candidate
@@ -170,14 +175,9 @@ TurnThreeCandidates  = $OtherThirdWordCandidates
 MostCommonFirstPosition = ($firstposition -join ',')
 SecondPosition = ($secondposition -join ',')
 ThirdPosition = ($thirdposition -join ',')} | Format-List
-
-Write-Host -f green "Presence" -n; Write-Host -f white " is the sum of all occurrences of the letters in the word present within the dictionary."
-Write-Host -f green "Position" -n; Write-Host -f white " is the sum of all occurrences of the letters in their current positions within the dictionary.`n"
 Write-Host -f Yellow ("-" * 100)}
 
 if ($MoreDetails) {($firstcandidates | Select-Object @{n='Turn';e={1}},*) + ($secondcandidates | Select-Object @{n='Turn';e={2}},*) + ($thirdcandidates | Select-Object @{n='Turn';e={3}},*) | Format-Table
-Write-Host -f green "Presence" -n; Write-Host -f white " is the sum of all occurrences of the letters in the word present within the dictionary."
-Write-Host -f green "Position" -n; Write-Host -f white " is the sum of all occurrences of the letters in their current positions within the dictionary.`n"
 Write-Host -f yellow ('-' * 100)}}
 
 # ----------------- TESTWORDS ---------------------------------------------------------------------
@@ -583,10 +583,10 @@ MostCommonFirstPosition : s,a,a,e,s
 SecondPosition          : c,o,i,t,y
 ThirdPosition           : b,i,o,n,e
 
+----------------------------------------------------------------------------------------------------
+
 Presence is the sum of all occurrences of the letters in the word present within the dictionary.
 Position is the sum of all occurrences of the letters in their current positions within the dictionary.
-
-----------------------------------------------------------------------------------------------------
 
 Turns         : tares, doily, punch
 UniqueLetters : 15
@@ -623,10 +623,10 @@ Turn Candidate Presence Position TotalScore Reduction Remaining Improvement
    3 hulky         4735     2069       6804      5611       146 97%
    3 lucky         4864     1897       6761      5613       144 97%
 
+----------------------------------------------------------------------------------------------------
+
 Presence is the sum of all occurrences of the letters in the word present within the dictionary.
 Position is the sum of all occurrences of the letters in their current positions within the dictionary.
-
-----------------------------------------------------------------------------------------------------
 
 Turns         : tares, doily, punch
 UniqueLetters : 15
