@@ -467,7 +467,7 @@ Write-Host ""; return}
 
 # ----------------- CALL UTILITIES ----------------------------------------------------------------
 if ($help) {help; return}
-Write-Host -f yellow "`n`t`t`t`tTWIRDLE/WORDLE Solver"
+Write-Host -f yellow "`n`t`t`t`tTwordle Solver"
 Write-Host -f yellow ("-" * 100)
 
 if ($Import) {ImportTwordleList $Import}
@@ -564,7 +564,7 @@ During gameplay, pressing F4 will reveal each subsequent letter, but the scorebo
 ## Sample TestWords Screens
 C:\Users\Public\Desktop> Twordle -TestWords tares,doily,punch
 
-                                TWIRDLE/WORDLE Solver
+                                Twordle Solver
 ----------------------------------------------------------------------------------------------------
 
 Presence is the sum of all occurrences of the letters in the word present within the dictionary, represented as a single word.
@@ -605,7 +605,7 @@ Improvement   : 97%
 
 C:\Users\Public\Desktop> Twordle -TestWords tares,doily,punch -moredetails
 
-                                TWIRDLE/WORDLE Solver
+                                Twordle Solver
 ----------------------------------------------------------------------------------------------------
 
 Presence is the sum of all occurrences of the letters in the word present within the dictionary, represented as a single word.
@@ -647,7 +647,7 @@ Improvement   : 97%
 ## Sample Find Screen
 C:\Users\Public\Desktop> Twordle -find __a_e,ra__y,_rea_ -exclude dmnqstlz
 
-                                TWIRDLE/WORDLE Solver
+                                Twordle Solver
 ----------------------------------------------------------------------------------------------------
 DictionaryFile : twordle.txt
 WordCount      : 5757
