@@ -566,6 +566,11 @@ C:\Users\Public\Desktop> Twordle -TestWords tares,doily,punch
 
                                 TWIRDLE/WORDLE Solver
 ----------------------------------------------------------------------------------------------------
+Presence is the sum of all occurrences of the letters in the word present within the dictionary.
+Position is the sum of all occurrences of the letters in their current positions within the dictionary.
+TotalScore is the sum of these two values.
+
+Top-scoring candidates are further ranked by their ability to reduce the remaining word pool.
 
 DictionaryFile          : twordle.txt
 WordCount               : 5757
@@ -584,10 +589,6 @@ SecondPosition          : c,o,i,t,y
 ThirdPosition           : b,i,o,n,e
 
 ----------------------------------------------------------------------------------------------------
-
-Presence is the sum of all occurrences of the letters in the word present within the dictionary.
-Position is the sum of all occurrences of the letters in their current positions within the dictionary.
-
 Turns         : tares, doily, punch
 UniqueLetters : 15
 Coverage      : 58%
@@ -604,6 +605,11 @@ C:\Users\Public\Desktop> Twordle -TestWords tares,doily,punch -moredetails
 
                                 TWIRDLE/WORDLE Solver
 ----------------------------------------------------------------------------------------------------
+Presence is the sum of all occurrences of the letters in the word present within the dictionary.
+Position is the sum of all occurrences of the letters in their current positions within the dictionary.
+TotalScore is the sum of these two values.
+
+Top-scoring candidates are further ranked by their ability to reduce the remaining word pool.
 
 Turn Candidate Presence Position TotalScore Reduction Remaining Improvement
 ---- --------- -------- -------- ---------- --------- --------- -----------
@@ -624,10 +630,6 @@ Turn Candidate Presence Position TotalScore Reduction Remaining Improvement
    3 lucky         4864     1897       6761      5613       144 97%
 
 ----------------------------------------------------------------------------------------------------
-
-Presence is the sum of all occurrences of the letters in the word present within the dictionary.
-Position is the sum of all occurrences of the letters in their current positions within the dictionary.
-
 Turns         : tares, doily, punch
 UniqueLetters : 15
 Coverage      : 58%
@@ -643,12 +645,10 @@ C:\Users\Public\Desktop> Twordle -find __a_e,ra__y,_rea_ -exclude dmnqstlz
 
                                 TWIRDLE/WORDLE Solver
 ----------------------------------------------------------------------------------------------------
-
 DictionaryFile : twordle.txt
 WordCount      : 5757
 
 ----------------------------------------------------------------------------------------------------
-
 Pattern : {__a_e, ra__y, _rea_}
 Exclude : dmnqstlz
 Matches : 1
