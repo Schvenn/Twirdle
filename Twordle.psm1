@@ -1,4 +1,4 @@
-function Twordle ([string[]]$TestWords, [switch]$MoreCandidates, [string[]]$Find, [string]$Exclude, [string]$Import, [switch]$Force, [switch]$Play, [switch]$Cheat, [string]$First, [switch]$Help) {# Twordle/Wordle word helper and game.
+function Twordle ([string[]]$TestWords, [switch]$MoreDetails, [string[]]$Find, [string]$Exclude, [string]$Import, [switch]$Force, [switch]$Play, [switch]$Cheat, [string]$First, [switch]$Help) {# Twordle/Wordle word helper and game.
 
 # ----------------- HELP --------------------------------------------------------------------------
 function help {# Inline help.
@@ -111,67 +111,71 @@ PositionScore = $score.PositionScore
 TotalScore = $score.TotalScore}}
 
 $topfirst = $results | Sort-Object TotalScore -Descending | Select-Object -First 5
-$bestfirst = $topfirst | ForEach-Object {$test = TestTwordleWords $_.Word
-
-[pscustomobject]@{Word = $_.Word
+$firstcandidates = $topfirst | ForEach-Object {$test = TestTwordleWords $_.Word
+[pscustomobject]@{Candidate = $_.Word
+Presence = $_.PresenceScore
+Position = $_.PositionScore
 TotalScore = $_.TotalScore
-ReducedTo = $test.ReducedTo
-ReductionPct = $test.ReductionPct}} | Sort-Object ReducedTo | Select-Object -First 1
-$used = $bestfirst.Word.ToCharArray()
+Reduction = [int]$test.ReducedBy
+Remaining = [int]$test.ReducedTo
+Improvement = "{0,11}%" -f [int][math]::Round($test.ReductionPct)}}
+$bestfirst = $firstcandidates | Sort-Object Remaining | Select-Object -First 1
+$used = $bestfirst.Candidate.ToCharArray()
 
-$topsecond = $results | Where-Object {($_.Word.ToCharArray() | Where-Object {$_ -in $used}).Count -eq 0} | Sort-Object TotalScore -Descending | Select-Object -First 5
-$bestsecond = $topsecond | ForEach-Object {$test = TestTwordleWords @($bestfirst.Word, $_.Word)
-
-[pscustomobject]@{Word= $_.Word
+$topsecond = $results | Where-Object {($_.Word.ToCharArray() | Where-Object {$_ -in $used}).Count -eq 0} | Sort-Object TotalScore -Descending |
+Select-Object -First 5
+$secondcandidates = $topsecond | ForEach-Object {$test = TestTwordleWords @($bestfirst.Candidate,$_.Word)
+[pscustomobject]@{Candidate = $_.Word
+Presence = $_.PresenceScore
+Position = $_.PositionScore
 TotalScore = $_.TotalScore
-ReducedTo = $test.ReducedTo
-ReductionPct = $test.ReductionPct}} | Sort-Object ReducedTo | Select-Object -First 1
-$used += $bestsecond.Word.ToCharArray()
+Reduction = [int]$test.ReducedBy
+Remaining = [int]$test.ReducedTo
+Improvement = "{0,11}%" -f [int][math]::Round($test.ReductionPct)}}
+$bestsecond = $secondcandidates | Sort-Object Remaining | Select-Object -First 1
+$used += $bestsecond.Candidate.ToCharArray()
 
 $topthird = $results | Where-Object {($_.Word.ToCharArray() | Where-Object {$_ -in $used}).Count -eq 0} | Sort-Object TotalScore -Descending | Select-Object -First 5
-$bestthird = $topthird | ForEach-Object {$test = TestTwordleWords @($bestfirst.Word, $bestsecond.Word, $_.Word)
-
-[pscustomobject]@{Word = $_.Word
+$thirdcandidates = $topthird | ForEach-Object {
+$test = TestTwordleWords @($bestfirst.Candidate,$bestsecond.Candidate,$_.Word)
+[pscustomobject]@{Candidate = $_.Word
+Presence = $_.PresenceScore
+Position = $_.PositionScore
 TotalScore = $_.TotalScore
-ReducedTo = $test.ReducedTo
-ReductionPct = $test.ReductionPct}} | Sort-Object ReducedTo | Select-Object -First 1
+Reduction = [int]$test.ReducedBy
+Remaining = [int]$test.ReducedTo
+Improvement = "{0,11}%" -f [int][math]::Round($test.ReductionPct)}}
+$bestthird = $thirdcandidates | Sort-Object Remaining | Select-Object -First 1
 
 $firstposition = foreach ($i in 0..4) {($positionfreq[$i].GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1).Key}
 $secondposition = foreach ($i in 0..4) {($positionfreq[$i].GetEnumerator() | Sort-Object Value -Descending | Select-Object -Skip 1 -First 1).Key}
 $thirdposition = foreach ($i in 0..4) {($positionfreq[$i].GetEnumerator() | Sort-Object Value -Descending | Select-Object -Skip 2 -First 1).Key}
 
-$OtherFirstWordCandidates = ($topfirst.Word | Where-Object {$_ -ne $bestfirst.Word}) -join ', '
-$OtherSecondWordCandidates = ($topsecond.Word | Where-Object {$_ -ne $bestsecond.Word}) -join ', '
-$OtherThirdWordCandidates = ($topthird.Word | Where-Object {$_ -ne $bestthird.Word}) -join ', '
+$OtherFirstWordCandidates = ($topfirst.Word | Where-Object {$_ -ne $bestfirst.Candidate}) -join ', '
+$OtherSecondWordCandidates = ($topsecond.Word | Where-Object {$_ -ne $bestsecond.Candidate}) -join ', '
+$OtherThirdWordCandidates = ($topthird.Word | Where-Object {$_ -ne $bestthird.Candidate}) -join ', '
 
-if ($Import -or $TestWords) {[pscustomobject]@{DictionaryFile = Split-Path $path -Leaf
+if ($Import -or $TestWords -and !$MoreDetails) {[pscustomobject]@{DictionaryFile = Split-Path $path -Leaf
 WordCount = $script:words.Count
-BestFirstGuess = $bestfirst.Word
-FirstScore = $bestfirst.TotalScore
-FirstReducedBy  = $script:words.Count - $bestfirst.ReducedTo
-FirstReducedTo = $bestfirst.ReducedTo
-FirstReductionPct = $bestfirst.ReductionPct
-OtherFirstWordCandidates  = $OtherFirstWordCandidates
-BestSecondGuess = $bestsecond.Word
-SecondScore = $bestsecond.TotalScore
-SecondReducedBy = $script:words.Count - $bestsecond.ReducedTo
-SecondReducedTo = $bestsecond.ReducedTo
-SecondReductionPct = $bestsecond.ReductionPct
-OtherSecondWordCandidates = $OtherSecondWordCandidates
-BestThirdGuess = $bestthird.Word
-ThirdScore = $bestthird.TotalScore
-ThirdReducedBy  = $script:words.Count - $bestthird.ReducedTo
-ThirdReducedTo = $bestthird.ReducedTo
-ThirdReductionPct = $bestthird.ReductionPct
-OtherThirdWordCandidates  = $OtherThirdWordCandidates
-TotalScore = $bestfirst.TotalScore + $bestsecond.TotalScore + $bestthird.TotalScore
+BestFirstGuess = $bestfirst.Candidate
+Reduction  = $script:words.Count - $bestfirst.Remaining
+RemainingAfterFirst = $bestfirst.Remaining
+TurnOneCandidates  = $OtherFirstWordCandidates
+BestSecondGuess = $bestsecond.Candidate
+RemainingAfterSecond = $bestsecond.Remaining
+TurnTwoCandidates = $OtherSecondWordCandidates
+BestThirdGuess = $bestthird.Candidate
+RemainingAfterThird = $bestthird.Remaining
+TurnThreeCandidates  = $OtherThirdWordCandidates
 MostCommonFirstPosition = ($firstposition -join ',')
 SecondPosition = ($secondposition -join ',')
 ThirdPosition = ($thirdposition -join ',')} | Format-List
 Write-Host -f Yellow ("-" * 100)}
 
-if ($MoreCandidates) {($topfirst  | Select-Object @{n='Turn';e={1}},*) + ($topsecond | Select-Object @{n='Turn';e={2}},*) + ($topthird  | Select-Object @{n='Turn';e={3}},*) | Format-Table
-Write-Host -f Yellow ("-" * 100)}}
+if ($MoreDetails) {($firstcandidates | Select-Object @{n='Turn';e={1}},*) + ($secondcandidates | Select-Object @{n='Turn';e={2}},*) + ($thirdcandidates | Select-Object @{n='Turn';e={3}},*) | Format-Table
+Write-Host -f green "Presence" -n; Write-Host -f white " score is the sum of all occurrences of the letters in the word present within the dictionary."
+Write-Host -f green "Position" -n; Write-Host -f white " score is the sum of all occurrences of the letters in their current positions within the dictionary.`n"
+Write-Host -f yellow ('-' * 100)}}
 
 # ----------------- TESTWORDS ---------------------------------------------------------------------
 function TestTwordleWords {param([string[]]$guess)
@@ -209,17 +213,17 @@ $reductionpct = $null
 $avgpresence = ($presencepct | Measure-Object -Average).Average
 $avgposition = ($positionpct | Measure-Object -Average).Average
 $reducedto = [math]::Round($script:words.Count * $avgpresence * $avgposition)
-$reductionpct = [math]::Round((1 - ($reducedto / $script:words.Count)) * 100, 2)
+$reductionpct = [math]::Round((1 - ($reducedto / $script:words.Count)) * 100, 0)
 
-[pscustomobject]@{Guess = ($guess -join ', ')
+[pscustomobject]@{Turns = ($guess -join ', ')
 UniqueLetters = $usedletters.Count
-CoveragePct = [math]::Round(($usedletters.Count / 26) * 100,2)
-PresenceScore = $presencescore
-PositionScore = $positionscore
+Coverage = "{0,2}%" -f [int][math]::Round(($usedletters.Count / 26) * 100, 0)
+Presence = $presencescore
+Positions = $positionscore
 TotalScore = $presencescore + $positionscore
-ReducedBy = $script:words.Count - $reducedto
-ReducedTo = $reducedto
-ReductionPct = $reductionpct}}
+Reduction = $script:words.Count - $reducedto
+Remainder = $reducedto
+Improvement = "{0,2}%" -f [int]$reductionpct}}
 
 # ----------------- FINDWORDS ---------------------------------------------------------------------
 function FindWord {param([string[]]$Find, [string]$Exclude)
@@ -472,9 +476,9 @@ if ($TestWords){TestTwordleWords $TestWords}
 if ($Find) {Findword $Find $Exclude | Format-List}
 
 # ----------------- HELP SCREEN -------------------------------------------------------------------
-if (-not $TestWords -and -not $Find) {Write-Host -f cyan "Usage: Twordle -Import <importfile> -TestWords <word1,word2,word3> -MoreCandidates -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -First <word> -Cheat -Help`n"
+if (-not $TestWords -and -not $Find) {Write-Host -f cyan "Usage: Twordle -Import <importfile> -TestWords <word1,word2,word3> -MoreDetails -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -First <word> -Cheat -Help`n"
 Write-Host -f cyan "Import" -n; Write-Host -f white " can be used universally to specify a custom word list.`n"
-Write-Host -f cyan "TestWords" -n; Write-Host -f white " allows you score and compare up to 3 opening turns and can be used with " -n; Write-Host -f cyan "MoreCandidates" -n; Write-Host -f white " to see additional words.`n"
+Write-Host -f cyan "TestWords" -n; Write-Host -f white " allows you score and compare up to 3 opening turns and can be used with " -n; Write-Host -f cyan "MoreDetails" -n; Write-Host -f white " to see additional words.`n"
 Write-Host -f cyan "Find, Exclude," -n; Write-Host -f white " and " -n; Write-Host -f cyan "Force" -n; Write-Host -f white " work together."
 Write-Host -f cyan "Play, First, Cheat," -n; Write-Host -f white " and " -n; Write-Host -f cyan "Force" -n; Write-Host -f white " also work together.`n"
 Write-Host -f yellow ("-"*80)
@@ -509,7 +513,7 @@ This module serves two purposes:
 * The second is to actually play an offline version of the game called Twordle.
 
 Usage: Twordle  -Import <importfile> 
-		-TestWords <word1,word2,word3> -MoreCandidates
+		-TestWords <word1,word2,word3> -MoreDetails
 		-Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force 
 		-Play -First <word> -Cheat -Force
 		-Help
@@ -527,7 +531,7 @@ Example Usages:
 Twordle -TestWords slate
 Twordle -TestWords slate,round,wimpy
 
-Use the -MoreCandidates switch to see the 15 top candidates.
+Use the -MoreDetails switch to see the 15 top candidates.
 
 ---------------------------------------------------------------------------------------------------
 FindWords allows you to display a list of words that match a specific pattern:
@@ -554,44 +558,79 @@ If you choose to play the game there are a few options that can be configured:
 	* Force will display all results, even if there are more than 250.
 
 During gameplay, pressing F4 will reveal each subsequent letter, but the scoreboard at the top will keep track of this. This hint function is independent of the Cheat function.
-## Sample TestWords Screen
+## Sample TestWords Screens
 C:\Users\Public\Desktop> Twordle -TestWords tares,doily,punch
 
                                 TWIRDLE/WORDLE Solver
 ----------------------------------------------------------------------------------------------------
 
-DictionaryFile            : twordle.txt
-WordCount                 : 5757
-BestFirstGuess            : rates
-FirstScore                : 15244
-FirstReducedTo            : 335
-FirstReductionPct         : 94.18
-OtherFirstWordCandidates  : tares, dares, tales, cares
-BestSecondGuess           : doing
-SecondScore               : 8377
-SecondReducedTo           : 196
-SecondReductionPct        : 96.6
-OtherSecondWordCandidates : doily, could, mould, pound
-BestThirdGuess            : lucky
-ThirdScore                : 6761
-ThirdReducedTo            : 144
-ThirdReductionPct         : 97.5
-OtherThirdWordCandidates  : plumy, lumpy, bulky, hulky
-TotalScore                : 30382
-MostCommonFirstPosition   : s,a,a,e,s
-SecondPosition            : c,o,i,t,y
-ThirdPosition             : b,i,o,n,e
+DictionaryFile          : twordle.txt
+WordCount               : 5757
+BestFirstGuess          : tares
+Reduction               : 5757
+RemainingAfterFirst     : 0
+TurnOneCandidates       : rates, dares, tales, cares
+BestSecondGuess         : doily
+RemainingAfterSecond    : 0
+TurnTwoCandidates       : could, mould, pound, doing
+BestThirdGuess          : punch
+RemainingAfterThird     : 0
+TurnThreeCandidates     : bunch, munch, chunk, bumph
+MostCommonFirstPosition : s,a,a,e,s
+SecondPosition          : c,o,i,t,y
+ThirdPosition           : b,i,o,n,e
 
 ----------------------------------------------------------------------------------------------------
-Guess         : tares, doily, punch
+
+Turns         : tares, doily, punch
 UniqueLetters : 15
-CoveragePct   : 57.69
-PresenceScore : 22291
-PositionScore : 9273
+Coverage      : 58%
+Presence      : 22291
+Positions     : 9273
 TotalScore    : 31564
-ReducedBy     : 5597
-ReducedTo     : 160
-ReductionPct  : 97.22
+Reduction     : 5597
+Remainder     : 160
+Improvement   : 97%
+
+----------------------------------------------------------------------------------------------------
+
+C:\Users\Public\Desktop> Twordle -TestWords tares,doily,punch -moredetails
+
+                                TWIRDLE/WORDLE Solver
+----------------------------------------------------------------------------------------------------
+
+Turn Candidate Presence Position TotalScore Reduction Remaining Improvement
+---- --------- -------- -------- ---------- --------- --------- -----------
+   1 tares                            15547         0         0           0%
+   1 rates                            15244         0         0           0%
+   1 dares                            15120         0         0           0%
+   1 tales                            15095         0         0           0%
+   1 cares                            15069         0         0           0%
+   2 doily                             9392         0         0           0%
+   2 could                             8665         0         0           0%
+   2 mould                             8397         0         0           0%
+   2 pound                             8392         0         0           0%
+   2 doing                             8377         0         0           0%
+   3 punch                             6625         0         0           0%
+   3 bunch                             6445         0         0           0%
+   3 munch                             6436         0         0           0%
+   3 chunk                             6125         0         0           0%
+   3 bumph                             5780         0         0           0%
+
+Presence score is the sum of all occurrences of the letters in the word present within the dictionary.
+Position score is the sum of all occurrences of the letters in their current positions within the dictionary.
+
+----------------------------------------------------------------------------------------------------
+
+Turns         : tares, doily, punch
+UniqueLetters : 15
+Coverage      : 58%
+Presence      : 22291
+Positions     : 9273
+TotalScore    : 31564
+Reduction     : 5597
+Remainder     : 160
+Improvement   : 97%
 
 ## Sample Find Screen
 C:\Users\Public\Desktop> Twordle -find __a_e,ra__y,_rea_ -exclude dmnqstlz
