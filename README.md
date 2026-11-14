@@ -67,10 +67,10 @@ Here is a sample output:
 ## Usage
 
 ```text
-Usage: Twirdle -Import <importfile> -TestWords <word1,word2,word3> -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -First <word> -Cheat -Help
+Usage: Twirdle -Import <importfile> -TestWords <word1,word2,word3> -MoreCandidates -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -First <word> -Cheat -Help
 ```
 `Import` can be used universally to specify a custom word list.<br><br>
-`TestWords` is a stand-alone parameter that allows you score and compare up to 3 opening turns.<br><br>
+`TestWords` allows you score and compare up to 3 opening turns and can be used with MoreCandidates to see additional words.<br><br>
 `Find`, `Exclude`, and `Force` work together.<br>
 `Play`, `First`, `Cheat`, and `Force` also work together.<br>
 
@@ -165,7 +165,7 @@ As you can see, it has lots of cheat features, making it a great tool for learni
 <img width="1504" height="1332" alt="image" src="https://github.com/user-attachments/assets/2ffe4e22-34c8-4d6f-969c-fa0df726c7fc" />
 
 ---
-# How to Solve Twordle 
+# How to Solve Twordle the Traditional Way 
 
 For best results, apparently we should start with:
 
