@@ -1,5 +1,5 @@
 @{RootModule = 'Twordle.psm1'
-ModuleVersion = '3.1'
+ModuleVersion = '3.2'
 GUID = '2142cd1d-2094-4732-b946-91950dcb7e1d'
 Author = 'Craig Plath'
 CompanyName = 'Plath Consulting Incorporated'
@@ -10,9 +10,9 @@ FunctionsToExport = @('Twordle')
 CmdletsToExport = @()
 VariablesToExport = @()
 AliasesToExport = @()
-FileList = @('Twordle.txt', 'Twordle.psm1', 'Twordle.html')
+FileList = @('Twordle.txt', 'Twordle.psm1')
 
 PrivateData = @{PSData = @{Tags = @('game', 'solver', 'tweet.app', 'twirdle', 'wordle')
 LicenseUri = 'https://github.com/Schvenn/Twirdle/blob/main/license.txt'
 ProjectUri = 'https://github.com/Schvenn/Twirdle'
-ReleaseNotes = 'Added evaluate and undo buttons.'}}}
+ReleaseNotes = 'Changed ranking to hybrid score and letter reduction model. Added additional statistics.'}}}
