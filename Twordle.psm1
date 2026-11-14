@@ -106,19 +106,19 @@ PositionFreq = $positionfreq}
 $results = foreach ($word in $script:words) {$score = TestTwordleWords $word
 
 [pscustomobject]@{Word = $word
-PresenceScore = $score.PresenceScore
-PositionScore = $score.PositionScore
+Presence = $score.Presence
+Position = $score.Position
 TotalScore = $score.TotalScore}}
 
 $topfirst = $results | Sort-Object TotalScore -Descending | Select-Object -First 5
 $firstcandidates = $topfirst | ForEach-Object {$test = TestTwordleWords $_.Word
 [pscustomobject]@{Candidate = $_.Word
-Presence = $_.PresenceScore
-Position = $_.PositionScore
+Presence = $_.Presence
+Position = $_.Position
 TotalScore = $_.TotalScore
-Reduction = [int]$test.ReducedBy
-Remaining = [int]$test.ReducedTo
-Improvement = "{0,11}%" -f [int][math]::Round($test.ReductionPct)}}
+Reduction = [int]$test.Reduction
+Remaining = [int]$test.Remainder
+Improvement = $test.Improvement}}
 $bestfirst = $firstcandidates | Sort-Object Remaining | Select-Object -First 1
 $used = $bestfirst.Candidate.ToCharArray()
 
@@ -126,12 +126,12 @@ $topsecond = $results | Where-Object {($_.Word.ToCharArray() | Where-Object {$_ 
 Select-Object -First 5
 $secondcandidates = $topsecond | ForEach-Object {$test = TestTwordleWords @($bestfirst.Candidate,$_.Word)
 [pscustomobject]@{Candidate = $_.Word
-Presence = $_.PresenceScore
-Position = $_.PositionScore
+Presence = $_.Presence
+Position = $_.Position
 TotalScore = $_.TotalScore
-Reduction = [int]$test.ReducedBy
-Remaining = [int]$test.ReducedTo
-Improvement = "{0,11}%" -f [int][math]::Round($test.ReductionPct)}}
+Reduction = [int]$test.Reduction
+Remaining = [int]$test.Remainder
+Improvement = $test.Improvement}}
 $bestsecond = $secondcandidates | Sort-Object Remaining | Select-Object -First 1
 $used += $bestsecond.Candidate.ToCharArray()
 
@@ -139,12 +139,12 @@ $topthird = $results | Where-Object {($_.Word.ToCharArray() | Where-Object {$_ -
 $thirdcandidates = $topthird | ForEach-Object {
 $test = TestTwordleWords @($bestfirst.Candidate,$bestsecond.Candidate,$_.Word)
 [pscustomobject]@{Candidate = $_.Word
-Presence = $_.PresenceScore
-Position = $_.PositionScore
+Presence = $_.Presence
+Position = $_.Position
 TotalScore = $_.TotalScore
-Reduction = [int]$test.ReducedBy
-Remaining = [int]$test.ReducedTo
-Improvement = "{0,11}%" -f [int][math]::Round($test.ReductionPct)}}
+Reduction = [int]$test.Reduction
+Remaining = [int]$test.Remainder
+Improvement = $test.Improvement}}
 $bestthird = $thirdcandidates | Sort-Object Remaining | Select-Object -First 1
 
 $firstposition = foreach ($i in 0..4) {($positionfreq[$i].GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1).Key}
@@ -170,11 +170,14 @@ TurnThreeCandidates  = $OtherThirdWordCandidates
 MostCommonFirstPosition = ($firstposition -join ',')
 SecondPosition = ($secondposition -join ',')
 ThirdPosition = ($thirdposition -join ',')} | Format-List
+
+Write-Host -f green "Presence" -n; Write-Host -f white " is the sum of all occurrences of the letters in the word present within the dictionary."
+Write-Host -f green "Position" -n; Write-Host -f white " is the sum of all occurrences of the letters in their current positions within the dictionary.`n"
 Write-Host -f Yellow ("-" * 100)}
 
 if ($MoreDetails) {($firstcandidates | Select-Object @{n='Turn';e={1}},*) + ($secondcandidates | Select-Object @{n='Turn';e={2}},*) + ($thirdcandidates | Select-Object @{n='Turn';e={3}},*) | Format-Table
-Write-Host -f green "Presence" -n; Write-Host -f white " score is the sum of all occurrences of the letters in the word present within the dictionary."
-Write-Host -f green "Position" -n; Write-Host -f white " score is the sum of all occurrences of the letters in their current positions within the dictionary.`n"
+Write-Host -f green "Presence" -n; Write-Host -f white " is the sum of all occurrences of the letters in the word present within the dictionary."
+Write-Host -f green "Position" -n; Write-Host -f white " is the sum of all occurrences of the letters in their current positions within the dictionary.`n"
 Write-Host -f yellow ('-' * 100)}}
 
 # ----------------- TESTWORDS ---------------------------------------------------------------------
@@ -183,8 +186,8 @@ function TestTwordleWords {param([string[]]$guess)
 if ($guess.Count -gt 3) {Write-Host -f yellow "Ignoring extra words beyond the first three.`n"
 $guess = $guess | Select-Object -First 3}
 $usedletters = @{}
-$positionscore = 0
-$presencescore = 0
+$Position = 0
+$Presence = 0
 $showproceedingwarning = $false
 
 foreach ($word in $guess) {if ($word.Length -ne 5) {Write-Host -f red "Warning: '$word' is not a 5-letter word."}
@@ -200,10 +203,10 @@ $positionpct = @()
 foreach ($word in $guess) {for ($i = 0; $i -lt 5; $i++) {$letter = $word[$i]
 if (!$usedletters.ContainsKey($letter)) {$usedletters[$letter] = $true
 
-if ($script:stats.LetterFreq.ContainsKey($letter)) {$presencescore += $script:stats.LetterFreq[$letter]
+if ($script:stats.LetterFreq.ContainsKey($letter)) {$Presence += $script:stats.LetterFreq[$letter]
 $presencepct += ($script:stats.LetterFreq[$letter] / $script:words.Count)}}
 
-if ($script:stats.PositionFreq[$i].ContainsKey($letter)) {$positionscore += $script:stats.PositionFreq[$i][$letter]
+if ($script:stats.PositionFreq[$i].ContainsKey($letter)) {$Position += $script:stats.PositionFreq[$i][$letter]
 
 $positionpct += ($script:stats.PositionFreq[$i][$letter] / $script:words.Count)}}}
 
@@ -218,9 +221,9 @@ $reductionpct = [math]::Round((1 - ($reducedto / $script:words.Count)) * 100, 0)
 [pscustomobject]@{Turns = ($guess -join ', ')
 UniqueLetters = $usedletters.Count
 Coverage = "{0,2}%" -f [int][math]::Round(($usedletters.Count / 26) * 100, 0)
-Presence = $presencescore
-Positions = $positionscore
-TotalScore = $presencescore + $positionscore
+Presence = $Presence
+Position = $Position
+TotalScore = $Presence + $Position
 Reduction = $script:words.Count - $reducedto
 Remainder = $reducedto
 Improvement = "{0,2}%" -f [int]$reductionpct}}
@@ -566,19 +569,22 @@ C:\Users\Public\Desktop> Twordle -TestWords tares,doily,punch
 
 DictionaryFile          : twordle.txt
 WordCount               : 5757
-BestFirstGuess          : tares
-Reduction               : 5757
-RemainingAfterFirst     : 0
-TurnOneCandidates       : rates, dares, tales, cares
-BestSecondGuess         : doily
-RemainingAfterSecond    : 0
-TurnTwoCandidates       : could, mould, pound, doing
-BestThirdGuess          : punch
-RemainingAfterThird     : 0
-TurnThreeCandidates     : bunch, munch, chunk, bumph
+BestFirstGuess          : rates
+Reduction               : 5422
+RemainingAfterFirst     : 335
+TurnOneCandidates       : tares, dares, tales, cares
+BestSecondGuess         : doing
+RemainingAfterSecond    : 196
+TurnTwoCandidates       : doily, could, mould, pound
+BestThirdGuess          : lucky
+RemainingAfterThird     : 144
+TurnThreeCandidates     : plumy, lumpy, bulky, hulky
 MostCommonFirstPosition : s,a,a,e,s
 SecondPosition          : c,o,i,t,y
 ThirdPosition           : b,i,o,n,e
+
+Presence is the sum of all occurrences of the letters in the word present within the dictionary.
+Position is the sum of all occurrences of the letters in their current positions within the dictionary.
 
 ----------------------------------------------------------------------------------------------------
 
@@ -586,7 +592,7 @@ Turns         : tares, doily, punch
 UniqueLetters : 15
 Coverage      : 58%
 Presence      : 22291
-Positions     : 9273
+Position      : 9273
 TotalScore    : 31564
 Reduction     : 5597
 Remainder     : 160
@@ -601,24 +607,24 @@ C:\Users\Public\Desktop> Twordle -TestWords tares,doily,punch -moredetails
 
 Turn Candidate Presence Position TotalScore Reduction Remaining Improvement
 ---- --------- -------- -------- ---------- --------- --------- -----------
-   1 tares                            15547         0         0           0%
-   1 rates                            15244         0         0           0%
-   1 dares                            15120         0         0           0%
-   1 tales                            15095         0         0           0%
-   1 cares                            15069         0         0           0%
-   2 doily                             9392         0         0           0%
-   2 could                             8665         0         0           0%
-   2 mould                             8397         0         0           0%
-   2 pound                             8392         0         0           0%
-   2 doing                             8377         0         0           0%
-   3 punch                             6625         0         0           0%
-   3 bunch                             6445         0         0           0%
-   3 munch                             6436         0         0           0%
-   3 chunk                             6125         0         0           0%
-   3 bumph                             5780         0         0           0%
+   1 tares        10774     4773      15547      5400       357 94%
+   1 rates        10774     4470      15244      5422       335 94%
+   1 dares        10412     4708      15120      5416       341 94%
+   1 tales        10409     4686      15095      5418       339 94%
+   1 cares        10232     4837      15069      5413       344 94%
+   2 doily         6624     2768       9392      5538       219 96%
+   2 could         6205     2460       8665      5553       204 96%
+   2 mould         6079     2318       8397      5558       199 97%
+   2 pound         5965     2427       8392      5556       201 97%
+   2 doing         6192     2185       8377      5561       196 97%
+   3 plumy         5059     1912       6971      5611       146 97%
+   3 lumpy         5059     1875       6934      5612       145 97%
+   3 bulky         4613     2262       6875      5608       149 97%
+   3 hulky         4735     2069       6804      5611       146 97%
+   3 lucky         4864     1897       6761      5613       144 97%
 
-Presence score is the sum of all occurrences of the letters in the word present within the dictionary.
-Position score is the sum of all occurrences of the letters in their current positions within the dictionary.
+Presence is the sum of all occurrences of the letters in the word present within the dictionary.
+Position is the sum of all occurrences of the letters in their current positions within the dictionary.
 
 ----------------------------------------------------------------------------------------------------
 
@@ -626,7 +632,7 @@ Turns         : tares, doily, punch
 UniqueLetters : 15
 Coverage      : 58%
 Presence      : 22291
-Positions     : 9273
+Position      : 9273
 TotalScore    : 31564
 Reduction     : 5597
 Remainder     : 160
