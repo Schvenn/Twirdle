@@ -211,8 +211,7 @@ $avgposition = ($positionpct | Measure-Object -Average).Average
 $reducedto = [math]::Round($script:words.Count * $avgpresence * $avgposition)
 $reductionpct = [math]::Round((1 - ($reducedto / $script:words.Count)) * 100, 2)
 
-[pscustomobject]@{
-Guess = ($guess -join ', ')
+[pscustomobject]@{Guess = ($guess -join ', ')
 UniqueLetters = $usedletters.Count
 CoveragePct = [math]::Round(($usedletters.Count / 26) * 100,2)
 PresenceScore = $presencescore
