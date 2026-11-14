@@ -295,7 +295,7 @@ else {$hinttext += '_'}}
 
 if ($hinttext -eq '_____') {$hinttext = '(F4:Hint)'}
 
-Write-Host -f yellow ("TWORDLE".PadLeft(19)) -n; Write-Host -f green ($hinttext.ToUpper().PadLeft(12))
+Write-Host -f yellow ("Twordle".PadLeft(19)) -n; Write-Host -f green ($hinttext.ToUpper().PadLeft(12))
 Write-Host -f yellow (" {0,2} Wins / {1,2} Losses / {2,2} Hints" -f $Wins,$Losses,$script:Hints)
 Write-Host -f yellow ("-" * 32)
 
@@ -685,7 +685,7 @@ Words   : yerba
 ----------------------------------------------------------------------------------------------------
 Sample Game Screen:
 
-            TWORDLE       LATER
+            Twordle       LATER
   1 Wins /  0 Losses /  1 Hints
 --------------------------------
             S L A T E
