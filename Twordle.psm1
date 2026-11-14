@@ -573,64 +573,23 @@ TotalScore is the sum of these two values.
 
 Top-scoring candidates are further ranked by their ability to reduce the remaining word pool.
 
-DictionaryFile          : twordle.txt
-WordCount               : 5757
-BestFirstGuess          : rates
-Reduction               : 5422
-RemainingAfterFirst     : 335
-TurnOneCandidates       : tares, dares, cares, tales
-BestSecondGuess         : doing
-RemainingAfterSecond    : 196
-TurnTwoCandidates       : doily, could, pound, mould
-BestThirdGuess          : lucky
-RemainingAfterThird     : 144
-TurnThreeCandidates     : plumy, lumpy, bulky, hulky
-MostCommonFirstPosition : s,a,a,e,s
-SecondPosition          : c,o,i,t,y
-ThirdPosition           : b,i,o,n,e
-
-----------------------------------------------------------------------------------------------------
-
-Turns         : tares, doily, punch
-UniqueLetters : 15
-Coverage      : 58%
-Presence      : 3.87
-Position      : 1.61
-TotalScore    : 5.48
-Reduction     : 5597
-Remainder     : 160
-Improvement   : 97%
-
-----------------------------------------------------------------------------------------------------
-
-C:\Users\Public\Desktop> Twordle -TestWords tares,doily,punch -moredetails
-
-                                Twordle Solver
-----------------------------------------------------------------------------------------------------
-
-Presence is the sum of all occurrences of the letters in the word present within the dictionary, represented as a single word.
-Position is the sum of all occurrences of the letters in their current positions within the dictionary, represented as a single word.
-TotalScore is the sum of these two values.
-
-Top-scoring candidates are further ranked by their ability to reduce the remaining word pool.
-
 Turn Candidate Presence Position TotalScore Reduction Remaining Improvement
 ---- --------- -------- -------- ---------- --------- --------- -----------
-   1 tares         1.87     0.83       2.70      5400       357 94%
-   1 rates         1.87     0.78       2.65      5422       335 94%
-   1 dares         1.81     0.82       2.63      5416       341 94%
-   1 cares         1.78     0.84       2.62      5413       344 94%
-   1 tales         1.81     0.81       2.62      5418       339 94%
-   2 doily         1.15     0.48       1.63      5538       219 96%
-   2 could         1.08     0.43       1.51      5553       204 96%
-   2 doing         1.08     0.38       1.46      5561       196 97%
-   2 pound         1.04     0.42       1.46      5556       201 97%
-   2 mould         1.06     0.40       1.46      5558       199 97%
-   3 plumy         0.88     0.33       1.21      5611       146 97%
-   3 lumpy         0.88     0.33       1.20      5612       145 97%
-   3 bulky         0.80     0.39       1.19      5608       149 97%
-   3 hulky         0.82     0.36       1.18      5611       146 97%
-   3 lucky         0.84     0.33       1.17      5613       144 97%
+   1     tares     1.87     0.83       2.70      5400       357         94%
+   1     rates     1.87     0.78       2.65      5422       335         94%
+   1     dares     1.81     0.82       2.63      5416       341         94%
+   1     cares     1.78     0.84       2.62      5413       344         94%
+   1     tales     1.81     0.81       2.62      5418       339         94%
+   2     doily     1.15     0.48       1.63      5538       219         96%
+   2     could     1.08     0.43       1.51      5553       204         96%
+   2     doing     1.08     0.38       1.46      5561       196         97%
+   2     pound     1.04     0.42       1.46      5556       201         97%
+   2     mould     1.06     0.40       1.46      5558       199         97%
+   3     plumy     0.88     0.33       1.21      5611       146         97%
+   3     lumpy     0.88     0.33       1.20      5612       145         97%
+   3     bulky     0.80     0.39       1.19      5608       149         97%
+   3     hulky     0.82     0.36       1.18      5611       146         97%
+   3     lucky     0.84     0.33       1.17      5613       144         97%
 
 ----------------------------------------------------------------------------------------------------
 
