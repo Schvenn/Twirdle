@@ -155,8 +155,8 @@ $OtherFirstWordCandidates = ($topfirst.Word | Where-Object {$_ -ne $bestfirst.Ca
 $OtherSecondWordCandidates = ($topsecond.Word | Where-Object {$_ -ne $bestsecond.Candidate}) -join ', '
 $OtherThirdWordCandidates = ($topthird.Word | Where-Object {$_ -ne $bestthird.Candidate}) -join ', '
 
-if ($TestWords) {Write-Host -f green "`nPresence" -n; Write-Host -f white " is the sum of all occurrences of the letters in the word present within the dictionary."
-Write-Host -f green "Position" -n; Write-Host -f white " is the sum of all occurrences of the letters in their current positions within the dictionary."
+if ($TestWords) {Write-Host -f green "`nPresence" -n; Write-Host -f white " is the sum of all occurrences of the letters in the word present within the dictionary, represented as a single word."
+Write-Host -f green "Position" -n; Write-Host -f white " is the sum of all occurrences of the letters in their current positions within the dictionary, represented as a single word."
 Write-Host -f green "TotalScore" -n; Write-Host -f white " is the sum of these two values."
 Write-Host -f white "`nTop-scoring candidates are further ranked by their ability to reduce the remaining word pool."}
 
@@ -221,9 +221,9 @@ $reductionpct = [math]::Round((1 - ($reducedto / $script:words.Count)) * 100, 0)
 [pscustomobject]@{Turns = ($guess -join ', ')
 UniqueLetters = $usedletters.Count
 Coverage = "{0,2}%" -f [int][math]::Round(($usedletters.Count / 26) * 100, 0)
-Presence = $Presence
-Position = $Position
-TotalScore = $Presence + $Position
+Presence = [math]::Round($Presence / $script:words.Count, 2)
+Position = [math]::Round($Position / $script:words.Count, 2)
+TotalScore = [math]::Round(($Presence + $Position) / $script:words.Count, 2)
 Reduction = $script:words.Count - $reducedto
 Remainder = $reducedto
 Improvement = "{0,2}%" -f [int]$reductionpct}}
@@ -566,8 +566,8 @@ C:\Users\Public\Desktop> Twordle -TestWords tares,doily,punch
 
                                 TWIRDLE/WORDLE Solver
 ----------------------------------------------------------------------------------------------------
-Presence is the sum of all occurrences of the letters in the word present within the dictionary.
-Position is the sum of all occurrences of the letters in their current positions within the dictionary.
+Presence is the sum of all occurrences of the letters in the word present within the dictionary, represented as a single word.
+Position is the sum of all occurrences of the letters in their current positions within the dictionary, represented as a single word.
 TotalScore is the sum of these two values.
 
 Top-scoring candidates are further ranked by their ability to reduce the remaining word pool.
@@ -607,6 +607,7 @@ C:\Users\Public\Desktop> Twordle -TestWords tares,doily,punch -moredetails
 ----------------------------------------------------------------------------------------------------
 Presence is the sum of all occurrences of the letters in the word present within the dictionary.
 Position is the sum of all occurrences of the letters in their current positions within the dictionary.
+Both values are normalized to represent a single average dictionary word.
 TotalScore is the sum of these two values.
 
 Top-scoring candidates are further ranked by their ability to reduce the remaining word pool.
