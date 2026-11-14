@@ -167,7 +167,7 @@ OtherThirdWordCandidates  = $OtherThirdWordCandidates
 TotalScore = $bestfirst.TotalScore + $bestsecond.TotalScore + $bestthird.TotalScore
 MostCommonFirstPosition = ($firstposition -join ',')
 SecondPosition = ($secondposition -join ',')
-ThirdPosition = ($thirdposition -join ',')}
+ThirdPosition = ($thirdposition -join ',')} | Format-List
 Write-Host -f Yellow ("-" * 100)}
 
 if ($MoreCandidates) {($topfirst  | Select-Object @{n='Turn';e={1}},*) + ($topsecond | Select-Object @{n='Turn';e={2}},*) + ($topthird  | Select-Object @{n='Turn';e={3}},*) | Format-Table
