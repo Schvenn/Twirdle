@@ -118,7 +118,7 @@ Position = $_.Position
 TotalScore = $_.TotalScore
 Reduction = [int]$test.Reduction
 Remaining = [int]$test.Remainder
-Improvement = $test.Improvement}}
+Improvement = $test.Improvement.PadLeft(11)}}
 $bestfirst = $firstcandidates | Sort-Object Remaining | Select-Object -First 1
 $used = $bestfirst.Candidate.ToCharArray()
 
@@ -131,7 +131,7 @@ Position = $_.Position
 TotalScore = $_.TotalScore
 Reduction = [int]$test.Reduction
 Remaining = [int]$test.Remainder
-Improvement = $test.Improvement}}
+Improvement = $test.Improvement.PadLeft(11)}}
 $bestsecond = $secondcandidates | Sort-Object Remaining | Select-Object -First 1
 $used += $bestsecond.Candidate.ToCharArray()
 
@@ -144,7 +144,7 @@ Position = $_.Position
 TotalScore = $_.TotalScore
 Reduction = [int]$test.Reduction
 Remaining = [int]$test.Remainder
-Improvement = $test.Improvement}}
+Improvement = $test.Improvement.PadLeft(11)}}
 $bestthird = $thirdcandidates | Sort-Object Remaining | Select-Object -First 1
 
 $firstposition = foreach ($i in 0..4) {($positionfreq[$i].GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1).Key}
@@ -177,7 +177,7 @@ SecondPosition = ($secondposition -join ',')
 ThirdPosition = ($thirdposition -join ',')} | Format-List
 Write-Host -f Yellow ("-" * 100)}
 
-if ($MoreDetails) {($firstcandidates | Select-Object @{n='Turn';e={1}},*) + ($secondcandidates | Select-Object @{n='Turn';e={2}},*) + ($thirdcandidates | Select-Object @{n='Turn';e={3}},*) | Format-Table
+if ($MoreDetails) {($firstcandidates | Select-Object @{n='Turn';e={1}},@{n='Candidate';e={"{0,9}" -f $_.Candidate}},* -ExcludeProperty Candidate) + ($secondcandidates | Select-Object @{n='Turn';e={2}},@{n='Candidate';e={"{0,9}" -f $_.Candidate}},* -ExcludeProperty Candidate) + ($thirdcandidates | Select-Object @{n='Turn';e={3}},@{n='Candidate';e={"{0,9}" -f $_.Candidate}},* -ExcludeProperty Candidate) | Format-Table
 Write-Host -f yellow ('-' * 100)}}
 
 # ----------------- TESTWORDS ---------------------------------------------------------------------
@@ -226,7 +226,7 @@ Position = [math]::Round($Position / $script:words.Count, 2)
 TotalScore = [math]::Round(($Presence + $Position) / $script:words.Count, 2)
 Reduction = $script:words.Count - $reducedto
 Remainder = $reducedto
-Improvement = "{0,2}%" -f [int]$reductionpct}}
+Improvement = "$($reductionpct)%"}}
 
 # ----------------- FINDWORDS ---------------------------------------------------------------------
 function FindWord {param([string[]]$Find, [string]$Exclude)
