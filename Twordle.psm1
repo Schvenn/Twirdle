@@ -148,16 +148,19 @@ if ($Import -or $TestWords) {[pscustomobject]@{DictionaryFile = Split-Path $path
 WordCount = $script:words.Count
 BestFirstGuess = $bestfirst.Word
 FirstScore = $bestfirst.TotalScore
+FirstReducedBy  = $script:words.Count - $bestfirst.ReducedTo
 FirstReducedTo = $bestfirst.ReducedTo
 FirstReductionPct = $bestfirst.ReductionPct
 OtherFirstWordCandidates  = $OtherFirstWordCandidates
 BestSecondGuess = $bestsecond.Word
 SecondScore = $bestsecond.TotalScore
+SecondReducedBy = $script:words.Count - $bestsecond.ReducedTo
 SecondReducedTo = $bestsecond.ReducedTo
 SecondReductionPct = $bestsecond.ReductionPct
 OtherSecondWordCandidates = $OtherSecondWordCandidates
 BestThirdGuess = $bestthird.Word
 ThirdScore = $bestthird.TotalScore
+ThirdReducedBy  = $script:words.Count - $bestthird.ReducedTo
 ThirdReducedTo = $bestthird.ReducedTo
 ThirdReductionPct = $bestthird.ReductionPct
 OtherThirdWordCandidates  = $OtherThirdWordCandidates
@@ -167,7 +170,7 @@ SecondPosition = ($secondposition -join ',')
 ThirdPosition = ($thirdposition -join ',')}
 Write-Host -f Yellow ("-" * 100)}
 
-if ($MoreCandidates) {$topfirst + $topsecond + $topthird | Format-Table
+if ($MoreCandidates) {($topfirst  | Select-Object @{n='Turn';e={1}},*) + ($topsecond | Select-Object @{n='Turn';e={2}},*) + ($topthird  | Select-Object @{n='Turn';e={3}},*) | Format-Table
 Write-Host -f Yellow ("-" * 100)}}
 
 # ----------------- TESTWORDS ---------------------------------------------------------------------
@@ -182,7 +185,8 @@ $showproceedingwarning = $false
 
 foreach ($word in $guess) {if ($word.Length -ne 5) {Write-Host -f red "Warning: '$word' is not a 5-letter word."}
 
-if ($word.ToLower() -notin $script:words) {Write-Host -f red "Warning: '$word' was not found in the Twordle word list."$showproceedingwarning = $true}}
+if ($word.ToLower() -notin $script:words) {Write-Host -f red "Warning: '$word' was not found in the Twordle word list."
+$showproceedingwarning = $true}}
 
 if ($showproceedingwarning) {Write-Host "Exiting.`n"
 return}
