@@ -10,7 +10,7 @@ FunctionsToExport = @('Twordle')
 CmdletsToExport = @()
 VariablesToExport = @()
 AliasesToExport = @()
-FileList = @('Twordle.txt', 'Twordle.psm1')
+FileList = @('Twordle.txt', 'Twordle.psm1', 'Twordle.html', 'TwordleOriginal.html', 'SOWPODS5.txt')
 
 PrivateData = @{PSData = @{Tags = @('game', 'solver', 'tweet.app', 'twirdle', 'wordle')
 LicenseUri = 'https://github.com/Schvenn/Twirdle/blob/main/license.txt'
