@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Twordle</title>
+
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23e53935'/%3E%3Ctext x='50' y='40' font-family='Arial,sans-serif' font-size='60' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'%3ET%3C/text%3E%3Ctext x='50' y='60' font-family='Arial,sans-serif' font-size='60' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'%3EW%3C/text%3E%3C/svg%3E">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{background:#000000; color:white; font-family:Arial,Helvetica,sans-serif; text-align:center; margin:0; padding:20px;}
+h1{margin-bottom:10px;}
+#message{height: 40px; margin-bottom:15px; color:white; font-weight:bold;}
+#message.solved{color:#00FF00 !important;}
+#message.error{color:#FF0000 !important;}
+#message.notice{color:#FFFFFF !important;}
+#message.warning{color:#F54927 !important;}
+
+#headerRow{display:grid; grid-template-columns: 220px 1fr 300px; gap:20px; max-width:1400px; margin:auto;}
+#headerRow h1{text-align:center; margin:0 0 15px 0;}
+
+#layout{display:grid; grid-template-columns: 220px 1fr 300px; gap:20px; max-width:1400px; margin:auto; align-items:start;}
+
+#helpButton{color:red; cursor:pointer; font-size:16px; font-weight:bold;}
+#helpPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1000; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;}
+#helpContent{position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left; line-height:1.5;}
+#helpContent h2{text-align:center; margin-top:0;}
+#helpContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
+#helpContent p{margin:12px 0;}
+
+#confirmPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
+#confirmContent{background:#222; border:1px solid #555; border-radius:8px; padding:10px; max-width:350px; width:100%; box-sizing:border-box; text-align:center;}
+#confirmContent h3{margin-top:10px; margin-bottom:15px;}
+#confirmContent p{margin:5px 0 12px;}
+#confirmContent button{margin:0 5px;}
+
+#dictionaryPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
+
+#statsPanel{text-align:left;}
+
+#dictionarySelect{margin-top:10px; margin-bottom:10px; padding:8px 12px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px; width:180px;}
+
+#gamePanel{text-align:center;}
+
+#cheatPanel{display:none; text-align:left; border:1px solid #444; padding:10px; overflow-y:auto; max-height:450px;}
+#cheatHeader {text-align:center; font-size:20px; font-weight:bold; padding-bottom:10px;}
+#possibleWords{text-align:center; font-size:12px; line-height:1.5; word-wrap:break-word;}
+#currentWord{font-weight:bold; color:#538d4e;}
+
+#secondaryButtons{margin-top:10px; margin-bottom:20px;}
+#secondaryButtons button{margin:0 5px;}
+
+#board{display:flex; flex-direction:column; gap:5px; align-items:center; margin-bottom:20px;}
+.row{display:flex; gap:5px;}
+.tile{width:60px; height:60px; border:2px solid #3a3a3c; display:flex; justify-content:center; align-items:center; font-size:32px;font-weight:bold; text-transform:uppercase;}
+.green{background:#538d4e; border-color:#538d4e;}
+.yellow{background:#b59f3b; border-color:#b59f3b;}
+.gray{background:#3a3a3c; border-color:#3a3a3c;}
+#controls{margin-bottom:20px;}
+
+input{width:120px; font-size:24px; text-transform:uppercase; text-align:center;}
+button{padding:8px 14px; font-size:16px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px;}
+
+#keyboard{max-width:700px; margin:auto;}
+.keyrow{margin-top:5px;}
+.key{display:inline-block; width:32px; padding:10px 0; margin:2px; border-radius:4px; background:#818384; font-weight:bold;}
+.key.green{background:#538d4e;}
+.key.yellow{background:#b59f3b;}
+.key.gray{background:#3a3a3c;}
+
+#playagain{display:none; margin-top:15px;}
+
+#footer{margin-top:100px; padding-bottom:20px; font-size:8px;}
+
+@media(max-width:1000px){body{padding:10px;}
+body.keyboardOpen #board .tile{width:18px; height:18px; font-size:14px;}
+body.keyboardOpen #keyboard{display:none;}
+#headerRow{grid-template-columns:minmax(0,1fr);}
+#layout{grid-template-columns:minmax(0,1fr); gap:15px;}
+#statsPanel{order:2; width:auto;}
+#gamePanel{order:1; min-width:0;}
+#cheatPanel{order:3; min-width:0;}
+.tile{width:48px; height:48px; font-size:26px;}
+.key{width:27px; padding:9px 0; margin:1px;}}
+</style>
+
+</head>
+<body>
+
+<div id="headerRow">
+<div></div>
+<h1>Twordle</h1>
+<div></div>
+</div>
+
+<div id="helpPopup" onclick="if(event.target===this)toggleHelp()">
+<div id="helpContent">
+<button onclick="toggleHelp()">✕</button>
+<h2>How to Play Twordle v3.1</h2>
+<p>Guess the hidden five-letter word in six attempts.</p>
+<ul>
+<li>Enter any valid five-letter word.</li>
+<li>Press Enter to submit your guess.</li>
+<li>Each guess provides colour-coded clues.</li>
+</ul>
+<h3>Colour Clues</h3>
+<p><span class="green">Green</span> - Correct letter in the correct position.</p>
+<p><span class="yellow">Yellow</span> - Correct letter in the wrong position.</p>
+<p><span class="gray">Grey</span> - Letter is not in the word.</p>
+<h3>Additional Features</h3>
+<ul>
+<li>The keyboard at the bottom helps you keep track of all 3 colours.</li>
+<li>Current Word lets you keep track of correctly guessed letters in their right spots.</li>
+<li>If you guess 5 invalid words in the same round, you lose that game.</li>
+<li>Clear Stats to erase your history and start again.</li>
+</ul>
+<h3>Cheat Features</h3>
+<ul>
+<li>Hint will reveal the first unguessed letter, but not the whole word. This is the least offensive cheat.</li>
+<li>Evaluate will test a word to see how much it reduces the results, but be careful. It let's you test invalid words.</li>
+<li>Cheat Shows you all possible matches. You have to be really stumped to use this.</li>
+<li>Undo removes the last played word. This is the most egregious cheat.</li>
+</ul>
+<h3>Privacy</h3>
+<p>This page uses localStorage/cookies to save those stats and for no other reason.</p>
+<p style="text-align:center; font-weight:bold; margin-top:20px;">Have fun!</p>
+</div></div>
+
+<div id="confirmPopup" onclick="if(event.target===this)toggleConfirm()">
+<div id="confirmContent">
+<h3>Are you sure you want to clear your statistics?</h3>
+<p>This will permanently erase all your wins, losses, hints and invalid words.</p>
+<button onclick="clearCookie()">Yes, Clear Stats</button>
+<button onclick="toggleConfirm()">Cancel</button>
+</div></div>
+
+<div id="dictionaryPopup" onclick="if(event.target===this)toggleDictionaryPopup()">
+<div id="confirmContent">
+<h3>Change Dictionary?</h3>
+<p>Changing dictionaries will immediately start a new game.</p>
+<button onclick="changeDictionary()">Yes, Change Dictionary</button>
+<button onclick="cancelDictionaryChange()">Cancel</button>
+</div>
+</div>
+
+<div id="layout">
+<div id="statsPanel">
+<div id="helpButton" onclick="toggleHelp()">Help ?</div>
+<br>
+<div>Wins: <span id="wins">0</span></div>
+<div>Losses: <span id="losses">0</span></div>
+<br>
+<div>Win %: <span id="winpct">0</span></div>
+<div>Turns/Win: <span id="winavg">0</span></div>
+<div>Invalid Words: <span id="invalidcount">0</span></div>
+<br>
+<div style = "color:#ff0000;">Cheats Used:</div>
+<div>Hints: <span id="hintcount">0</span></div>
+<div>Cheats: <span id="cheatcount">0</span></div>
+<div>Undo: <span id="undocount">0</span></div>
+
+<br>
+<div>Current Word: <span id="currentWord"></span></div>
+<br>
+<div><button onclick="toggleConfirm()" style="font-size:12px;">Clear Stats</button><br>
+<select id="dictionarySelect" onchange="confirmDictionaryChange()"><option value="Twordle.txt" selected>Standard Dictionary</option><option value="SOWPODS5.txt">SOWPODS Extreme</option></select></div>
+</div>
+
+<div id="gamePanel">
+<div id="message"></div>
+<div id="board"></div>
+
+<div id="controls"><input id="guess" maxlength="5" autocomplete="off"> <button onclick="submitGuess()">Guess</button></div>
+<div id="secondaryButtons"><button id="hintButton" onclick="giveHint()">Hint</button><button id="evaluateButton" onclick="evaluateGuess()">Evaluate</button><button onclick="toggleCheat()">Cheat</button><button id="undoButton" onclick="undo()">Undo</button></div>
+<div id="keyboard"></div>
+
+<button id="playagain" onclick="newGame()">Play Again</button></div>
+
+<div id="cheatPanel">
+<div id="cheatHeader">Possible Words:</div>
+<div id="possibleWords"></div>
+</div>
+</div>
+<div id="footer"><table><tr><td style="text-align:left;"><a href="https://github.com/Schvenn/Twirdle">Twordle on Github</a> is a WORDLE&trade; inspired clone created by Schvenn.<br><br>
+This version was created with the intent of allowing people to play<br>
+multiple rounds per day, and learn strategies.<br><br>
+<a href="https://www.nytimes.com/games/wordle/index.html" rel="noopener noreferrer" target="_blank">Original Wordle</a> |
+<a href="https://www.nytimes.com/2022/01/03/technology/wordle-word-game-creator.html" rel="noopener noreferrer" target="_blank">Original Creator</a> |
+<a href="https://www.nytco.com/press/the-new-york-times-acquires-wordle/" rel="noopener noreferrer" target="_blank">Ownership</a><br><br>
+Twordle is an independently developed word game and is not<br>
+affiliated with or endorsed by The New York Times Company.<br>
+WORDLE&trade; is a trademark of The New York Times Company.</td></tr></table></div>
+
+<script>
+let dictionary = [];
+let pendingDictionary = null;
+let currentDictionary = "Twordle.txt";
+
+let answer = "";
+let turn = 0;
+let board = [];
+let gameover = false;
+let keyboard = {};
+let usedWords = [];
+let totalInvalidWords = 0;
+let invalidWords = 0;
+let cheatEnabled = false;
+let lastCheatTurn = -1;
+let wins = 0;
+let losses = 0;
+let totalWinTurns = 0;
+let totalHints = 0;
+let totalCheats = 0;
+let totalUndos = 0;
+let hintedPositions = [];
+let previousMatches = dictionary.length;
+
+async function loadDictionary(file){const response = await fetch(file);
+if(!response.ok){throw new Error(`Unable to load dictionary: ${file}`);}
+const text = await response.text();
+dictionary = text
+.split(/\r?\n/)
+.map(word => word.trim().toLowerCase())
+.filter(word => /^[a-z]{5}$/.test(word));
+currentDictionary = file;}
+
+async function changeDictionary(){const file = pendingDictionary;
+localStorage.setItem("twordleDictionary",file);
+await loadDictionary(file);
+newGame();
+setMessage(file === "Twordle.txt"
+? `Standard dictionary loaded (${dictionary.length.toLocaleString()} words).`
+: `SOWPODS Extreme dictionary loaded (${dictionary.length.toLocaleString()} words).`,
+"notice");
+pendingDictionary = null;
+toggleDictionaryPopup();}
+
+function toggleHelp(){const popup=document.getElementById("helpPopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
+
+function toggleCheat(){cheatEnabled = !cheatEnabled;
+document
+.getElementById("cheatPanel")
+.style.display = cheatEnabled
+? "block"
+: "none";
+
+if(cheatEnabled && turn > 0 && lastCheatTurn !== turn){totalCheats++;
+lastCheatTurn = turn;
+updateStats();}
+
+updatePossibleWords();
+updateStats();}
+
+function saveStats(){const stats = JSON.stringify({wins:wins,losses:losses,totalHints:totalHints,totalInvalidWords:totalInvalidWords,totalWinTurns:totalWinTurns,totalCheats:totalCheats,totalUndos:totalUndos});
+try{localStorage.setItem("twordleStats",stats);}catch(e){console.warn("Unable to save TWORDLE stats to localStorage.");}
+try{document.cookie = "twordleStats=" + encodeURIComponent(stats) + "; max-age=31536000; path=/; SameSite=Lax";}catch(e){console.warn("Unable to save TWORDLE stats cookie.");}}
+
+function loadStats(){let stats = null;
+try{stats = localStorage.getItem("twordleStats");}catch(e){}
+if(!stats){const cookie = document.cookie.split("; ").find(row => row.startsWith("twordleStats="));
+if(cookie){stats = decodeURIComponent(cookie.substring("twordleStats=".length));}}
+if(stats){try{const data = JSON.parse(stats);
+wins = Number(data.wins) || 0;
+losses = Number(data.losses) || 0;
+totalWinTurns = Number(data.totalWinTurns) || 0;
+totalHints = Number(data.totalHints) || 0;
+totalInvalidWords = Number(data.totalInvalidWords) || 0;
+totalCheats = Number(data.totalCheats) || 0;
+totalUndos = Number(data.totalUndos) || 0;}catch(e){console.warn("Unable to load TWORDLE stats.");}}}
+
+function toggleConfirm(){const popup=document.getElementById("confirmPopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
+
+function clearCookie(){try{document.cookie = "twordleStats=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
+try{localStorage.removeItem("twordleStats");}catch(e){}
+location.reload();}
+
+function toggleDictionaryPopup(){const popup = document.getElementById("dictionaryPopup");
+popup.style.display = popup.style.display === "flex"
+? "none"
+: "flex";}
+
+function confirmDictionaryChange(){const selected = document
+.getElementById("dictionarySelect")
+.value;
+
+if(selected === currentDictionary){return;}
+pendingDictionary = selected;
+toggleDictionaryPopup();}
+
+function cancelDictionaryChange(){document
+.getElementById("dictionarySelect")
+.value = currentDictionary;
+toggleDictionaryPopup();}
+
+function updateStats(){document
+.getElementById("wins")
+.textContent = wins;
+
+document
+.getElementById("losses")
+.textContent = losses;
+
+document
+.getElementById("winavg")
+.textContent = wins? (totalWinTurns / wins).toFixed(1): "0";
+
+document
+.getElementById("hintcount")
+.textContent = totalHints;
+
+document
+.getElementById("currentWord")
+.textContent = answer.split("").map((letter,i) =>
+hintedPositions.includes(i) || board.some(row => row.colors[i] === "green")
+? letter.toUpperCase()
+: "_").join("");
+
+document
+.getElementById("invalidcount")
+.textContent = totalInvalidWords;
+
+const total = wins + losses;
+
+document
+.getElementById("winpct")
+.textContent =
+total
+? Math.round(wins / total * 100): 0;
+
+document
+.getElementById("cheatcount")
+.textContent = totalCheats;
+
+document
+.getElementById("undocount")
+.textContent = totalUndos;
+
+saveStats();}
+
+function giveHint(){if(gameover)
+return;
+
+let revealed = [];
+
+for(let i=0;i<5;i++){if(hintedPositions.includes(i) || board.some(row => row.colors[i] === "green")){revealed.push(i);}}
+
+if(revealed.length >= 4){setMessage("No more hints available.","warning");
+return;}
+
+for(let i=0;i<4;i++){if(!revealed.includes(i)){hintedPositions.push(i);
+totalHints++;
+updateStats();
+updatePossibleWords();
+setMessage("Hint revealed.","notice");
+return;}}}
+
+function evaluateGuess(){const guess = document
+.getElementById("guess")
+.value
+.trim()
+.toLowerCase();
+
+if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word to evaluate.");
+return;}
+const candidates = dictionary.filter(word => wordMatchesBoard(word));
+const before = candidates.length;
+let totalRemaining = 0;
+
+for(const possibleAnswer of candidates){const pattern = scoreGuess(guess, possibleAnswer);
+let remaining = 0;
+
+for(const candidate of candidates){const test = scoreGuess(guess, candidate);
+let same = true;
+
+for(let i = 0; i < 5; i++){ if(test[i] !== pattern[i]){same = false;
+break;}}
+
+if(same)
+remaining++;}
+
+totalRemaining += remaining;}
+const averageRemaining = Math.round(totalRemaining / before);
+const reduction = before - averageRemaining;
+const percent = before ? Math.round(reduction / before * 100): 0;
+setMessage(`${guess.toUpperCase()} is expected to reduce ` + `${before} possibilites to about ${averageRemaining} ` +  `(↓${percent}%).`,"message");}
+
+function wordMatchesBoard(word){for(const row of board){const test = scoreGuess(row.word.toLowerCase(), word);
+for(let i=0;i<5;i++){if(test[i] !== row.colors[i]){return false;}}}
+
+for(const i of hintedPositions){if(word[i] !== answer[i]){return false;}}
+return true;}
+
+function undo(){if(gameover || board.length === 0) {return;}
+totalUndos++;
+board.pop();
+usedWords.pop();
+turn = Math.max(0, turn - 1);
+keyboard = {};
+buildKeyboard();
+for(const row of board){updateKeyboard(row.word.toLowerCase(), row.colors);}
+renderBoard();
+updatePossibleWords();
+updateStats();
+setMessage("Last guess removed.","notice");}
+
+function buildKeyboard(){const rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+let html = "";
+for(const row of rows){html += '<div class="keyrow">';
+for(const letter of row){html += `<span class="key" id="key-${letter}">${letter}</span>`;}
+html += "</div>";}
+document.getElementById("keyboard").innerHTML = html;}
+
+function renderBoard(){const boardDiv =
+document.getElementById("board");
+let html = "";
+for(let r = 0; r < 6; r++){html += '<div class="row">';
+if(board[r]){const row = board[r];
+for(let c = 0; c < 5; c++){html += `<div class="tile ${row.colors[c]}">${row.word[c]}</div>`;}}
+else {for(let c = 0; c < 5; c++){html += '<div class="tile"></div>';}}
+html += '</div>';}
+boardDiv.innerHTML = html;}
+
+function setMessage(text,type="notice"){const message = document.getElementById("message");
+message.textContent = text;
+message.className = type;}
+
+function updateKeyboard(word,colors){for(let i = 0; i < 5; i++){const letter = word[i].toUpperCase();
+const key = document.getElementById(`key-${letter}`);
+const current = keyboard[letter];
+const next = colors[i];
+if(next === "green"){keyboard[letter] = "green";}
+else if(next === "yellow" && current !== "green"){keyboard[letter] = "yellow";}
+else if(next === "gray" && !current){keyboard[letter] = "gray";}
+key.className = "key " + keyboard[letter];}}
+
+function updatePossibleWords(){if(!cheatEnabled)
+return;
+
+const matches = dictionary.filter(word => wordMatchesBoard(word));
+
+document
+.getElementById("possibleWords")
+.innerHTML = "<b>" + matches.length + (matches.length === 1 ? " match" : " matches") + "</b><br><br>" + matches.join(", ");}
+
+function scoreGuess(guess, answerWord){let colors = ["gray","gray","gray","gray","gray"];
+let remaining = answerWord.split("");
+
+for(let i = 0; i < 5; i++){if(guess[i] === answerWord[i]){colors[i] = "green";
+remaining[i] = null;}}
+
+for(let i = 0; i < 5; i++){if(colors[i] === "green")
+continue;
+
+const idx = remaining.indexOf(guess[i]);
+if(idx >= 0){colors[i] = "yellow";
+remaining[idx] = null;}}
+
+return colors;}
+
+function submitGuess(){if(gameover)
+return;
+
+let guess = document
+.getElementById("guess")
+.value
+.trim()
+.toLowerCase();
+
+if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word.","notice");
+return;}
+
+if(usedWords.includes(guess)){setMessage(`${guess.toUpperCase()} has already been guessed.`,"notice");
+document.getElementById("guess").value = "";
+return;}
+
+if(!dictionary.includes(guess)){invalidWords++;
+totalInvalidWords++;
+updateStats();
+if(invalidWords >= 5){setMessage(`Too many invalid words. Answer: ${answer.toUpperCase()}`,"error");
+document.getElementById("guess").value = "";
+gameover = true;
+losses++;
+updateStats();
+document
+.getElementById("playagain")
+.style.display = "inline-block";
+return;}
+
+setMessage(`${guess.toUpperCase()} is not in this dictionary. ${5 - invalidWords} invalid guesses remaining.`,"warning");
+document.getElementById("guess").value = "";
+return;}
+
+usedWords.push(guess);
+const colors = scoreGuess(guess, answer);
+board.push({word:guess.toUpperCase(), colors:colors});
+updateKeyboard(guess,colors);
+renderBoard();
+updatePossibleWords();
+updateStats();
+
+document
+.getElementById("cheatPanel")
+.style.display = "none";
+cheatEnabled = false;
+
+document
+.getElementById("guess")
+.value = "";
+
+if(guess === answer){setMessage("Solved!","solved");
+
+document
+.getElementById("playagain")
+.style.display = "inline-block";
+
+gameover = true;
+wins++;
+totalWinTurns += board.length;
+updateStats();
+return;}
+turn++;
+
+if(turn >= 6){setMessage("Answer: " + answer.toUpperCase(),"error");
+
+document
+.getElementById("playagain")
+.style.display = "inline-block";
+
+gameover = true;
+losses++;
+updateStats();}}
+
+function newGame(){answer = dictionary[Math.floor(Math.random() * dictionary.length)];
+board = [];
+keyboard = {};
+usedWords = [];
+invalidWords = 0;
+turn = 0;
+gameover = false;
+hintedPositions = [];
+lastCheatTurn = -1;
+
+document
+.getElementById("cheatPanel")
+.style.display = "none";
+cheatEnabled = false;
+
+document
+.getElementById("playagain")
+.style.display = "none";
+
+document
+.getElementById("guess")
+.value = "";
+
+setMessage("");
+buildKeyboard();
+renderBoard();
+updateStats();
+console.log("ANSWER:", answer);
+
+document.getElementById("possibleWords").innerHTML = "";}
+
+document
+.getElementById("guess")
+.addEventListener("keydown",e=>{if(e.key === "Enter"){if(gameover){newGame();}else{submitGuess();}}});
+
+document.addEventListener("click",e=>{if(e.target.closest("button")){document.getElementById("guess").focus();}});
+
+if(window.visualViewport){window.visualViewport.addEventListener("resize",()=>{document.body.classList.toggle("keyboardOpen",window.visualViewport.height < window.innerHeight * 0.75);});}
+
+async function initialize(){const savedDictionary = localStorage.getItem("twordleDictionary") || "Twordle.txt";
+document
+.getElementById("dictionarySelect")
+.value = savedDictionary;
+await loadDictionary(savedDictionary);
+loadStats();
+newGame();}
+
+initialize();
+</script>
+
+</body>
+</html>
