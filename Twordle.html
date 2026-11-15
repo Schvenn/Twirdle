@@ -551,7 +551,9 @@ document
 
 gameover = true;
 losses++;
-updateStats();}
+updateStats();
+return;}
+
 updateEvaluateStatus();}
 
 function newGame(){answer = dictionary[Math.floor(Math.random() * dictionary.length)];
@@ -563,6 +565,7 @@ turn = 0;
 gameover = false;
 hintedPositions = [];
 lastCheatTurn = -1;
+evaluateEnabled = false;
 
 document
 .getElementById("cheatPanel")
