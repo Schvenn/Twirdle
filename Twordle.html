@@ -23,13 +23,14 @@ h1{margin-bottom:10px;}
 
 #layout{display:grid; grid-template-columns: 220px 1fr 300px; gap:20px; max-width:1400px; margin:auto; align-items:start;}
 
-#helpButton{color:red; cursor:pointer; font-size:16px; font-weight:bold;}
+#helpButton{color:red; cursor:pointer; font-size:14px; font-weight:bold;}
 #helpPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1000; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;}
 #helpContent{position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left; line-height:1.5;}
 #helpContent h2{text-align:center; margin-top:0;}
 #helpContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
 #helpContent p{margin:12px 0;}
 
+#toggleConfirm {font-size:14px}
 #confirmPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
 #confirmContent{background:#222; border:1px solid #555; border-radius:8px; padding:10px; max-width:350px; width:100%; box-sizing:border-box; text-align:center;}
 #confirmContent h3{margin-top:10px; margin-bottom:15px;}
@@ -61,7 +62,7 @@ h1{margin-bottom:10px;}
 #controls{margin-bottom:20px;}
 
 input{width:120px; font-size:24px; text-transform:uppercase; text-align:center;}
-button{padding:8px 14px; font-size:16px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px;}
+button{padding:8px 14px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px;}
 
 #keyboard{max-width:700px; margin:auto;}
 .keyrow{margin-top:5px;}
@@ -164,7 +165,7 @@ body.keyboardOpen #keyboard{display:none;}
 <br>
 <div>Current Word: <span id="currentWord"></span></div>
 <br>
-<div><button onclick="toggleConfirm()" style="font-size:12px;">Clear Stats</button><br>
+<div><button onclick="toggleConfirm()">Clear Stats</button><br>
 <select id="dictionarySelect" onchange="confirmDictionaryChange()"><option value="Twordle.txt" selected>Standard Dictionary</option><option value="SOWPODS5.txt">SOWPODS Extreme</option></select></div>
 </div>
 
@@ -206,6 +207,7 @@ let keyboard = {};
 let usedWords = [];
 let totalInvalidWords = 0;
 let invalidWords = 0;
+let evaluateEnabled = false;
 let cheatEnabled = false;
 let lastCheatTurn = -1;
 let wins = 0;
@@ -356,14 +358,36 @@ updatePossibleWords();
 setMessage("Hint revealed.","notice");
 return;}}}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 function evaluateGuess(){const guess = document
 .getElementById("guess")
 .value
 .trim()
 .toLowerCase();
 
-if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word to evaluate.");
+if(!guess){if(evaluateEnabled){evaluateEnabled = false;
+updateEvaluateButton();
+setMessage("Evaluate is now turned off.","notice");
 return;}
+evaluateEnabled = true;
+updateEvaluateButton();
+const matches = dictionary.filter(word => wordMatchesBoard(word));
+setMessage(`Based on your current board, there ${matches.length === 1 ? "is" : "are"} ${matches.length.toLocaleString()} possible ${matches.length === 1 ? "match" : "matches"}.`,"notice");
+return;}
+
+if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word to evaluate.");return;}
 const candidates = dictionary.filter(word => wordMatchesBoard(word));
 const before = candidates.length;
 let totalRemaining = 0;
@@ -374,17 +398,32 @@ let remaining = 0;
 for(const candidate of candidates){const test = scoreGuess(guess, candidate);
 let same = true;
 
-for(let i = 0; i < 5; i++){ if(test[i] !== pattern[i]){same = false;
+for(let i = 0; i < 5; i++){if(test[i] !== pattern[i]){same = false;
 break;}}
 
-if(same)
-remaining++;}
-
+if(same) remaining++;}
 totalRemaining += remaining;}
+
 const averageRemaining = Math.round(totalRemaining / before);
 const reduction = before - averageRemaining;
-const percent = before ? Math.round(reduction / before * 100): 0;
-setMessage(`${guess.toUpperCase()} is expected to reduce ` + `${before} possibilites to about ${averageRemaining} ` +  `(↓${percent}%).`,"message");}
+const percent = before ? Math.round(reduction / before * 100) : 0;
+setMessage(`${guess.toUpperCase()} is expected to reduce ${before} possibilites to about ${averageRemaining} (↓${percent}%).`,"message");}
+
+function updateEvaluateButton(){document
+.getElementById("evaluateButton")
+.textContent = (evaluateEnabled ? "🟢 " : "🔴 ") + "Evaluate";}
+
+
+
+
+
+
+
+
+
+
+
+
 
 function wordMatchesBoard(word){for(const row of board){const test = scoreGuess(row.word.toLowerCase(), word);
 for(let i=0;i<5;i++){if(test[i] !== row.colors[i]){return false;}}}
@@ -557,6 +596,7 @@ document
 
 setMessage("");
 buildKeyboard();
+updateEvaluateButton();
 renderBoard();
 updateStats();
 console.log("ANSWER:", answer);
