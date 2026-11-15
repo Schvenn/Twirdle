@@ -358,9 +358,6 @@ updatePossibleWords();
 setMessage("Hint revealed.","notice");
 return;}}}
 
-
-
-
 function evaluateGuess(){const guess = document
 .getElementById("guess")
 .value
@@ -381,6 +378,9 @@ if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word to evaluate."
 const candidates = dictionary.filter(word => wordMatchesBoard(word));
 const before = candidates.length;
 let totalRemaining = 0;
+
+if(board.length === 0){setMessage("Submit your first guess before using Evaluate.","notice");
+return;}
 
 for(const possibleAnswer of candidates){const pattern = scoreGuess(guess, possibleAnswer);
 let remaining = 0;
@@ -406,8 +406,6 @@ function updateEvaluateButton(){document
 function updateEvaluateStatus(){if(!evaluateEnabled){return;}
 const matches = dictionary.filter(word => wordMatchesBoard(word));
 setMessage(`Based on your current board, there ${matches.length.toLocaleString()} possible ${matches.length === 1 ? "match" : "matches"}.`,"notice");}
-
-
 
 function wordMatchesBoard(word){for(const row of board){const test = scoreGuess(row.word.toLowerCase(), word);
 for(let i=0;i<5;i++){if(test[i] !== row.colors[i]){return false;}}}
@@ -555,7 +553,6 @@ gameover = true;
 losses++;
 updateStats();}
 updateEvaluateStatus();}
-
 
 function newGame(){answer = dictionary[Math.floor(Math.random() * dictionary.length)];
 board = [];
