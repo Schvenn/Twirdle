@@ -164,6 +164,12 @@ As you can see, it has lots of cheat features, making it a great tool for learni
 
 <img width="1504" height="1332" alt="image" src="https://github.com/user-attachments/assets/2ffe4e22-34c8-4d6f-969c-fa0df726c7fc" />
 
+<br>`Twordle.html` is the Current version, supporting multiple dictionaries, which also requires two dictionary files: `Twordle.txt` and `SOWPODS5.txt`.
+
+However, I have also provided `TwordleOriginal.html`, which is the legacy, self-contained version that has an embedded dictionary for play without any additional file dependencies.
+
+You can play both here: <a href="http://schvenn.byethost14.com/Twordle.html">Twordle</a> and here: <a href="http://schvenn.byethost14.com/TwordleOriginal.html">Twordle Original</a>.
+
 ---
 # How to Solve Twordle the Traditional Way 
 
