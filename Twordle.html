@@ -361,16 +361,6 @@ return;}}}
 
 
 
-
-
-
-
-
-
-
-
-
-
 function evaluateGuess(){const guess = document
 .getElementById("guess")
 .value
@@ -413,15 +403,9 @@ function updateEvaluateButton(){document
 .getElementById("evaluateButton")
 .textContent = (evaluateEnabled ? "🟢 " : "🔴 ") + "Evaluate";}
 
-
-
-
-
-
-
-
-
-
+function updateEvaluateStatus(){if(!evaluateEnabled){return;}
+const matches = dictionary.filter(word => wordMatchesBoard(word));
+setMessage(`Based on your current board, there ${matches.length.toLocaleString()} possible ${matches.length === 1 ? "match" : "matches"}.`,"notice");}
 
 
 
@@ -569,7 +553,9 @@ document
 
 gameover = true;
 losses++;
-updateStats();}}
+updateStats();}
+updateEvaluateStatus();}
+
 
 function newGame(){answer = dictionary[Math.floor(Math.random() * dictionary.length)];
 board = [];
