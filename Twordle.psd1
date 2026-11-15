@@ -1,5 +1,5 @@
 @{RootModule = 'Twordle.psm1'
-ModuleVersion = '3.2'
+ModuleVersion = '3.5'
 GUID = '2142cd1d-2094-4732-b946-91950dcb7e1d'
 Author = 'Craig Plath'
 CompanyName = 'Plath Consulting Incorporated'
@@ -15,4 +15,4 @@ FileList = @('Twordle.txt', 'Twordle.psm1')
 PrivateData = @{PSData = @{Tags = @('game', 'solver', 'tweet.app', 'twirdle', 'wordle')
 LicenseUri = 'https://github.com/Schvenn/Twirdle/blob/main/license.txt'
 ProjectUri = 'https://github.com/Schvenn/Twirdle'
-ReleaseNotes = 'Changed ranking to hybrid score and letter reduction model. Added additional statistics.'}}}
+ReleaseNotes = 'Added dictionary switching to the HTML version, providing both classic inline version and file loading version.'}}}
