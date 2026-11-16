@@ -30,25 +30,36 @@ h1{margin-bottom:10px;}
 #helpContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
 #helpContent p{margin:12px 0;}
 
-#toggleConfirm {font-size:12px}
 #confirmPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
+#profilePopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
+#dictionaryPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
+
 #confirmContent{background:#222; border:1px solid #555; border-radius:8px; padding:10px; max-width:350px; width:100%; box-sizing:border-box; text-align:center;}
 #confirmContent h3{margin-top:10px; margin-bottom:15px;}
 #confirmContent p{margin:5px 0 12px;}
 #confirmContent button{margin:0 5px;}
 
-#dictionaryPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
+#toggleConfirm {font-size:12px}
+#profileConfirm {margin-top:5px;}
+#dictionarySelect{margin-top:5px; margin-bottom:10px; padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px; width:175px;}
 
 #statsPanel{text-align:left;}
 
-#dictionarySelect{margin-top:10px; margin-bottom:10px; padding:10px 10px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px; width:174px;}
-
 #gamePanel{text-align:center;}
+
+#sidePanel{position:relative; min-height:450px; max-height:450px;}
+#cheatPanel{position:absolute; inset:0; z-index:1;}
+#profilePanel{position:absolute; inset:0; z-index:2;}
+th{background:#227; font-weight: bold;}
 
 #cheatPanel{display:none; text-align:left; border:1px solid #444; padding:10px; overflow-y:auto; max-height:450px;}
 #cheatHeader {text-align:center; font-size:20px; font-weight:bold; padding-bottom:10px;}
 #possibleWords{text-align:center; font-size:12px; line-height:1.5; word-wrap:break-word;}
 #currentWord{font-weight:bold; color:#538d4e;}
+
+#profilePanel{display:none; text-align:left; border:1px solid #444; padding:10px; overflow-y:auto; max-height:450px;}
+#profileHeader {text-align:center; font-size:20px; font-weight:bold; padding-bottom:10px;}
+#profileWords{text-align:center; font-size:12px; line-height:1.5; word-wrap:break-word;}
 
 #secondaryButtons{margin-top:10px; margin-bottom:20px;}
 #secondaryButtons button{margin:0 5px;}
@@ -82,7 +93,9 @@ body.keyboardOpen #keyboard{display:none;}
 #layout{grid-template-columns:minmax(0,1fr); gap:15px;}
 #statsPanel{order:2; width:auto;}
 #gamePanel{order:1; min-width:0;}
-#cheatPanel{order:3; min-width:0;}
+#sidePanel{order:4; position:relative; width:100%;}
+#cheatPanel{min-width:0;}
+#profilePanel{min-width:0;}
 .tile{width:48px; height:48px; font-size:26px;}
 .key{width:27px; padding:9px 0; margin:1px;}}
 </style>
@@ -146,6 +159,15 @@ body.keyboardOpen #keyboard{display:none;}
 </div>
 </div>
 
+<div id="profilePopup" onclick="if(event.target===this)toggleProfileConfirm()">
+<div id="confirmContent">
+<h3>Are you sure you want to clear your player profile?</h3>
+<p>This will permanently erase all your word tracking, wins, and losses.</p>
+<button onclick="clearProfile()">Yes, Clear Profile</button>
+<button onclick="toggleProfileConfirm()">Cancel</button>
+</div>
+</div>
+
 <div id="layout">
 <div id="statsPanel">
 <div id="helpButton" onclick="toggleHelp()">Help ?</div>
@@ -165,8 +187,12 @@ body.keyboardOpen #keyboard{display:none;}
 <br>
 <div>Current Word: <span id="currentWord"></span></div>
 <br>
-<div><button onclick="toggleConfirm()">Clear Stats</button><br>
-<select id="dictionarySelect" onchange="confirmDictionaryChange()"><option value="Twordle.txt" selected>Standard Dictionary</option><option value="SOWPODS5.txt">SOWPODS Extreme</option></select></div>
+<div><button id="profileButton" onclick="toggleProfile()">🔴 Player Profile</button><br>
+<button id="profileConfirm" onclick="toggleProfileConfirm()">Clear Profile</button>
+</div>
+<br>
+<div><button onclick="toggleConfirm()">Clear Stats</button></div><br>
+<div><select id="dictionarySelect" onchange="confirmDictionaryChange()"><option value="Twordle.txt" selected>Standard Dictionary</option><option value="SOWPODS5.txt">SOWPODS Extreme</option></select></div>
 </div>
 
 <div id="gamePanel">
@@ -174,16 +200,24 @@ body.keyboardOpen #keyboard{display:none;}
 <div id="board"></div>
 
 <div id="controls"><input id="guess" maxlength="5" autocomplete="off"> <button onclick="submitGuess()">Guess</button></div>
-<div id="secondaryButtons"><button id="hintButton" onclick="giveHint()">Hint</button><button id="evaluateButton" onclick="evaluateGuess()">Evaluate</button><button id="cheatButton" onclick="toggleCheat()">Cheat</button><button id="undoButton" onclick="undo()">Undo</button></div>
+<div id="secondaryButtons"><button id="hintButton" onclick="giveHint()">Hint</button><button id="evaluateButton" onclick="evaluateGuess()">Evaluate</button><button id="cheatButton" onclick="toggleCheat()">🔴 Cheat</button><button id="undoButton" onclick="undo()">Undo</button></div>
 <div id="keyboard"></div>
 
 <button id="playagain" onclick="newGame()">Play Again</button></div>
 
+<div id="sidePanel">
 <div id="cheatPanel">
 <div id="cheatHeader">Possible Words:</div>
 <div id="possibleWords"></div>
 </div>
+
+<div id="profilePanel">
+<div id="profileHeader">Player Profile:</div>
+<div id="profileWords"></div>
 </div>
+</div>
+</div>
+
 <div id="footer"><table><tr><td style="text-align:left;"><a href="https://github.com/Schvenn/Twirdle">Twordle on Github</a> is a WORDLE&trade; inspired clone created by Schvenn.<br><br>
 This version was created with the intent of allowing people to play<br>
 multiple rounds per day, and learn strategies.<br><br>
@@ -209,6 +243,7 @@ let totalInvalidWords = 0;
 let invalidWords = 0;
 let evaluateEnabled = false;
 let cheatEnabled = false;
+let profileEnabled = false;
 let lastCheatTurn = -1;
 let wins = 0;
 let losses = 0;
@@ -218,6 +253,7 @@ let totalCheats = 0;
 let totalUndos = 0;
 let hintedPositions = [];
 let previousMatches = dictionary.length;
+let profile = {};
 
 async function loadDictionary(file){const response = await fetch(file);
 if(!response.ok){throw new Error(`Unable to load dictionary: ${file}`);}
@@ -261,6 +297,26 @@ function updateCheatButton(){document
 .getElementById("cheatButton")
 .textContent = (cheatEnabled ? "🟢 " : "🔴 ") + "Cheat";}
 
+function toggleProfile(){profileEnabled = !profileEnabled;
+updateProfileButton()
+document
+.getElementById("profilePanel")
+.style.display = profileEnabled
+? "block"
+: "none";
+
+document
+.getElementById("cheatPanel")
+.style.visibility = profileEnabled
+? "hidden"
+: "visible";
+
+updateProfilePanel();}
+
+function updateProfileButton(){document
+.getElementById("profileButton")
+.textContent = (profileEnabled ? "🟢 " : "🔴 ") + "Player Profile";}
+
 function saveStats(){const stats = JSON.stringify({wins:wins,losses:losses,totalHints:totalHints,totalInvalidWords:totalInvalidWords,totalWinTurns:totalWinTurns,totalCheats:totalCheats,totalUndos:totalUndos});
 try{localStorage.setItem("twordleStats",stats);}catch(e){console.warn("Unable to save TWORDLE stats to localStorage.");}
 try{document.cookie = "twordleStats=" + encodeURIComponent(stats) + "; max-age=31536000; path=/; SameSite=Lax";}catch(e){console.warn("Unable to save TWORDLE stats cookie.");}}
@@ -278,10 +334,29 @@ totalInvalidWords = Number(data.totalInvalidWords) || 0;
 totalCheats = Number(data.totalCheats) || 0;
 totalUndos = Number(data.totalUndos) || 0;}catch(e){console.warn("Unable to load TWORDLE stats.");}}}
 
+function saveProfile(){const data = JSON.stringify(profile);
+try{localStorage.setItem("twordleProfile",data);}catch(e){}
+try{document.cookie = "twordleProfile=" + encodeURIComponent(data) + "; max-age=31536000; path=/; SameSite=Lax";}catch(e){}}
+
+function loadProfile(){let data = null;
+try{data = localStorage.getItem("twordleProfile");}catch(e){}
+
+if(!data){const cookie = document.cookie.split("; ").find(row => row.startsWith("twordleProfile="));
+
+if(cookie){data = decodeURIComponent(cookie.substring("twordleProfile=".length));}}
+
+if(data){try{profile = JSON.parse(data);}catch(e){profile = {};}}}
+
 function toggleConfirm(){const popup=document.getElementById("confirmPopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
+
+function toggleProfileConfirm(){const popup=document.getElementById("profilePopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
 
 function clearCookie(){try{document.cookie = "twordleStats=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
 try{localStorage.removeItem("twordleStats");}catch(e){}
+location.reload();}
+
+function clearProfile(){try{document.cookie = "twordleProfile=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
+try{localStorage.removeItem("twordleProfile");}catch(e){}
 location.reload();}
 
 function toggleDictionaryPopup(){const popup = document.getElementById("dictionaryPopup");
@@ -301,6 +376,8 @@ function cancelDictionaryChange(){document
 .getElementById("dictionarySelect")
 .value = currentDictionary;
 toggleDictionaryPopup();}
+
+function ensureProfileWord(word){if(!profile[word]){profile[word] = {date:"", counts:[0,0,0,0,0,0,0,0,0,0,0,0]};}}
 
 function updateStats(){document
 .getElementById("wins")
@@ -345,7 +422,9 @@ document
 .getElementById("undocount")
 .textContent = totalUndos;
 
-saveStats();}
+saveStats();
+updateProfileWords();
+saveProfile();}
 
 function giveHint(){if(gameover)
 return;
@@ -486,6 +565,53 @@ remaining[idx] = null;}}
 
 return colors;}
 
+function updateProfileWords(){const topwords = Object.entries(profile)
+.filter(([word,data]) => data.counts.slice(0,6).reduce((a,b) => a + b, 0) > 0)
+.sort((a,b) => {const awins = a[1].counts.slice(0,6).reduce((x,y) => x + y, 0);
+const bwins = b[1].counts.slice(0,6).reduce((x,y) => x + y, 0);
+if(bwins !== awins) {return bwins - awins;}
+const apos = a[1].counts.findIndex((count,i) => i < 6 && count > 0);
+const bpos = b[1].counts.findIndex((count,i) => i < 6 && count > 0);
+return apos - bpos;})
+.slice(0,10);
+
+let html = "<hr><h3>Top Winning Words:</h3>";
+html += "<table border='1' style='width:100%; border-collapse:collapse; text-align:center;'>";
+html += "<tr><th rowspan=2>Word</th><th colspan=6>Round</th></tr> <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr>";
+
+for(const [word,data] of topwords){html += "<tr>";
+html += `<td>${word.toUpperCase()}</td>`;
+for(let i = 0; i < 6; i++){html += `<td>${data.counts[i]}</td>`;}
+html += "</tr>";}
+html += "</table><br>";
+
+html += "<hr><h3>Words Without a Win:</h3>";
+html += "<table border='1' style='width:100%; border-collapse:collapse; text-align:center;'>";
+html += "<tr><th rowspan=2>Word</th><th colspan=6>Round</th></tr> <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr>";
+
+for(const [word,data] of Object.entries(profile)){const wins = data.counts.slice(0,6).reduce((a,b) => a + b, 0);
+
+if(wins === 0 && losses > 0){html += "<tr>";
+html += `<td>${word.toUpperCase()}</td>`;
+
+for(let i = 6; i < 12; i++){html += `<td>${data.counts[i]}</td>`;}
+html += "</tr>";}}
+html += "</table>";
+
+document
+.getElementById("profileWords")
+.innerHTML = html;}
+
+function updateProfile(result){const today = new Date().toISOString().split("T")[0];
+for(let i = 0; i < usedWords.length; i++){const word = usedWords[i];
+
+if(!profile[word]){profile[word] = {date:today,counts:[0,0,0,0,0,0,0,0,0,0,0,0]};}
+profile[word].date = today;
+
+if(result === "win"){profile[word].counts[i]++;}
+
+if(result === "loss"){profile[word].counts[i + 6]++;}}}
+
 function submitGuess(){if(gameover)
 return;
 
@@ -546,6 +672,7 @@ document
 gameover = true;
 wins++;
 totalWinTurns += board.length;
+updateProfile("win");
 updateStats();
 return;}
 turn++;
@@ -558,6 +685,7 @@ document
 
 gameover = true;
 losses++;
+updateProfile("loss");
 updateStats();
 return;}
 
@@ -581,6 +709,12 @@ cheatEnabled = false;
 updateCheatButton();
 
 document
+.getElementById("profilePanel")
+.style.display = "none";
+profileEnabled = false;
+updateProfileButton();
+
+document
 .getElementById("playagain")
 .style.display = "none";
 
@@ -595,6 +729,7 @@ renderBoard();
 updateStats();
 console.log("ANSWER:", answer);
 
+document.getElementById("profileWords").innerHTML = "";
 document.getElementById("possibleWords").innerHTML = "";}
 
 document
@@ -610,8 +745,11 @@ document
 .getElementById("dictionarySelect")
 .value = savedDictionary;
 await loadDictionary(savedDictionary);
+
 loadStats();
-newGame();}
+loadProfile();
+newGame();
+updateProfileWords();}
 
 initialize();
 </script>
