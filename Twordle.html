@@ -23,14 +23,14 @@ h1{margin-bottom:10px;}
 
 #layout{display:grid; grid-template-columns: 220px 1fr 300px; gap:20px; max-width:1400px; margin:auto; align-items:start;}
 
-#helpButton{color:red; cursor:pointer; font-size:14px; font-weight:bold;}
+#helpButton{color:red; cursor:pointer; font-size:12px; font-weight:bold;}
 #helpPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1000; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;}
 #helpContent{position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left; line-height:1.5;}
 #helpContent h2{text-align:center; margin-top:0;}
 #helpContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
 #helpContent p{margin:12px 0;}
 
-#toggleConfirm {font-size:14px}
+#toggleConfirm {font-size:12px}
 #confirmPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
 #confirmContent{background:#222; border:1px solid #555; border-radius:8px; padding:10px; max-width:350px; width:100%; box-sizing:border-box; text-align:center;}
 #confirmContent h3{margin-top:10px; margin-bottom:15px;}
@@ -41,7 +41,7 @@ h1{margin-bottom:10px;}
 
 #statsPanel{text-align:left;}
 
-#dictionarySelect{margin-top:10px; margin-bottom:10px; padding:8px 12px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px; width:180px;}
+#dictionarySelect{margin-top:10px; margin-bottom:10px; padding:10px 10px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px; width:174px;}
 
 #gamePanel{text-align:center;}
 
@@ -62,7 +62,7 @@ h1{margin-bottom:10px;}
 #controls{margin-bottom:20px;}
 
 input{width:120px; font-size:24px; text-transform:uppercase; text-align:center;}
-button{padding:8px 14px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px;}
+button{padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px;}
 
 #keyboard{max-width:700px; margin:auto;}
 .keyrow{margin-top:5px;}
@@ -174,7 +174,7 @@ body.keyboardOpen #keyboard{display:none;}
 <div id="board"></div>
 
 <div id="controls"><input id="guess" maxlength="5" autocomplete="off"> <button onclick="submitGuess()">Guess</button></div>
-<div id="secondaryButtons"><button id="hintButton" onclick="giveHint()">Hint</button><button id="evaluateButton" onclick="evaluateGuess()">Evaluate</button><button onclick="toggleCheat()">Cheat</button><button id="undoButton" onclick="undo()">Undo</button></div>
+<div id="secondaryButtons"><button id="hintButton" onclick="giveHint()">Hint</button><button id="evaluateButton" onclick="evaluateGuess()">Evaluate</button><button id="cheatButton" onclick="toggleCheat()">Cheat</button><button id="undoButton" onclick="undo()">Undo</button></div>
 <div id="keyboard"></div>
 
 <button id="playagain" onclick="newGame()">Play Again</button></div>
@@ -242,6 +242,7 @@ toggleDictionaryPopup();}
 function toggleHelp(){const popup=document.getElementById("helpPopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
 
 function toggleCheat(){cheatEnabled = !cheatEnabled;
+updateCheatButton()
 document
 .getElementById("cheatPanel")
 .style.display = cheatEnabled
@@ -249,11 +250,16 @@ document
 : "none";
 
 if(cheatEnabled && turn > 0 && lastCheatTurn !== turn){totalCheats++;
+updateCheatButton()
 lastCheatTurn = turn;
 updateStats();}
 
 updatePossibleWords();
 updateStats();}
+
+function updateCheatButton(){document
+.getElementById("cheatButton")
+.textContent = (cheatEnabled ? "🟢 " : "🔴 ") + "Cheat";}
 
 function saveStats(){const stats = JSON.stringify({wins:wins,losses:losses,totalHints:totalHints,totalInvalidWords:totalInvalidWords,totalWinTurns:totalWinTurns,totalCheats:totalCheats,totalUndos:totalUndos});
 try{localStorage.setItem("twordleStats",stats);}catch(e){console.warn("Unable to save TWORDLE stats to localStorage.");}
@@ -525,6 +531,7 @@ document
 .getElementById("cheatPanel")
 .style.display = "none";
 cheatEnabled = false;
+updateCheatButton();
 
 document
 .getElementById("guess")
@@ -571,6 +578,7 @@ document
 .getElementById("cheatPanel")
 .style.display = "none";
 cheatEnabled = false;
+updateCheatButton();
 
 document
 .getElementById("playagain")
