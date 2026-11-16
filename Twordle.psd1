@@ -1,5 +1,5 @@
 @{RootModule = 'Twordle.psm1'
-ModuleVersion = '3.5'
+ModuleVersion = '3.6'
 GUID = '2142cd1d-2094-4732-b946-91950dcb7e1d'
 Author = 'Craig Plath'
 CompanyName = 'Plath Consulting Incorporated'
@@ -15,4 +15,4 @@ FileList = @('Twordle.txt', 'Twordle.psm1', 'Twordle.html', 'TwordleOriginal.htm
 PrivateData = @{PSData = @{Tags = @('game', 'solver', 'tweet.app', 'twirdle', 'wordle')
 LicenseUri = 'https://github.com/Schvenn/Twirdle/blob/main/license.txt'
 ProjectUri = 'https://github.com/Schvenn/Twirdle'
-ReleaseNotes = 'Added dictionary switching to the HTML version, providing both classic inline version and file loading version.'}}}
+ReleaseNotes = 'Added player statistics to the online version.'}}}
