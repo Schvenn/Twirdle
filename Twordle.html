@@ -90,6 +90,9 @@ button{padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; backgr
 #footer{margin-top:100px; padding-bottom:20px; font-size:8px;}
 
 @media(max-width:1000px){body{padding:10px;}
+@media(max-width:1000px){#board .tile{width:min(12vw,48px); height:min(12vw,48px); font-size:min(8vw,32px);}}
+@media(max-width:1000px) and (max-height:800px){#board .tile{width:min(10vw,40px); height:min(10vw,40px); font-size:min(7vw,26px);}}
+@media(max-width:1000px) and (max-height:700px){#board .tile{width:min(8vw,32px); height:min(8vw,32px); font-size:min(6vw,22px);}}
 #headerRow{grid-template-columns:minmax(0,1fr);}
 #layout{grid-template-columns:minmax(0,1fr); gap:15px;}
 #statsPanel{order:2; width:auto;}
@@ -751,7 +754,7 @@ updateStats();
 
 if(firstguess){submitGuess();}
 
-document.getElementById("profileWords").innerHTML = "";
+updateProfileWords();
 document.getElementById("possibleWords").innerHTML = "";}
 
 document
