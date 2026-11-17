@@ -1,4 +1,4 @@
-# TWIRDLE/WORDLE Solver and Game
+# Twordle Solver and Game
 
 *New!* On 11/12/2026, I added the HTML recreation of the game. It runs Javascript in your browser, is one file, completely self-contained, endless plays, no ads, no limitations, cookies to only store your stats, which you can clear whenever you like.
 
@@ -162,7 +162,7 @@ Guess: WIMPY
 
 As you can see, it has lots of cheat features, making it a great tool for learning, testing and playing. You choose the level of effort you want to put into the game by deciding which cheats if any, that you use.
 
-<img width="1504" height="1332" alt="image" src="https://github.com/user-attachments/assets/2ffe4e22-34c8-4d6f-969c-fa0df726c7fc" />
+<img width="666" height="593" alt="image" src="https://github.com/user-attachments/assets/4df51655-f601-4a78-9871-100df088d279" />
 
 <br>`Twordle.html` is the Current version, supporting multiple dictionaries, which also requires two dictionary files: `Twordle.txt` and `SOWPODS5.txt`.
 
