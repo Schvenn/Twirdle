@@ -40,12 +40,15 @@ h1{margin-bottom:10px;}
 #confirmContent button{margin:0 5px;}
 
 #toggleConfirm {font-size:12px}
+#firstGuess {margin-top:5px;}
+#saveGuess {margin-top:5px; background:#225555; border:1px solid #4466aa; border-radius:6px; color:#fff;}
 #profileConfirm {margin-top:5px;}
 #dictionarySelect{margin-top:5px; margin-bottom:10px; padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px; width:175px;}
 
 #statsPanel{text-align:left;}
 
 #gamePanel{text-align:center;}
+#controls {margin-top:5px;}
 
 #sidePanel{position:relative; min-height:450px; max-height:450px;}
 #cheatPanel{position:absolute; inset:0; z-index:1;}
@@ -70,9 +73,9 @@ th{background:#227; font-weight: bold;}
 .green{background:#538d4e; border-color:#538d4e;}
 .yellow{background:#b59f3b; border-color:#b59f3b;}
 .gray{background:#3a3a3c; border-color:#3a3a3c;}
-#controls{margin-bottom:20px;}
+#guess{background:#223355; border:1px solid #4466aa; border-radius:6px; color:#fff;}
 
-input{width:120px; font-size:24px; text-transform:uppercase; text-align:center;}
+input{width:120px; height:35px; font-size:26px; text-transform:uppercase; text-align:center;}
 button{padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px;}
 
 #keyboard{max-width:700px; margin:auto;}
@@ -181,15 +184,17 @@ button{padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; backgr
 <div>Hints: <span id="hintcount">0</span></div>
 <div>Cheats: <span id="cheatcount">0</span></div>
 <div>Undo: <span id="undocount">0</span></div>
-
+<br>
+<div><button onclick="toggleConfirm()">Clear Stats</button></div>
 <br>
 <div>Current Word: <span id="currentWord"></span></div>
 <br>
 <div><button id="profileButton" onclick="toggleProfile()">🔴 Player Profile</button><br>
+<div><input id="saveGuess" maxlength="5" autocomplete="off"><br>
+<button id="firstGuess" onclick="saveGuess()">Save First Guess</button></div>
 <button id="profileConfirm" onclick="toggleProfileConfirm()">Clear Profile</button>
 </div>
 <br>
-<div><button onclick="toggleConfirm()">Clear Stats</button></div><br>
 <div><select id="dictionarySelect" onchange="confirmDictionaryChange()"><option value="Twordle.txt" selected>Standard Dictionary</option><option value="SOWPODS5.txt">SOWPODS Extreme</option></select></div>
 </div>
 
@@ -343,7 +348,21 @@ if(!data){const cookie = document.cookie.split("; ").find(row => row.startsWith(
 
 if(cookie){data = decodeURIComponent(cookie.substring("twordleProfile=".length));}}
 
-if(data){try{profile = JSON.parse(data);}catch(e){profile = {};}}}
+if(data){try{profile = JSON.parse(data);}catch(e){profile = {};}}
+
+try{firstguess = localStorage.getItem("twordleFirstGuess") || "";}catch(e){}
+document.getElementById("saveGuess").value = firstguess.toUpperCase();}
+
+function saveGuess(){const guess = document.getElementById("saveGuess").value.toLowerCase().trim();
+
+if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word.");
+return;}
+
+if(!dictionary.includes(guess)){setMessage("That word is not in the dictionary.");
+return;}
+
+try{localStorage.setItem("twordleFirstGuess",guess);}catch(e){}
+setMessage(`First guess saved: ${guess.toUpperCase()}`);}
 
 function toggleConfirm(){const popup=document.getElementById("confirmPopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
 
@@ -355,6 +374,7 @@ location.reload();}
 
 function clearProfile(){try{document.cookie = "twordleProfile=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
 try{localStorage.removeItem("twordleProfile");}catch(e){}
+try{localStorage.removeItem("twordleFirstGuess");}catch(e){}
 location.reload();}
 
 function toggleDictionaryPopup(){const popup = document.getElementById("dictionaryPopup");
@@ -718,14 +738,17 @@ document
 
 document
 .getElementById("guess")
-.value = "";
+.value = firstguess
+? firstguess.toUpperCase()
+: "";
 
 setMessage("");
 buildKeyboard();
 updateEvaluateButton();
 renderBoard();
 updateStats();
-console.log("ANSWER:", answer);
+
+if(firstguess){submitGuess();}
 
 document.getElementById("profileWords").innerHTML = "";
 document.getElementById("possibleWords").innerHTML = "";}
