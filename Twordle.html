@@ -57,6 +57,8 @@ h1{margin-bottom:10px;}
 #cheatPanel{position:absolute; inset:0; z-index:1;}
 #profilePanel{position:absolute; inset:0; z-index:2;}
 th{background:#227; font-weight: bold;}
+.profileword{cursor:pointer; color:#7db4ff;}
+.profileword:hover{text-decoration:underline;}
 
 #cheatPanel{display:none; text-align:left; border:1px solid #444; padding:10px; overflow-y:auto; max-height:450px;}
 #cheatHeader {text-align:center; font-size:20px; font-weight:bold; padding-bottom:10px;}
@@ -90,7 +92,9 @@ button:active{transform:scale(0.95)}
 
 #keyboard{max-width:700px; margin:auto;}
 .keyrow{margin-top:5px;}
-.key{display:inline-block; width:32px; padding:10px 0; margin:2px; border-radius:4px; background:#818384; font-weight:bold;}
+.key{display:inline-block; width:32px; padding:10px 0; margin:2px; border-radius:4px; background:#818384; font-weight:bold; cursor:pointer; user-select:none;}
+.key.special{width:60px;}
+.key:active{transform:scale(0.99);}
 .key.green{background:#538d4e;}
 .key.yellow{background:#b59f3b;}
 .key.gray{background:#3a3a3c;}
@@ -598,12 +602,41 @@ updatePossibleWords();
 updateStats();
 setMessage("Last guess removed.","notice");}
 
-function buildKeyboard(){const rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+function buildKeyboard(){const rows = ["QWERTYUIOP",
+"ASDFGHJKL",
+"←ZXCVBNM↵"];
 let html = "";
+
 for(const row of rows){html += '<div class="keyrow">';
-for(const letter of row){html += `<span class="key" id="key-${letter}">${letter}</span>`;}
+
+for(const letter of row){const special = letter === "←" || letter === "↵"
+? " special"
+: "";
+
+html += `<span class="key${special}" id="key-${letter}">${letter}</span>`;}
 html += "</div>";}
-document.getElementById("keyboard").innerHTML = html;}
+
+document.getElementById("keyboard").innerHTML = html;
+
+document.querySelectorAll("#keyboard .key").forEach(key=>{key.addEventListener("click",()=>{
+if(gameover) return;
+const input = document.getElementById("guess");
+const keytext = key.textContent;
+
+if(keytext === "←"){input.value = input.value.slice(0,-1);
+beep(600,0.01,"triangle");
+input.focus();
+return;}
+
+if(keytext === "↵"){submitGuess();
+input.focus();
+return;}
+
+if(input.value.length < 5){input.value += keytext.toLowerCase();
+beep(800,0.01,"triangle");
+setMessage(`Loaded ${cell.dataset.word.toUpperCase()}.`,"notice");}
+
+input.focus();});});}
 
 function renderBoard(){const boardDiv =
 document.getElementById("board");
@@ -673,7 +706,7 @@ html += "<table border='1' style='width:100%; border-collapse:collapse; text-ali
 html += "<tr><th rowspan=2>Word</th><th colspan=6>Round</th></tr> <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr>";
 
 for(const [word,data] of topwords){html += "<tr>";
-html += `<td>${word.toUpperCase()}</td>`;
+html += `<td class="profileword" data-word="${word}">${word.toUpperCase()}</td>`;
 for(let i = 0; i < 6; i++){html += `<td>${data.counts[i]}</td>`;}
 html += "</tr>";}
 html += "</table><br>";
@@ -693,7 +726,14 @@ html += "</table>";
 
 document
 .getElementById("profileWords")
-.innerHTML = html;}
+.innerHTML = html;
+
+document.querySelectorAll(".profileword").forEach(cell=>{cell.addEventListener("click",()=>{if(gameover) return;
+const guessinput = document.getElementById("guess");
+guessinput.value = "";
+guessinput.value = cell.dataset.word.toUpperCase();
+beep(800,0.01,"triangle");
+guessinput.focus();});});}
 
 function updateProfile(result){const today = new Date().toISOString().split("T")[0];
 for(let i = 0; i < usedWords.length; i++){const word = usedWords[i];
@@ -800,7 +840,7 @@ return;}
 updateEvaluateStatus();}
 
 function revealRow(rowindex){const row = board[rowindex];
-    console.log("reveal");
+console.log("reveal");
 for(let i = 0; i < 5; i++){setTimeout(()=>{
 row.revealed[i] = true;
 
@@ -886,7 +926,7 @@ setTimeout(()=>beep(784,0.15,"sine", 0.02),100);}
 document.getElementById("guess").addEventListener("keydown",e=>{if(e.key.length === 1) beep(800,0.01,"triangle");
 if(e.key === "Backspace") beep(600,0.01,"triangle");
 if(e.key === "Delete") beep(600,0.01,"triangle");
-	
+
 if(e.key === "Enter"){if(gameover){newGame();}else{submitGuess();}}});
 
 document.getElementById("saveGuess").addEventListener("keydown",e=>{if(e.key.length === 1) beep(800,0.01,"triangle");
@@ -898,6 +938,8 @@ if(e.key === "Enter"){saveGuess();}});
 document.addEventListener("click",e=>{if(e.target.closest("button")){document.getElementById("guess").focus();}});
 
 document.addEventListener("click",e=>{if(e.target.matches("button")){playClickSound();}});
+
+document.getElementById("board").addEventListener("click",()=>{document.getElementById("guess").focus();});
 
 if(window.visualViewport){window.visualViewport.addEventListener("resize",()=>{document.body.classList.toggle("keyboardOpen",window.visualViewport.height < window.innerHeight * 0.75);});}
 
