@@ -23,12 +23,13 @@ h1{margin-bottom:10px;}
 
 #layout{display:grid; grid-template-columns: 220px 1fr 300px; gap:20px; max-width:1400px; margin:auto; align-items:start;}
 
-#helpButton{color:#ff0000; cursor:pointer; font-size:12px; font-weight:bold;}
+#helpButton{color:#ff0000; cursor:pointer; font-size:16px; font-weight:bold;}
 #helpPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1000; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;}
 #helpContent{position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left; line-height:1.5;}
 #helpContent h2{text-align:center; margin-top:0;}
 #helpContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
 #helpContent p{margin:12px 0;}
+#helpButton,#soundButton{display:inline-block; cursor:pointer;}
 
 #confirmPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
 #profilePopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
@@ -71,7 +72,13 @@ th{background:#227; font-weight: bold;}
 
 #board{display:flex; flex-direction:column; gap:5px; align-items:center; margin-bottom:20px;}
 .row{display:flex; gap:5px;}
-.tile{width:60px; height:60px; border:2px solid #3a3a3c; display:flex; justify-content:center; align-items:center; font-size:32px;font-weight:bold; text-transform:uppercase;}
+.tile{width:60px; height:60px; border:2px solid #3a3a3c; display:flex; justify-content:center; align-items:center; font-size:32px;font-weight:bold; text-transform:uppercase; transition:transform .2s;}
+
+.tile.revealed{animation:pop .15s ease-out;}
+@keyframes pop{0%{transform:scale(0.99);}
+99%{transform:scale(1.01);}
+100%{transform:scale(1);}}
+
 .green{background:#538d4e; border-color:#538d4e;}
 .yellow{background:#b59f3b; border-color:#b59f3b;}
 .gray{background:#3a3a3c; border-color:#3a3a3c;}
@@ -79,6 +86,7 @@ th{background:#227; font-weight: bold;}
 
 input{width:120px; height:35px; font-size:26px; text-transform:uppercase; text-align:center;}
 button{padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px;}
+button:active{transform:scale(0.95)}
 
 #keyboard{max-width:700px; margin:auto;}
 .keyrow{margin-top:5px;}
@@ -185,7 +193,7 @@ button{padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; backgr
 
 <div id="layout">
 <div id="statsPanel">
-<div id="helpButton" onclick="toggleHelp()">Help ?</div>
+<div id="helpButton" onclick="toggleHelp()">Help ?</div> | <div id="soundButton" onclick="toggleSound()">🔊</div><br>
 <br>
 <div id="newGame" onclick="newGame()">New Game</div>
 <br>
@@ -251,7 +259,7 @@ WORDLE&trade; is a trademark of The New York Times Company.</td></tr></table></d
 let dictionary = [];
 let pendingDictionary = null;
 let currentDictionary = "Twordle.txt";
-
+let soundenabled = true;
 let answer = "";
 let turn = 0;
 let board = [];
@@ -294,7 +302,17 @@ setMessage(file === "Twordle.txt"
 pendingDictionary = null;
 toggleDictionaryPopup();}
 
-function toggleHelp(){const popup=document.getElementById("helpPopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
+function toggleHelp(){playClickSound();
+const popup=document.getElementById("helpPopup");
+popup.style.display=popup.style.display==="flex"?"none":"flex";}
+
+function toggleSound(){if(soundenabled) playClickSound();
+soundenabled = !soundenabled;
+
+if(soundenabled) playClickSound();
+updateSoundButton();}
+
+function updateSoundButton(){document.getElementById("soundButton").textContent = soundenabled ? "🔊" : "🔇";}
 
 function toggleCheat(){cheatEnabled = !cheatEnabled;
 if(cheatEnabled && profileEnabled){profileEnabled = false;
@@ -311,6 +329,10 @@ document
 .style.display = cheatEnabled
 ? "block"
 : "none";
+
+if(cheatEnabled) {beep(500,0.05,"triangle");
+setTimeout(()=>beep(700,0.05,"triangle"),50);
+setTimeout(()=>beep(900,0.08,"triangle"),100);}
 
 if(cheatEnabled && turn > 0 && lastCheatTurn !== turn){totalCheats++;
 lastCheatTurn = turn;}
@@ -562,6 +584,9 @@ return true;}
 
 function undo(){if(gameover || board.length === 0) {return;}
 totalUndos++;
+beep(1000,0.03,"triangle");
+setTimeout(()=>beep(850,0.03,"triangle"),30);
+setTimeout(()=>beep(700,0.05,"triangle"),60);
 board.pop();
 usedWords.pop();
 turn = Math.max(0, turn - 1);
@@ -584,8 +609,14 @@ function renderBoard(){const boardDiv =
 document.getElementById("board");
 let html = "";
 for(let r = 0; r < 6; r++){html += '<div class="row">';
+
 if(board[r]){const row = board[r];
-for(let c = 0; c < 5; c++){html += `<div class="tile ${row.colors[c]}">${row.word[c]}</div>`;}}
+for(let c = 0; c < 5; c++){const color = row.revealed[c] ? row.colors[c] : "";
+const revealclass = board.activeRow === r && row.revealed[c]
+? "revealed"
+: "";
+html += `<div class="tile ${color} ${revealclass}">${row.word[c]}</div>`;}}
+
 else {for(let c = 0; c < 5; c++){html += '<div class="tile"></div>';}}
 html += '</div>';}
 boardDiv.innerHTML = html;}
@@ -684,10 +715,13 @@ let guess = document
 .toLowerCase();
 
 if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word.","notice");
+beep(150,0.25,"sawtooth");
 return;}
 
 if(usedWords.includes(guess)){setMessage(`${guess.toUpperCase()} has already been guessed.`,"notice");
 document.getElementById("guess").value = "";
+beep(300,0.12,"square");
+setTimeout(()=>beep(200,0.12,"square"),100);
 return;}
 
 if(!dictionary.includes(guess)){invalidWords++;
@@ -706,13 +740,18 @@ return;}
 
 setMessage(`${guess.toUpperCase()} is not in this dictionary. ${5 - invalidWords} invalid guesses remaining.`,"warning");
 document.getElementById("guess").value = "";
+beep(150,0.25,"sawtooth");
 return;}
 
 usedWords.push(guess);
+
 const colors = scoreGuess(guess, answer);
-board.push({word:guess.toUpperCase(), colors:colors});
+board.push({word:guess.toUpperCase(), colors:colors, revealed:[false,false,false,false,false]});
+board.activeRow = board.length - 1;
 updateKeyboard(guess,colors);
 renderBoard();
+revealRow(board.length - 1);
+
 updatePossibleWords();
 updateStats();
 
@@ -727,7 +766,6 @@ document
 .value = "";
 
 if(guess === answer){setMessage("Solved!","solved");
-
 document
 .getElementById("playagain")
 .style.display = "inline-block";
@@ -737,10 +775,15 @@ wins++;
 totalWinTurns += board.length;
 updateProfile("win");
 updateStats();
+beep(523,0.08,"triangle");
+setTimeout(()=>beep(659,0.08,"triangle"),80);
+setTimeout(()=>beep(784,0.10,"triangle"),160);
+setTimeout(()=>beep(1047,0.35,"square"),250);
 return;}
 turn++;
 
 if(turn >= 6){setMessage("Answer: " + answer.toUpperCase(),"error");
+playLoseSound()
 
 document
 .getElementById("playagain")
@@ -753,6 +796,45 @@ updateStats();
 return;}
 
 updateEvaluateStatus();}
+
+function revealRow(rowindex){const row = board[rowindex];
+    console.log("reveal");
+for(let i = 0; i < 5; i++){setTimeout(()=>{
+row.revealed[i] = true;
+
+if(row.colors[i] === "green"){beep(900,0.04,"triangle",0.02);}
+else if(row.colors[i] === "yellow"){beep(700,0.03,"triangle",0.02);}
+else{beep(300,0.02,"square",0.02);}
+renderBoard();
+if(i === 4){board.activeRow = -1;}},i * 200);}}
+
+function beep(freq,duration,type="sine",volume=0.1){if(!soundenabled) return;
+const ctx = new AudioContext();
+const osc = ctx.createOscillator();
+const gain = ctx.createGain();
+osc.type = type;
+osc.frequency.value = freq;
+osc.connect(gain);
+gain.connect(ctx.destination);
+gain.gain.value = volume;
+osc.start();
+gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+osc.stop(ctx.currentTime + duration);}
+
+function playLoseSound(){const ctx = new AudioContext();
+const osc = ctx.createOscillator();
+const gain = ctx.createGain();
+osc.type = "sawtooth";
+osc.frequency.setValueAtTime(250,ctx.currentTime);
+osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.75);
+osc.connect(gain);
+gain.connect(ctx.destination);
+gain.gain.setValueAtTime(0.12,ctx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.75);
+osc.start();
+osc.stop(ctx.currentTime + 0.75);}
+
+function playClickSound(){beep(1000,0.01,"triangle");}
 
 function newGame(){answer = dictionary[Math.floor(Math.random() * dictionary.length)];
 board = [];
@@ -787,21 +869,30 @@ buildKeyboard();
 updateEvaluateButton();
 renderBoard();
 updateStats();
+document.getElementById("guess").focus();
 
 if(firstguess){submitGuess();}
 
 updateProfileWords();
-document.getElementById("possibleWords").innerHTML = "";}
+document.getElementById("possibleWords").innerHTML = "";
+beep(523,0.10,"sine", 0.02);
+setTimeout(()=>beep(784,0.15,"sine", 0.02),100);}
 
-document
-.getElementById("guess")
-.addEventListener("keydown",e=>{if(e.key === "Enter"){if(gameover){newGame();}else{submitGuess();}}});
+document.getElementById("guess").addEventListener("keydown",e=>{if(e.key.length === 1) beep(800,0.01,"triangle");
+if(e.key === "Backspace") beep(600,0.01,"triangle");
+if(e.key === "Delete") beep(600,0.01,"triangle");
+	
+if(e.key === "Enter"){if(gameover){newGame();}else{submitGuess();}}});
 
-document
-.getElementById("saveGuess")
-.addEventListener("keydown",e=>{if(e.key === "Enter"){saveGuess();}});
+document.getElementById("saveGuess").addEventListener("keydown",e=>{if(e.key.length === 1) beep(800,0.01,"triangle");
+if(e.key === "Backspace") beep(600,0.01,"triangle");
+if(e.key === "Delete") beep(600,0.01,"triangle");
+
+if(e.key === "Enter"){saveGuess();}});
 
 document.addEventListener("click",e=>{if(e.target.closest("button")){document.getElementById("guess").focus();}});
+
+document.addEventListener("click",e=>{if(e.target.matches("button")){playClickSound();}});
 
 if(window.visualViewport){window.visualViewport.addEventListener("resize",()=>{document.body.classList.toggle("keyboardOpen",window.visualViewport.height < window.innerHeight * 0.75);});}
 
