@@ -23,7 +23,7 @@ h1{margin-bottom:10px;}
 
 #layout{display:grid; grid-template-columns: 220px 1fr 300px; gap:20px; max-width:1400px; margin:auto; align-items:start;}
 
-#helpButton{color:red; cursor:pointer; font-size:12px; font-weight:bold;}
+#helpButton{color:#ff0000; cursor:pointer; font-size:12px; font-weight:bold;}
 #helpPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1000; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;}
 #helpContent{position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left; line-height:1.5;}
 #helpContent h2{text-align:center; margin-top:0;}
@@ -33,6 +33,7 @@ h1{margin-bottom:10px;}
 #confirmPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
 #profilePopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
 #dictionaryPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
+#firstGuessPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
 
 #confirmContent{background:#222; border:1px solid #555; border-radius:8px; padding:10px; max-width:350px; width:100%; box-sizing:border-box; text-align:center;}
 #confirmContent h3{margin-top:10px; margin-bottom:15px;}
@@ -44,6 +45,7 @@ h1{margin-bottom:10px;}
 #saveGuess {margin-top:5px; background:#225555; border:1px solid #4466aa; border-radius:6px; color:#fff;}
 #profileConfirm {margin-top:5px;}
 #dictionarySelect{margin-top:5px; margin-bottom:10px; padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px; width:175px;}
+#newGame{color:#ffff00; cursor:pointer; font-size:16px; font-weight:bold;}
 
 #statsPanel{text-align:left;}
 
@@ -172,9 +174,20 @@ button{padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; backgr
 </div>
 </div>
 
+<div id="firstGuessPopup" onclick="if(event.target===this)toggleFirstGuessConfirm()">
+<div id="confirmContent">
+<h3>Clear Saved First Guess?</h3>
+<p>Are you sure you want to clear the saved first guess "<span id="firstGuessWord"></span>"?</p>
+<button onclick="clearFirstGuess()">Yes, Clear First Guess</button>
+<button onclick="toggleFirstGuessConfirm()">Cancel</button>
+</div>
+</div>
+
 <div id="layout">
 <div id="statsPanel">
 <div id="helpButton" onclick="toggleHelp()">Help ?</div>
+<br>
+<div id="newGame" onclick="newGame()">New Game</div>
 <br>
 <div>Wins: <span id="wins">0</span></div>
 <div>Losses: <span id="losses">0</span></div>
@@ -284,7 +297,15 @@ toggleDictionaryPopup();}
 function toggleHelp(){const popup=document.getElementById("helpPopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
 
 function toggleCheat(){cheatEnabled = !cheatEnabled;
-updateCheatButton()
+if(cheatEnabled && profileEnabled){profileEnabled = false;
+document
+.getElementById("profilePanel")
+.style.display = "none";
+updateProfileButton();
+setMessage("Player Profile turned off.","notice");}
+
+updateCheatButton();
+
 document
 .getElementById("cheatPanel")
 .style.display = cheatEnabled
@@ -292,9 +313,7 @@ document
 : "none";
 
 if(cheatEnabled && turn > 0 && lastCheatTurn !== turn){totalCheats++;
-updateCheatButton()
-lastCheatTurn = turn;
-updateStats();}
+lastCheatTurn = turn;}
 
 updatePossibleWords();
 updateStats();}
@@ -304,19 +323,19 @@ function updateCheatButton(){document
 .textContent = (cheatEnabled ? "🟢 " : "🔴 ") + "Cheat";}
 
 function toggleProfile(){profileEnabled = !profileEnabled;
-updateProfileButton()
+if(profileEnabled && cheatEnabled){cheatEnabled = false;
+document
+.getElementById("cheatPanel")
+.style.display = "none";
+updateCheatButton();
+setMessage("Cheat turned off.","notice");}
+
+updateProfileButton();
 document
 .getElementById("profilePanel")
 .style.display = profileEnabled
 ? "block"
 : "none";
-
-document
-.getElementById("cheatPanel")
-.style.visibility = profileEnabled
-? "hidden"
-: "visible";
-
 updateProfilePanel();}
 
 function updateProfileButton(){document
@@ -356,7 +375,14 @@ if(data){try{profile = JSON.parse(data);}catch(e){profile = {};}}
 try{firstguess = localStorage.getItem("twordleFirstGuess") || "";}catch(e){}
 document.getElementById("saveGuess").value = firstguess.toUpperCase();}
 
-function saveGuess(){const guess = document.getElementById("saveGuess").value.toLowerCase().trim();
+function saveGuess(){const guess = document
+.getElementById("saveGuess")
+.value
+.toLowerCase()
+.trim();
+
+if(!guess){if(firstguess){toggleFirstGuessConfirm();}
+return;}
 
 if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word.");
 return;}
@@ -365,11 +391,26 @@ if(!dictionary.includes(guess)){setMessage("That word is not in the dictionary."
 return;}
 
 try{localStorage.setItem("twordleFirstGuess",guess);}catch(e){}
+firstguess = guess;
 setMessage(`First guess saved: ${guess.toUpperCase()}`);}
 
 function toggleConfirm(){const popup=document.getElementById("confirmPopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
 
 function toggleProfileConfirm(){const popup=document.getElementById("profilePopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
+
+function toggleFirstGuessConfirm(){document.getElementById("firstGuessWord").textContent = firstguess.toUpperCase();
+const popup = document.getElementById("firstGuessPopup");
+popup.style.display = popup.style.display === "flex"
+? "none"
+: "flex";}
+
+function clearFirstGuess(){try{localStorage.removeItem("twordleFirstGuess");}catch(e){}
+firstguess = "";
+document
+.getElementById("saveGuess")
+.value = "";
+toggleFirstGuessConfirm();
+setMessage("Saved first guess cleared.","notice");}
 
 function clearCookie(){try{document.cookie = "twordleStats=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
 try{localStorage.removeItem("twordleStats");}catch(e){}
@@ -722,7 +763,6 @@ turn = 0;
 gameover = false;
 hintedPositions = [];
 lastCheatTurn = -1;
-evaluateEnabled = false;
 
 document
 .getElementById("cheatPanel")
@@ -730,10 +770,6 @@ document
 cheatEnabled = false;
 updateCheatButton();
 
-document
-.getElementById("profilePanel")
-.style.display = "none";
-profileEnabled = false;
 updateProfileButton();
 
 document
@@ -760,6 +796,10 @@ document.getElementById("possibleWords").innerHTML = "";}
 document
 .getElementById("guess")
 .addEventListener("keydown",e=>{if(e.key === "Enter"){if(gameover){newGame();}else{submitGuess();}}});
+
+document
+.getElementById("saveGuess")
+.addEventListener("keydown",e=>{if(e.key === "Enter"){saveGuess();}});
 
 document.addEventListener("click",e=>{if(e.target.closest("button")){document.getElementById("guess").focus();}});
 
