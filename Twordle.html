@@ -94,7 +94,7 @@ button:active{transform:scale(0.95)}
 .keyrow{margin-top:5px;}
 .key{display:inline-block; width:32px; padding:10px 0; margin:2px; border-radius:4px; background:#818384; font-weight:bold; cursor:pointer; user-select:none;}
 .key.special{width:60px;}
-.key:active{transform:scale(0.99);}
+.key:active{transform:scale(0.95);}
 .key.green{background:#538d4e;}
 .key.yellow{background:#b59f3b;}
 .key.gray{background:#3a3a3c;}
@@ -272,9 +272,9 @@ let keyboard = {};
 let usedWords = [];
 let totalInvalidWords = 0;
 let invalidWords = 0;
-let evaluateEnabled = false;
+let evaluateEnabled = true;
 let cheatEnabled = false;
-let profileEnabled = false;
+let profileEnabled = true;
 let lastCheatTurn = -1;
 let wins = 0;
 let losses = 0;
