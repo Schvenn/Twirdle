@@ -285,6 +285,8 @@ let totalUndos = 0;
 let hintedPositions = [];
 let previousMatches = dictionary.length;
 let profile = {};
+const audiocontext = new (window.AudioContext || window.webkitAudioContext)();
+const ismobile = navigator.maxTouchPoints > 0;
 
 async function loadDictionary(file){const response = await fetch(file);
 if(!response.ok){throw new Error(`Unable to load dictionary: ${file}`);}
@@ -625,18 +627,15 @@ const keytext = key.textContent;
 
 if(keytext === "←"){input.value = input.value.slice(0,-1);
 beep(600,0.01,"triangle");
-input.focus();
 return;}
 
 if(keytext === "↵"){submitGuess();
-input.focus();
 return;}
 
 if(input.value.length < 5){input.value += keytext.toLowerCase();
 beep(800,0.01,"triangle");
-setMessage(`Loaded ${cell.dataset.word.toUpperCase()}.`,"notice");}
 
-input.focus();});});}
+setMessage(`Loaded ${cell.dataset.word.toUpperCase()}.`,"notice");}});});}
 
 function renderBoard(){const boardDiv =
 document.getElementById("board");
@@ -850,8 +849,6 @@ else{beep(300,0.02,"square",0.02);}
 renderBoard();
 if(i === 4){board.activeRow = -1;}},i * 200);}}
 
-const audiocontext = new (window.AudioContext || window.webkitAudioContext)();
-
 function beep(freq,duration,type="sine",volume=0.1){if(audiocontext.state === "suspended"){audiocontext.resume();}
 const osc = audiocontext.createOscillator();
 const gain = audiocontext.createGain();
@@ -912,6 +909,8 @@ document
 setMessage("");
 buildKeyboard();
 updateEvaluateButton();
+
+
 renderBoard();
 updateStats();
 document.getElementById("guess").focus();
@@ -923,11 +922,17 @@ document.getElementById("possibleWords").innerHTML = "";
 beep(523,0.10,"sine", 0.02);
 setTimeout(()=>beep(784,0.15,"sine", 0.02),100);}
 
-document.getElementById("guess").addEventListener("keydown",e=>{if(e.key.length === 1) beep(800,0.01,"triangle");
+document.getElementById("guess").addEventListener("keydown",e=>{const input = e.target;
+if(input.value.length >= 5 && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey){e.preventDefault();
+beep(250,0.01,"square");
+return;}
+
+if(e.key.length === 1) beep(800,0.01,"triangle");
 if(e.key === "Backspace") beep(600,0.01,"triangle");
 if(e.key === "Delete") beep(600,0.01,"triangle");
 
-if(e.key === "Enter"){if(gameover){newGame();}else{submitGuess();}}});
+if(e.key === "Enter"){if(gameover){newGame();}
+else{submitGuess();}}});
 
 document.getElementById("saveGuess").addEventListener("keydown",e=>{if(e.key.length === 1) beep(800,0.01,"triangle");
 if(e.key === "Backspace") beep(600,0.01,"triangle");
@@ -935,11 +940,12 @@ if(e.key === "Delete") beep(600,0.01,"triangle");
 
 if(e.key === "Enter"){saveGuess();}});
 
-document.addEventListener("click",e=>{if(e.target.closest("button")){document.getElementById("guess").focus();}});
+document.addEventListener("click",e=>{if(e.target.closest("button") && !ismobile){document.getElementById("guess").focus();}});
 
 document.addEventListener("click",e=>{if(e.target.matches("button")){playClickSound();}});
 
-document.getElementById("board").addEventListener("click",()=>{document.getElementById("guess").focus();});
+document.getElementById("board").addEventListener("click",()=>{playClickSound();
+document.getElementById("guess").focus();});
 
 if(window.visualViewport){window.visualViewport.addEventListener("resize",()=>{document.body.classList.toggle("keyboardOpen",window.visualViewport.height < window.innerHeight * 0.75);});}
 
@@ -952,6 +958,8 @@ await loadDictionary(savedDictionary);
 loadStats();
 loadProfile();
 newGame();
+updateProfileButton();
+document.getElementById("profilePanel").style.display = profileEnabled ? "block" : "none";
 updateProfileWords();}
 
 initialize();
