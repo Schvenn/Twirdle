@@ -23,13 +23,15 @@ h1{margin-bottom:10px;}
 
 #layout{display:grid; grid-template-columns: 220px 1fr 300px; gap:20px; max-width:1400px; margin:auto; align-items:start;}
 
-#helpButton{color:#ff0000; cursor:pointer; font-size:16px; font-weight:bold;}
-#helpPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1000; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;}
-#helpContent{position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left; line-height:1.5;}
-#helpContent h2{text-align:center; margin-top:0;}
-#helpContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
-#helpContent p{margin:12px 0;}
-#helpButton,#soundButton{display:inline-block; cursor:pointer;}
+#helpButton, #scoreButton {color:#ff0000; cursor:pointer; font-size:16px; font-weight:bold;}
+#helpPopup, #scorePopup {display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1000; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;}
+#helpContent, #scoreContent {position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left; line-height:1.5;}
+#helpContent h2, #scoreContent h2{text-align:center; margin-top:0;}
+#helpContent button, #scoreContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
+#helpContent p, #scoreContent p{margin:12px 0;}
+#helpButton, #soundButton, #scoreButton{display:inline-block; cursor:pointer;}
+
+#scoreBoard {font-size:48px; font-weight:bold; color:#00FF00}
 
 #confirmPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
 #profilePopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
@@ -160,6 +162,39 @@ button:active{transform:scale(0.95)}
 <p style="text-align:center; font-weight:bold; margin-top:20px;">Have fun!</p>
 </div></div>
 
+<div id="scorePopup" onclick="if(event.target===this)toggleScore()">
+<div id="scoreContent"><button onclick="toggleScore()">✕</button>
+<h2>Scoring</h2>
+
+<p><b>🏆 Base Score:</b><br>
+Solve the word = 50 points</p>
+
+<p><b>⚡ Solve Bonus:</b><br>
+Turn 1: +50, Turn 2: +40, Turn 3: +30,<br>
+Turn 4: +20, Turn 5: +10, Turn 6: +0</p>
+
+<p><b>⭐ Word Bonuses:</b><br>
++5 Rare Letter Word (V, X, Z, J, Q)<br>
++5 Word with 4+ Vowels or No Vowels (A, E, I, O, U, Y)</p>
+
+<p><b>📈 Progress:</b><br>
+🟩 Green = 10<br>
+🟨 Yellow = 5</p>
+
+<p><b>❌ Penalties:</b><br>
+Known gray letter reused once = -1<br>
+Known gray letter reused twice = -2<br>
+Known gray letter reused 3 times = -3<br>
+Known gray letter reused 4 times = -4<br>
+Use a Hint = -5<br>
+Attempt an invalid word = -10<br>
+Used an Undo = -15<br>
+Use the Cheat panel = -20</p>
+
+<small>Progress shows how close you are to solving the word.<br>Solved words are worth 50 points plus bonuses and minus penalties.<br>Unsolved puzzles score 0.</small>
+</div>
+</div>
+
 <div id="confirmPopup" onclick="if(event.target===this)toggleConfirm()">
 <div id="confirmContent">
 <h3>Are you sure you want to clear your statistics?</h3>
@@ -197,7 +232,9 @@ button:active{transform:scale(0.95)}
 
 <div id="layout">
 <div id="statsPanel">
-<div id="helpButton" onclick="toggleHelp()">Help ?</div> | <div id="soundButton" onclick="toggleSound()">🔊</div><br>
+<div id="helpButton" onclick="toggleHelp()">Help ?</div> | <div id="soundButton" onclick="toggleSound()">🔊</div>| <div id="scoreButton" onclick="toggleScore()">🏆</div><br>
+<br>
+<div id="scoreBoard">000</div>
 <br>
 <div id="newGame" onclick="newGame()">New Game</div>
 <br>
@@ -260,6 +297,7 @@ affiliated with or endorsed by The New York Times Company.<br>
 WORDLE&trade; is a trademark of The New York Times Company.</td></tr></table></div>
 
 <script>
+// ------------------------ DEFINE VARIABLES ------------------------------------------------------
 let dictionary = [];
 let pendingDictionary = null;
 let currentDictionary = "Twordle.txt";
@@ -285,9 +323,17 @@ let totalUndos = 0;
 let hintedPositions = [];
 let previousMatches = dictionary.length;
 let profile = {};
+let score = 0;
+let penaltyscore = 0;
+let cheatpenaltyapplied = false;
+let grayletteruses = {};
+let progressscore = 0;
+let positionvalues = [0,0,0,0,0];
 const audiocontext = new (window.AudioContext || window.webkitAudioContext)();
 const ismobile = navigator.maxTouchPoints > 0;
 
+
+// ------------------------ DICTIONARY ------------------------------------------------------------
 async function loadDictionary(file){const response = await fetch(file);
 if(!response.ok){throw new Error(`Unable to load dictionary: ${file}`);}
 const text = await response.text();
@@ -308,6 +354,8 @@ setMessage(file === "Twordle.txt"
 pendingDictionary = null;
 toggleDictionaryPopup();}
 
+
+// ------------------------ TOGGLES ---------------------------------------------------------------
 function toggleHelp(){playClickSound();
 const popup=document.getElementById("helpPopup");
 popup.style.display=popup.style.display==="flex"?"none":"flex";}
@@ -320,6 +368,82 @@ updateSoundButton();}
 
 function updateSoundButton(){document.getElementById("soundButton").textContent = soundenabled ? "🔊" : "🔇";}
 
+function toggleScore(){playClickSound();
+const popup=document.getElementById("scorePopup");
+popup.style.display=popup.style.display==="flex"?"none":"flex";}
+
+
+// ------------------------ SCORING ---------------------------------------------------------------
+function scoreGuess(guess, answerWord){let colors = ["gray","gray","gray","gray","gray"];
+let remaining = answerWord.split("");
+
+for(let i = 0; i < 5; i++){if(guess[i] === answerWord[i]){colors[i] = "green";
+remaining[i] = null;}}
+
+for(let i = 0; i < 5; i++){if(colors[i] === "green")
+continue;
+
+const idx = remaining.indexOf(guess[i]);
+if(idx >= 0){colors[i] = "yellow";
+remaining[idx] = null;}}
+
+return colors;}
+
+function updateScoreBoard(value){document.getElementById("scoreBoard").textContent = Math.max(0,value).toString().padStart(3,"0");}
+
+function updateLiveScore(){updateScoreBoard(calculateProgressScore());}
+
+function resetScore(){progressscore = 0;
+penaltyscore = 0;
+positionvalues = [0,0,0,0,0];
+grayletteruses = {};
+updateLiveScore();}
+
+function calculateProgressScore(){return Math.max(0, progressscore - penaltyscore);}
+
+function addLetterProgress(colors){for(let i = 0;i < 5;i++){let value = 0;
+
+if(colors[i] === "green"){value = 10;}
+else if(colors[i] === "yellow"){value = 5;}
+if(value > positionvalues[i]){progressscore += value - positionvalues[i];
+positionvalues[i] = value;}}
+updateLiveScore();}
+
+function getSolveBonus(turn){return Math.max(0,(6 - turn) * 10);}
+
+function hasRareLetter(word){return /[VXZJQ]/i.test(word);}
+
+function qualifiesVowelBonus(word){const vowels = (word.match(/[AEIOUY]/gi) || []).length;
+return vowels >= 4 || vowels === 0;}
+
+function applyGrayPenalties(guess,colors){for(let i = 0;i < 5;i++){if(colors[i] !== "gray") continue;
+const letter = guess[i];
+
+if(!(letter in grayletteruses)){grayletteruses[letter] = 0;
+continue;}
+grayletteruses[letter]++;
+penaltyscore += grayletteruses[letter];}
+updateLiveScore();}
+
+function rebuildScore(){progressscore = 0;
+positionvalues = [0,0,0,0,0];
+grayletteruses = {};
+for(const row of board){addLetterProgress(row.colors);
+applyGrayPenalties(row.word.toLowerCase(),row.colors);}
+updateLiveScore();}
+
+function calculateFinalScore(answer, turnSolved){let finalscore = 50;
+finalscore += getSolveBonus(turnSolved);
+if(hasRareLetter(answer)){finalscore += 5;}
+if(qualifiesVowelBonus(answer)){finalscore += 5;}
+finalscore -= penaltyscore;
+finalscore = Math.max(0,finalscore);
+score = finalscore;
+updateScoreBoard(score);
+return finalscore;}
+
+
+// ------------------------ CHEAT -----------------------------------------------------------------
 function toggleCheat(){cheatEnabled = !cheatEnabled;
 if(cheatEnabled && profileEnabled){profileEnabled = false;
 document
@@ -343,6 +467,10 @@ setTimeout(()=>beep(900,0.08,"triangle", 0.03),100);}
 if(cheatEnabled && turn > 0 && lastCheatTurn !== turn){totalCheats++;
 lastCheatTurn = turn;}
 
+if(cheatEnabled && turn > 0 && !cheatpenaltyapplied){penaltyscore += 20;
+updateLiveScore();
+cheatpenaltyapplied = true;}
+
 updatePossibleWords();
 updateStats();}
 
@@ -350,6 +478,66 @@ function updateCheatButton(){document
 .getElementById("cheatButton")
 .textContent = (cheatEnabled ? "🟢 " : "🔴 ") + "Cheat";}
 
+function updatePossibleWords(){if(!cheatEnabled)
+return;
+
+const matches = dictionary.filter(word => wordMatchesBoard(word));
+
+document
+.getElementById("possibleWords")
+.innerHTML = "<b>" + matches.length + (matches.length === 1 ? " match" : " matches") + "</b><br><br>" + matches.join(", ");}
+
+
+// ------------------------ HINT & UNDO -----------------------------------------------------------
+function giveHint(){if(gameover)
+return;
+
+let revealed = [];
+for(let i=0;i<5;i++){if(hintedPositions.includes(i) || board.some(row => row.colors[i] === "green")){revealed.push(i);}}
+
+if(revealed.length >= 4){setMessage("No more hints available.","warning");
+return;}
+
+for(let i=0;i<4;i++){if(!revealed.includes(i)){hintedPositions.push(i);
+penaltyscore += 5;
+updateLiveScore();
+totalHints++;
+updateStats();
+updatePossibleWords();
+setMessage("Hint revealed.","notice");
+return;}}}
+
+function undo(){if(gameover || board.length === 0) {return;}
+totalUndos++;
+penaltyscore += 15;
+updateLiveScore();
+beep(1000,0.03,"triangle", 0.03);
+setTimeout(()=>beep(850,0.03,"triangle", 0.03),30);
+setTimeout(()=>beep(700,0.05,"triangle", 0.03),60);
+board.pop();
+usedWords.pop();
+rebuildScore();
+turn = Math.max(0, turn - 1);
+keyboard = {};
+buildKeyboard();
+for(const row of board){updateKeyboard(row.word.toLowerCase(), row.colors);}
+renderBoard();
+updatePossibleWords();
+updateStats();
+setMessage("Last guess removed.","notice");}
+
+
+// ------------------------ EVALUATE --------------------------------------------------------------
+function updateEvaluateButton(){document
+.getElementById("evaluateButton")
+.textContent = (evaluateEnabled ? "🟢 " : "🔴 ") + "Evaluate";}
+
+function updateEvaluateStatus(){if(!evaluateEnabled){return;}
+const matches = dictionary.filter(word => wordMatchesBoard(word));
+setMessage(`Based on your current board, there ${matches.length === 1 ? "is 1 possible match." : `are ${matches.length.toLocaleString()} possible matches.`}`,"notice");}
+
+
+// ------------------------ PLAYER PROFILE --------------------------------------------------------
 function toggleProfile(){profileEnabled = !profileEnabled;
 if(profileEnabled && cheatEnabled){cheatEnabled = false;
 document
@@ -364,28 +552,11 @@ document
 .style.display = profileEnabled
 ? "block"
 : "none";
-updateProfilePanel();}
+updateProfileWords();}
 
 function updateProfileButton(){document
 .getElementById("profileButton")
 .textContent = (profileEnabled ? "🟢 " : "🔴 ") + "Player Profile";}
-
-function saveStats(){const stats = JSON.stringify({wins:wins,losses:losses,totalHints:totalHints,totalInvalidWords:totalInvalidWords,totalWinTurns:totalWinTurns,totalCheats:totalCheats,totalUndos:totalUndos});
-try{localStorage.setItem("twordleStats",stats);}catch(e){console.warn("Unable to save TWORDLE stats to localStorage.");}
-try{document.cookie = "twordleStats=" + encodeURIComponent(stats) + "; max-age=31536000; path=/; SameSite=Lax";}catch(e){console.warn("Unable to save TWORDLE stats cookie.");}}
-
-function loadStats(){let stats = null;
-try{stats = localStorage.getItem("twordleStats");}catch(e){}
-if(!stats){const cookie = document.cookie.split("; ").find(row => row.startsWith("twordleStats="));
-if(cookie){stats = decodeURIComponent(cookie.substring("twordleStats=".length));}}
-if(stats){try{const data = JSON.parse(stats);
-wins = Number(data.wins) || 0;
-losses = Number(data.losses) || 0;
-totalWinTurns = Number(data.totalWinTurns) || 0;
-totalHints = Number(data.totalHints) || 0;
-totalInvalidWords = Number(data.totalInvalidWords) || 0;
-totalCheats = Number(data.totalCheats) || 0;
-totalUndos = Number(data.totalUndos) || 0;}catch(e){console.warn("Unable to load TWORDLE stats.");}}}
 
 function saveProfile(){const data = JSON.stringify(profile);
 try{localStorage.setItem("twordleProfile",data);}catch(e){}
@@ -403,292 +574,14 @@ if(data){try{profile = JSON.parse(data);}catch(e){profile = {};}}
 try{firstguess = localStorage.getItem("twordleFirstGuess") || "";}catch(e){}
 document.getElementById("saveGuess").value = firstguess.toUpperCase();}
 
-function saveGuess(){const guess = document
-.getElementById("saveGuess")
-.value
-.toLowerCase()
-.trim();
-
-if(!guess){if(firstguess){toggleFirstGuessConfirm();}
-return;}
-
-if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word.");
-return;}
-
-if(!dictionary.includes(guess)){setMessage("That word is not in the dictionary.");
-return;}
-
-try{localStorage.setItem("twordleFirstGuess",guess);}catch(e){}
-firstguess = guess;
-setMessage(`First guess saved: ${guess.toUpperCase()}`);}
-
-function toggleConfirm(){const popup=document.getElementById("confirmPopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
-
 function toggleProfileConfirm(){const popup=document.getElementById("profilePopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
-
-function toggleFirstGuessConfirm(){document.getElementById("firstGuessWord").textContent = firstguess.toUpperCase();
-const popup = document.getElementById("firstGuessPopup");
-popup.style.display = popup.style.display === "flex"
-? "none"
-: "flex";}
-
-function clearFirstGuess(){try{localStorage.removeItem("twordleFirstGuess");}catch(e){}
-firstguess = "";
-document
-.getElementById("saveGuess")
-.value = "";
-toggleFirstGuessConfirm();
-setMessage("Saved first guess cleared.","notice");}
-
-function clearCookie(){try{document.cookie = "twordleStats=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
-try{localStorage.removeItem("twordleStats");}catch(e){}
-location.reload();}
 
 function clearProfile(){try{document.cookie = "twordleProfile=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
 try{localStorage.removeItem("twordleProfile");}catch(e){}
 try{localStorage.removeItem("twordleFirstGuess");}catch(e){}
 location.reload();}
 
-function toggleDictionaryPopup(){const popup = document.getElementById("dictionaryPopup");
-popup.style.display = popup.style.display === "flex"
-? "none"
-: "flex";}
-
-function confirmDictionaryChange(){const selected = document
-.getElementById("dictionarySelect")
-.value;
-
-if(selected === currentDictionary){return;}
-pendingDictionary = selected;
-toggleDictionaryPopup();}
-
-function cancelDictionaryChange(){document
-.getElementById("dictionarySelect")
-.value = currentDictionary;
-toggleDictionaryPopup();}
-
 function ensureProfileWord(word){if(!profile[word]){profile[word] = {date:"", counts:[0,0,0,0,0,0,0,0,0,0,0,0]};}}
-
-function updateStats(){document
-.getElementById("wins")
-.textContent = wins;
-
-document
-.getElementById("losses")
-.textContent = losses;
-
-document
-.getElementById("winavg")
-.textContent = wins? (totalWinTurns / wins).toFixed(1): "0";
-
-document
-.getElementById("hintcount")
-.textContent = totalHints;
-
-document
-.getElementById("currentWord")
-.textContent = answer.split("").map((letter,i) =>
-hintedPositions.includes(i) || board.some(row => row.colors[i] === "green")
-? letter.toUpperCase()
-: "_").join("");
-
-document
-.getElementById("invalidcount")
-.textContent = totalInvalidWords;
-
-const total = wins + losses;
-
-document
-.getElementById("winpct")
-.textContent =
-total
-? Math.round(wins / total * 100): 0;
-
-document
-.getElementById("cheatcount")
-.textContent = totalCheats;
-
-document
-.getElementById("undocount")
-.textContent = totalUndos;
-
-saveStats();
-updateProfileWords();
-saveProfile();}
-
-function giveHint(){if(gameover)
-return;
-
-let revealed = [];
-
-for(let i=0;i<5;i++){if(hintedPositions.includes(i) || board.some(row => row.colors[i] === "green")){revealed.push(i);}}
-
-if(revealed.length >= 4){setMessage("No more hints available.","warning");
-return;}
-
-for(let i=0;i<4;i++){if(!revealed.includes(i)){hintedPositions.push(i);
-totalHints++;
-updateStats();
-updatePossibleWords();
-setMessage("Hint revealed.","notice");
-return;}}}
-
-function evaluateGuess(){const guess = document
-.getElementById("guess")
-.value
-.trim()
-.toLowerCase();
-
-if(!guess){if(evaluateEnabled){evaluateEnabled = false;
-updateEvaluateButton();
-setMessage("Evaluate is now turned off.","notice");
-return;}
-evaluateEnabled = true;
-updateEvaluateButton();
-const matches = dictionary.filter(word => wordMatchesBoard(word));
-setMessage(`Based on your current board, there ${matches.length === 1 ? "is" : "are"} ${matches.length.toLocaleString()} possible ${matches.length === 1 ? "match" : "matches"}.`,"notice");
-return;}
-
-if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word to evaluate.");return;}
-const candidates = dictionary.filter(word => wordMatchesBoard(word));
-const before = candidates.length;
-let totalRemaining = 0;
-
-if(board.length === 0){setMessage("Submit your first guess before using Evaluate.","notice");
-return;}
-
-for(const possibleAnswer of candidates){const pattern = scoreGuess(guess, possibleAnswer);
-let remaining = 0;
-
-for(const candidate of candidates){const test = scoreGuess(guess, candidate);
-let same = true;
-
-for(let i = 0; i < 5; i++){if(test[i] !== pattern[i]){same = false;
-break;}}
-
-if(same) remaining++;}
-totalRemaining += remaining;}
-
-const averageRemaining = Math.round(totalRemaining / before);
-const reduction = before - averageRemaining;
-const percent = before ? Math.round(reduction / before * 100) : 0;
-setMessage(`${guess.toUpperCase()} is expected to reduce ${before} possibilites to about ${averageRemaining} (↓${percent}%).`,"message");}
-
-function updateEvaluateButton(){document
-.getElementById("evaluateButton")
-.textContent = (evaluateEnabled ? "🟢 " : "🔴 ") + "Evaluate";}
-
-function updateEvaluateStatus(){if(!evaluateEnabled){return;}
-const matches = dictionary.filter(word => wordMatchesBoard(word));
-setMessage(`Based on your current board, there ${matches.length.toLocaleString()} possible ${matches.length === 1 ? "match" : "matches"}.`,"notice");}
-
-function wordMatchesBoard(word){for(const row of board){const test = scoreGuess(row.word.toLowerCase(), word);
-for(let i=0;i<5;i++){if(test[i] !== row.colors[i]){return false;}}}
-
-for(const i of hintedPositions){if(word[i] !== answer[i]){return false;}}
-return true;}
-
-function undo(){if(gameover || board.length === 0) {return;}
-totalUndos++;
-beep(1000,0.03,"triangle", 0.03);
-setTimeout(()=>beep(850,0.03,"triangle", 0.03),30);
-setTimeout(()=>beep(700,0.05,"triangle", 0.03),60);
-board.pop();
-usedWords.pop();
-turn = Math.max(0, turn - 1);
-keyboard = {};
-buildKeyboard();
-for(const row of board){updateKeyboard(row.word.toLowerCase(), row.colors);}
-renderBoard();
-updatePossibleWords();
-updateStats();
-setMessage("Last guess removed.","notice");}
-
-function buildKeyboard(){const rows = ["QWERTYUIOP",
-"ASDFGHJKL",
-"←ZXCVBNM↵"];
-let html = "";
-
-for(const row of rows){html += '<div class="keyrow">';
-
-for(const letter of row){const special = letter === "←" || letter === "↵"
-? " special"
-: "";
-
-html += `<span class="key${special}" id="key-${letter}">${letter}</span>`;}
-html += "</div>";}
-
-document.getElementById("keyboard").innerHTML = html;
-
-document.querySelectorAll("#keyboard .key").forEach(key=>{key.addEventListener("click",()=>{
-if(gameover) return;
-const input = document.getElementById("guess");
-const keytext = key.textContent;
-
-if(keytext === "←"){input.value = input.value.slice(0,-1);
-beep(600,0.01,"triangle");
-return;}
-
-if(keytext === "↵"){submitGuess();
-return;}
-
-if(input.value.length < 5){input.value += keytext.toLowerCase();
-beep(800,0.01,"triangle");
-
-setMessage(`Loaded ${cell.dataset.word.toUpperCase()}.`,"notice");}});});}
-
-function renderBoard(){const boardDiv =
-document.getElementById("board");
-let html = "";
-for(let r = 0; r < 6; r++){html += '<div class="row">';
-
-if(board[r]){const row = board[r];
-for(let c = 0; c < 5; c++){const color = row.revealed[c] ? row.colors[c] : "";
-const revealclass = board.activeRow === r && row.revealed[c]
-? "revealed"
-: "";
-html += `<div class="tile ${color} ${revealclass}">${row.word[c]}</div>`;}}
-
-else {for(let c = 0; c < 5; c++){html += '<div class="tile"></div>';}}
-html += '</div>';}
-boardDiv.innerHTML = html;}
-
-function setMessage(text,type="notice"){const message = document.getElementById("message");
-message.textContent = text;
-message.className = type;}
-
-function updateKeyboard(word,colors){for(let i = 0; i < 5; i++){const letter = word[i].toUpperCase();
-const key = document.getElementById(`key-${letter}`);
-const current = keyboard[letter];
-const next = colors[i];
-if(next === "green"){keyboard[letter] = "green";}
-else if(next === "yellow" && current !== "green"){keyboard[letter] = "yellow";}
-else if(next === "gray" && !current){keyboard[letter] = "gray";}
-key.className = "key " + keyboard[letter];}}
-
-function updatePossibleWords(){if(!cheatEnabled)
-return;
-
-const matches = dictionary.filter(word => wordMatchesBoard(word));
-
-document
-.getElementById("possibleWords")
-.innerHTML = "<b>" + matches.length + (matches.length === 1 ? " match" : " matches") + "</b><br><br>" + matches.join(", ");}
-
-function scoreGuess(guess, answerWord){let colors = ["gray","gray","gray","gray","gray"];
-let remaining = answerWord.split("");
-
-for(let i = 0; i < 5; i++){if(guess[i] === answerWord[i]){colors[i] = "green";
-remaining[i] = null;}}
-
-for(let i = 0; i < 5; i++){if(colors[i] === "green")
-continue;
-
-const idx = remaining.indexOf(guess[i]);
-if(idx >= 0){colors[i] = "yellow";
-remaining[idx] = null;}}
-
-return colors;}
 
 function updateProfileWords(){const topwords = Object.entries(profile)
 .filter(([word,data]) => data.counts.slice(0,6).reduce((a,b) => a + b, 0) > 0)
@@ -744,6 +637,135 @@ if(result === "win"){profile[word].counts[i]++;}
 
 if(result === "loss"){profile[word].counts[i + 6]++;}}}
 
+
+// ------------------------ FIRST GUESS -----------------------------------------------------------
+function saveGuess(){const guess = document
+.getElementById("saveGuess")
+.value
+.toLowerCase()
+.trim();
+
+if(!guess){if(firstguess){toggleFirstGuessConfirm();}
+return;}
+
+if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word.");
+return;}
+
+if(!dictionary.includes(guess)){setMessage("That word is not in the dictionary.");
+return;}
+
+try{localStorage.setItem("twordleFirstGuess",guess);}catch(e){}
+firstguess = guess;
+setMessage(`First guess saved: ${guess.toUpperCase()}`);}
+
+function toggleFirstGuessConfirm(){document.getElementById("firstGuessWord").textContent = firstguess.toUpperCase();
+const popup = document.getElementById("firstGuessPopup");
+popup.style.display = popup.style.display === "flex"
+? "none"
+: "flex";}
+
+function clearFirstGuess(){try{localStorage.removeItem("twordleFirstGuess");}catch(e){}
+firstguess = "";
+document
+.getElementById("saveGuess")
+.value = "";
+toggleFirstGuessConfirm();
+setMessage("Saved first guess cleared.","notice");}
+
+
+// ------------------------ STATS -----------------------------------------------------------------
+function saveStats(){const stats = JSON.stringify({wins:wins,losses:losses,totalHints:totalHints,totalInvalidWords:totalInvalidWords,totalWinTurns:totalWinTurns,totalCheats:totalCheats,totalUndos:totalUndos});
+try{localStorage.setItem("twordleStats",stats);}catch(e){console.warn("Unable to save TWORDLE stats to localStorage.");}
+try{document.cookie = "twordleStats=" + encodeURIComponent(stats) + "; max-age=31536000; path=/; SameSite=Lax";}catch(e){console.warn("Unable to save TWORDLE stats cookie.");}}
+
+function loadStats(){let stats = null;
+try{stats = localStorage.getItem("twordleStats");}catch(e){}
+if(!stats){const cookie = document.cookie.split("; ").find(row => row.startsWith("twordleStats="));
+if(cookie){stats = decodeURIComponent(cookie.substring("twordleStats=".length));}}
+if(stats){try{const data = JSON.parse(stats);
+wins = Number(data.wins) || 0;
+losses = Number(data.losses) || 0;
+totalWinTurns = Number(data.totalWinTurns) || 0;
+totalHints = Number(data.totalHints) || 0;
+totalInvalidWords = Number(data.totalInvalidWords) || 0;
+totalCheats = Number(data.totalCheats) || 0;
+totalUndos = Number(data.totalUndos) || 0;}catch(e){console.warn("Unable to load TWORDLE stats.");}}}
+
+function toggleConfirm(){const popup=document.getElementById("confirmPopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
+
+function clearCookie(){try{document.cookie = "twordleStats=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
+try{localStorage.removeItem("twordleStats");}catch(e){}
+location.reload();}
+
+function updateStats(){document
+.getElementById("wins")
+.textContent = wins;
+
+document
+.getElementById("losses")
+.textContent = losses;
+
+document
+.getElementById("winavg")
+.textContent = wins? (totalWinTurns / wins).toFixed(1): "0";
+
+document
+.getElementById("hintcount")
+.textContent = totalHints;
+
+document
+.getElementById("currentWord")
+.textContent = answer.split("").map((letter,i) =>
+hintedPositions.includes(i) || board.some(row => row.colors[i] === "green")
+? letter.toUpperCase()
+: "_").join("");
+
+document
+.getElementById("invalidcount")
+.textContent = totalInvalidWords;
+
+const total = wins + losses;
+
+document
+.getElementById("winpct")
+.textContent =
+total
+? Math.round(wins / total * 100): 0;
+
+document
+.getElementById("cheatcount")
+.textContent = totalCheats;
+
+document
+.getElementById("undocount")
+.textContent = totalUndos;
+
+saveStats();
+updateProfileWords();
+saveProfile();}
+
+
+// ------------------------ DICTIONARY ------------------------------------------------------------
+function toggleDictionaryPopup(){const popup = document.getElementById("dictionaryPopup");
+popup.style.display = popup.style.display === "flex"
+? "none"
+: "flex";}
+
+function confirmDictionaryChange(){const selected = document
+.getElementById("dictionarySelect")
+.value;
+
+if(selected === currentDictionary){return;}
+pendingDictionary = selected;
+toggleDictionaryPopup();}
+
+function cancelDictionaryChange(){document
+.getElementById("dictionarySelect")
+.value = currentDictionary;
+toggleDictionaryPopup();}
+
+
+// ------------------------ GAME LOGIC ------------------------------------------------------------
 function submitGuess(){if(gameover)
 return;
 
@@ -765,6 +787,8 @@ return;}
 
 if(!dictionary.includes(guess)){invalidWords++;
 totalInvalidWords++;
+penaltyscore += 10;
+updateLiveScore();
 updateStats();
 if(invalidWords >= 5){setMessage(`Too many invalid words. Answer: ${answer.toUpperCase()}`,"error");
 document.getElementById("guess").value = "";
@@ -783,10 +807,10 @@ document.getElementById("guess").value = "";
 setTimeout(()=>beep(200,0.12,"square", 0.02),100);
 beep(150,0.25,"sawtooth", 0.02);
 return;}
-
 usedWords.push(guess);
-
 const colors = scoreGuess(guess, answer);
+addLetterProgress(colors);
+applyGrayPenalties(guess,colors);
 board.push({word:guess.toUpperCase(), colors:colors, revealed:[false,false,false,false,false]});
 board.activeRow = board.length - 1;
 updateKeyboard(guess,colors);
@@ -806,7 +830,9 @@ document
 .getElementById("guess")
 .value = "";
 
-if(guess === answer){setMessage("Solved!","solved");
+if(guess === answer){const finalscore = calculateFinalScore(answer, board.length);
+setMessage(`Solved! You earned ${finalscore} points!`,"solved");
+
 document
 .getElementById("playagain")
 .style.display = "inline-block";
@@ -838,6 +864,53 @@ return;}
 
 updateEvaluateStatus();}
 
+function evaluateGuess(){const guess = document
+.getElementById("guess")
+.value
+.trim()
+.toLowerCase();
+
+if(!guess){if(evaluateEnabled){evaluateEnabled = false;
+updateEvaluateButton();
+setMessage("Evaluate is now turned off.","notice");
+return;}
+evaluateEnabled = true;
+updateEvaluateButton();
+const matches = dictionary.filter(word => wordMatchesBoard(word));
+setMessage(`Based on your current board, there ${matches.length === 1 ? "is" : "are"} ${matches.length.toLocaleString()} possible ${matches.length === 1 ? "match" : "matches"}.`,"notice");
+return;}
+
+if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word to evaluate.");return;}
+const candidates = dictionary.filter(word => wordMatchesBoard(word));
+const before = candidates.length;
+let totalRemaining = 0;
+
+if(board.length === 0){setMessage("Submit your first guess before using Evaluate.","notice");
+return;}
+
+for(const possibleAnswer of candidates){const pattern = scoreGuess(guess, possibleAnswer);
+let remaining = 0;
+
+for(const candidate of candidates){const test = scoreGuess(guess, candidate);
+let same = true;
+
+for(let i = 0; i < 5; i++){if(test[i] !== pattern[i]){same = false;
+break;}}
+
+if(same) remaining++;}
+totalRemaining += remaining;}
+
+const averageRemaining = Math.round(totalRemaining / before);
+const reduction = before - averageRemaining;
+const percent = before ? Math.round(reduction / before * 100) : 0;
+setMessage(`${guess.toUpperCase()} is expected to reduce ${before} possibilites to about ${averageRemaining} (↓${percent}%).`,"message");}
+
+function wordMatchesBoard(word){for(const row of board){const test = scoreGuess(row.word.toLowerCase(), word);
+for(let i=0;i<5;i++){if(test[i] !== row.colors[i]){return false;}}}
+
+for(const i of hintedPositions){if(word[i] !== answer[i]){return false;}}
+return true;}
+
 function revealRow(rowindex){const row = board[rowindex];
 console.log("reveal");
 for(let i = 0; i < 5; i++){setTimeout(()=>{
@@ -849,36 +922,9 @@ else{beep(300,0.02,"square",0.02);}
 renderBoard();
 if(i === 4){board.activeRow = -1;}},i * 200);}}
 
-function beep(freq,duration,type="sine",volume=0.1){if(audiocontext.state === "suspended"){audiocontext.resume();}
-const osc = audiocontext.createOscillator();
-const gain = audiocontext.createGain();
-osc.type = type;
-osc.frequency.value = freq;
-osc.connect(gain);
-gain.connect(audiocontext.destination);
-gain.gain.value = volume;
-osc.start();
-gain.gain.exponentialRampToValueAtTime(0.0001, audiocontext.currentTime + duration);
-osc.stop(audiocontext.currentTime + duration);
-osc.onended = ()=>{osc.disconnect();
-gain.disconnect();};}
-
-function playLoseSound(){const ctx = new AudioContext();
-const osc = ctx.createOscillator();
-const gain = ctx.createGain();
-osc.type = "sawtooth";
-osc.frequency.setValueAtTime(250,ctx.currentTime);
-osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.75);
-osc.connect(gain);
-gain.connect(ctx.destination);
-gain.gain.setValueAtTime(0.03,ctx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.75);
-osc.start();
-osc.stop(ctx.currentTime + 0.75);}
-
-function playClickSound(){beep(1200,0.01,"triangle");}
-
 function newGame(){answer = dictionary[Math.floor(Math.random() * dictionary.length)];
+resetScore();
+grayletteruses = {};
 board = [];
 keyboard = {};
 usedWords = [];
@@ -887,6 +933,7 @@ turn = 0;
 gameover = false;
 hintedPositions = [];
 lastCheatTurn = -1;
+cheatpenaltyapplied = false;
 
 document
 .getElementById("cheatPanel")
@@ -922,6 +969,104 @@ document.getElementById("possibleWords").innerHTML = "";
 beep(523,0.10,"sine", 0.02);
 setTimeout(()=>beep(784,0.15,"sine", 0.02),100);}
 
+
+// ------------------------ KEYBOARD --------------------------------------------------------------
+
+function buildKeyboard(){const rows = ["QWERTYUIOP",
+"ASDFGHJKL",
+"←ZXCVBNM↵"];
+let html = "";
+
+for(const row of rows){html += '<div class="keyrow">';
+
+for(const letter of row){const special = letter === "←" || letter === "↵"
+? " special"
+: "";
+
+html += `<span class="key${special}" id="key-${letter}">${letter}</span>`;}
+html += "</div>";}
+
+document.getElementById("keyboard").innerHTML = html;
+
+document.querySelectorAll("#keyboard .key").forEach(key=>{key.addEventListener("click",()=>{
+if(gameover) return;
+const input = document.getElementById("guess");
+const keytext = key.textContent;
+
+if(keytext === "←"){input.value = input.value.slice(0,-1);
+beep(600,0.01,"triangle");
+return;}
+
+if(keytext === "↵"){submitGuess();
+return;}
+
+if(input.value.length < 5){input.value += keytext.toLowerCase();
+beep(800,0.01,"triangle");}});});}
+
+function renderBoard(){const boardDiv =
+document.getElementById("board");
+let html = "";
+for(let r = 0; r < 6; r++){html += '<div class="row">';
+
+if(board[r]){const row = board[r];
+for(let c = 0; c < 5; c++){const color = row.revealed[c] ? row.colors[c] : "";
+const revealclass = board.activeRow === r && row.revealed[c]
+? "revealed"
+: "";
+html += `<div class="tile ${color} ${revealclass}">${row.word[c]}</div>`;}}
+
+else {for(let c = 0; c < 5; c++){html += '<div class="tile"></div>';}}
+html += '</div>';}
+boardDiv.innerHTML = html;}
+
+function updateKeyboard(word,colors){for(let i = 0; i < 5; i++){const letter = word[i].toUpperCase();
+const key = document.getElementById(`key-${letter}`);
+const current = keyboard[letter];
+const next = colors[i];
+if(next === "green"){keyboard[letter] = "green";}
+else if(next === "yellow" && current !== "green"){keyboard[letter] = "yellow";}
+else if(next === "gray" && !current){keyboard[letter] = "gray";}
+key.className = "key " + keyboard[letter];}}
+
+
+// ------------------------ MESSAGE ---------------------------------------------------------------
+function setMessage(text,type="notice"){const message = document.getElementById("message");
+message.textContent = text;
+message.className = type;}
+
+
+// ------------------------ AUDIO -----------------------------------------------------------------
+function beep(freq,duration,type="sine",volume=0.1){if(audiocontext.state === "suspended"){audiocontext.resume();}
+const osc = audiocontext.createOscillator();
+const gain = audiocontext.createGain();
+osc.type = type;
+osc.frequency.value = freq;
+osc.connect(gain);
+gain.connect(audiocontext.destination);
+gain.gain.value = volume;
+osc.start();
+gain.gain.exponentialRampToValueAtTime(0.0001, audiocontext.currentTime + duration);
+osc.stop(audiocontext.currentTime + duration);
+osc.onended = ()=>{osc.disconnect();
+gain.disconnect();};}
+
+function playLoseSound(){const ctx = new AudioContext();
+const osc = ctx.createOscillator();
+const gain = ctx.createGain();
+osc.type = "sawtooth";
+osc.frequency.setValueAtTime(250,ctx.currentTime);
+osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.75);
+osc.connect(gain);
+gain.connect(ctx.destination);
+gain.gain.setValueAtTime(0.03,ctx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.75);
+osc.start();
+osc.stop(ctx.currentTime + 0.75);}
+
+function playClickSound(){beep(1200,0.01,"triangle");}
+
+
+// ------------------------ EVENT LISTENERS -------------------------------------------------------
 document.getElementById("guess").addEventListener("keydown",e=>{const input = e.target;
 if(input.value.length >= 5 && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey){e.preventDefault();
 beep(250,0.01,"square");
@@ -949,6 +1094,7 @@ document.getElementById("guess").focus();});
 
 if(window.visualViewport){window.visualViewport.addEventListener("resize",()=>{document.body.classList.toggle("keyboardOpen",window.visualViewport.height < window.innerHeight * 0.75);});}
 
+// ------------------------ INITIALIZATION --------------------------------------------------------
 async function initialize(){const savedDictionary = localStorage.getItem("twordleDictionary") || "Twordle.txt";
 document
 .getElementById("dictionarySelect")
