@@ -160,9 +160,9 @@ Guess: WIMPY
 ---
 ## [Twordle Online](http://schvenn.byethost14.com/Twordle.html)
 
-As you can see, it has lots of cheat features, making it a great tool for learning, testing and playing. You choose the level of effort you want to put into the game by deciding which cheats if any, that you use.
+As you can see, it has lots of cheat features, making it a great tool for learning, testing and playing, as well as a unique scoring system. You choose the level of effort you want to put into the game by deciding which cheats if any, that you use.
 
-<img width="664" height="578" alt="image" src="https://github.com/user-attachments/assets/caeed321-7703-4934-ad8b-ec5a8f0a8613" />
+<img width="671" height="580" alt="image" src="https://github.com/user-attachments/assets/cf33acf7-05e4-40f4-b5b8-ee055c99a964" />
 
 <br>`Twordle.html` is the Current version, supporting multiple dictionaries, which also requires two dictionary files: `Twordle.txt` and `SOWPODS5.txt`.
 
