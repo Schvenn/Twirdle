@@ -167,31 +167,29 @@ button:active{transform:scale(0.95)}
 <h2>Scoring</h2>
 
 <p><b>🏆 Base Score:</b><br>
-Solve the word = 50 points</p>
+Solve the word for 50 points.</p>
 
-<p><b>⚡ Solve Bonus:</b><br>
-Turn 1: +50, Turn 2: +40, Turn 3: +30,<br>
-Turn 4: +20, Turn 5: +10, Turn 6: +0</p>
+<p><b>⚡ Solve Bonuses:</b><br>
+<ul><li>You get a 50 point bonus for solving the word on the first turn.</li>
+<li>That bonus decreases by 10 points each turn.</li></ul>
 
 <p><b>⭐ Word Bonuses:</b><br>
-+5 Rare Letter Word (V, X, Z, J, Q)<br>
-+5 Word with 4+ Vowels or No Vowels (A, E, I, O, U, Y)</p>
+<ul><li>Gain 5 points for solving a word that contains at least one rare letter: V, X, Z, J, or Q.</li>
+<li>Gain 5 points for solving a word that has at least 4 vowels, or has no vowels: A, E, I, O, U, or Y.</li></ul>
 
 <p><b>📈 Progress:</b><br>
-🟩 Green = 10<br>
-🟨 Yellow = 5</p>
+While working towards the solution, the score will update:<br>
+<ul><li>🟩 Green tiles add 10 points each.</li>
+<li>🟨 Yellow tiles add 5 points each.</li></ul>
+
+<small>Progress only shows how close you are to solving the word, not your final score.</small>
 
 <p><b>❌ Penalties:</b><br>
-Known gray letter reused once = -1<br>
-Known gray letter reused twice = -2<br>
-Known gray letter reused 3 times = -3<br>
-Known gray letter reused 4 times = -4<br>
-Use a Hint = -5<br>
-Attempt an invalid word = -10<br>
-Used an Undo = -15<br>
-Use the Cheat panel = -20</p>
-
-<small>Progress shows how close you are to solving the word.<br>Solved words are worth 50 points plus bonuses and minus penalties.<br>Unsolved puzzles score 0.</small>
+<ul><li>Replaying a known invalid letter costs you 1 additional point each time you replay it, for an accumulative penalty as high as 10 points (1+2+3+4).</li>
+<li>Hints costs 5 points each.</li>
+<li>Invalid words cost 10 points each.</li>
+<li>Undo costs 15 points each use.</li>
+<li>Using the Cheat panel costs 20 points, once per turn.</li></ul>
 </div>
 </div>
 
