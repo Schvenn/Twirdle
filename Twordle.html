@@ -171,16 +171,16 @@ Solve the word for 50 points.</p>
 
 <p><b>⚡ Solve Bonuses:</b><br>
 <ul><li>You get a 50 point bonus for solving the word on the first turn.</li>
-<li>That bonus decreases by 10 points each turn.</li></ul>
+<li>That bonus decreases by 10 points each turn.</li></ul></p>
 
 <p><b>⭐ Word Bonuses:</b><br>
 <ul><li>Gain 5 points for solving a word that contains at least one rare letter: V, X, Z, J, or Q.</li>
-<li>Gain 5 points for solving a word that has at least 4 vowels, or has no vowels: A, E, I, O, U, or Y.</li></ul>
+<li>Gain 5 points for solving a word that has at least 4 vowels, or has no vowels: A, E, I, O, U, or Y.</li></ul></p>
 
 <p><b>📈 Progress:</b><br>
 While working towards the solution, the score will update:<br>
 <ul><li>🟩 Green tiles add 10 points each.</li>
-<li>🟨 Yellow tiles add 5 points each.</li></ul>
+<li>🟨 Yellow tiles add 5 points each.</li></ul></p>
 
 <small>Progress only shows how close you are to solving the word, not your final score.</small>
 
@@ -189,7 +189,7 @@ While working towards the solution, the score will update:<br>
 <li>Hints costs 5 points each.</li>
 <li>Invalid words cost 10 points each.</li>
 <li>Undo costs 15 points each use.</li>
-<li>Using the Cheat panel costs 20 points, once per turn.</li></ul>
+<li>Using the Cheat panel costs 20 points, once per turn.</li></ul></p>
 </div>
 </div>
 
@@ -311,6 +311,7 @@ let invalidWords = 0;
 let evaluateEnabled = true;
 let cheatEnabled = false;
 let profileEnabled = true;
+let previousProfilestate = true;
 let lastCheatTurn = -1;
 let wins = 0;
 let losses = 0;
@@ -327,6 +328,9 @@ let cheatpenaltyapplied = false;
 let grayletteruses = {};
 let progressscore = 0;
 let positionvalues = [0,0,0,0,0];
+let gameswon = 0;
+let totalscore = 0;
+let highscore = 0;
 const audiocontext = new (window.AudioContext || window.webkitAudioContext)();
 const ismobile = navigator.maxTouchPoints > 0;
 
@@ -440,35 +444,66 @@ score = finalscore;
 updateScoreBoard(score);
 return finalscore;}
 
+function saveScores(){const scores = JSON.stringify({gameswon:gameswon,
+totalscore:totalscore,
+highscore:highscore});
+try{localStorage.setItem("twordleScores",scores);}catch(e){}
+try{document.cookie = "twordleScores=" + encodeURIComponent(scores) + "; max-age=31536000; path=/; SameSite=Lax";}catch(e){}}
+
+function loadScores(){let scores = null;
+try{scores = localStorage.getItem("twordleScores");}catch(e){}
+
+if(!scores){const cookie = document.cookie
+.split("; ")
+.find(row=>row.startsWith("twordleScores="));
+
+if(cookie){scores = decodeURIComponent(
+cookie.substring("twordleScores=".length)
+);}}
+
+if(scores){try{const data = JSON.parse(scores);
+gameswon = Number(data.gameswon) || 0;
+totalscore = Number(data.totalscore) || 0;
+highscore = Number(data.highscore) || 0;}catch(e){}}}
+
 
 // ------------------------ CHEAT -----------------------------------------------------------------
-function toggleCheat(){cheatEnabled = !cheatEnabled;
-if(cheatEnabled && profileEnabled){profileEnabled = false;
+function toggleCheat(){if(!cheatEnabled){previousProfileEnabled = profileEnabled;
+cheatEnabled = true;
+
+if(profileEnabled){profileEnabled = false;
 document
 .getElementById("profilePanel")
 .style.display = "none";
+
 updateProfileButton();
 setMessage("Player Profile turned off.","notice");}
 
-updateCheatButton();
-
-document
-.getElementById("cheatPanel")
-.style.display = cheatEnabled
-? "block"
-: "none";
-
-if(cheatEnabled) {beep(500,0.05,"triangle", 0.03);
-setTimeout(()=>beep(700,0.05,"triangle", 0.03),50);
-setTimeout(()=>beep(900,0.08,"triangle", 0.03),100);}
-
-if(cheatEnabled && turn > 0 && lastCheatTurn !== turn){totalCheats++;
+if(turn > 0 && lastCheatTurn !== turn){totalCheats++;
 lastCheatTurn = turn;}
 
-if(cheatEnabled && turn > 0 && !cheatpenaltyapplied){penaltyscore += 20;
+if(turn > 0 && !cheatpenaltyapplied){penaltyscore += 20;
 updateLiveScore();
 cheatpenaltyapplied = true;}
 
+beep(500,0.05,"triangle",0.03);
+setTimeout(()=>beep(700,0.05,"triangle",0.03),50);
+setTimeout(()=>beep(900,0.08,"triangle",0.03),100);
+
+document.getElementById("cheatPanel").style.display = "block";}
+
+else{cheatEnabled = false;
+profileEnabled = previousProfileEnabled;
+document
+.getElementById("profilePanel")
+.style.display =
+profileEnabled
+? "block"
+: "none";
+updateProfileButton();
+document.getElementById("cheatPanel").style.display = "none";}
+
+updateCheatButton();
 updatePossibleWords();
 updateStats();}
 
@@ -569,14 +604,25 @@ if(cookie){data = decodeURIComponent(cookie.substring("twordleProfile=".length))
 
 if(data){try{profile = JSON.parse(data);}catch(e){profile = {};}}
 
+firstguess = "";
 try{firstguess = localStorage.getItem("twordleFirstGuess") || "";}catch(e){}
+
+
+if(!firstguess){const cookie = document.cookie
+.split("; ")
+.find(row=>row.startsWith("twordleFirstGuess="));
+if(cookie){firstguess = decodeURIComponent(cookie.substring("twordleFirstGuess=".length));}}
 document.getElementById("saveGuess").value = firstguess.toUpperCase();}
 
 function toggleProfileConfirm(){const popup=document.getElementById("profilePopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
 
 function clearProfile(){try{document.cookie = "twordleProfile=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
 try{localStorage.removeItem("twordleProfile");}catch(e){}
+try{document.cookie = "twordleScores=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
+try{localStorage.removeItem("twordleScores");}catch(e){}
+try{document.cookie = "twordleFirstGuess=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
 try{localStorage.removeItem("twordleFirstGuess");}catch(e){}
+
 location.reload();}
 
 function ensureProfileWord(word){if(!profile[word]){profile[word] = {date:"", counts:[0,0,0,0,0,0,0,0,0,0,0,0]};}}
@@ -591,7 +637,16 @@ const bpos = b[1].counts.findIndex((count,i) => i < 6 && count > 0);
 return apos - bpos;})
 .slice(0,10);
 
-let html = "<hr><h3>Top Winning Words:</h3>";
+let html = "<h3>Scores:</h3>";
+const averagescore = gameswon
+? (totalscore / gameswon).toFixed(1)
+: "0";
+html += "<table border='1' style='width:100%; border-collapse:collapse; text-align:center;'>";
+html += "<tr><th>Total Score</th><th>High Score</th><th>Average Score</th></tr><tr>";
+html += `<td>${totalscore.toLocaleString()}</td><td>${highscore.toLocaleString()}</td><td>${averagescore}</td>`;
+html += "</tr></table><br>";
+
+html += "<hr><h3>Top Winning Words:</h3>";
 html += "<table border='1' style='width:100%; border-collapse:collapse; text-align:center;'>";
 html += "<tr><th rowspan=2>Word</th><th colspan=6>Round</th></tr> <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr>";
 
@@ -603,16 +658,15 @@ html += "</table><br>";
 
 html += "<hr><h3>Words Without a Win:</h3>";
 html += "<table border='1' style='width:100%; border-collapse:collapse; text-align:center;'>";
-html += "<tr><th rowspan=2>Word</th><th colspan=6>Round</th></tr> <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr>";
-
-for(const [word,data] of Object.entries(profile)){const wins = data.counts.slice(0,6).reduce((a,b) => a + b, 0);
-
-if(wins === 0 && losses > 0){html += "<tr>";
-html += `<td>${word.toUpperCase()}</td>`;
-
-for(let i = 6; i < 12; i++){html += `<td>${data.counts[i]}</td>`;}
-html += "</tr>";}}
-html += "</table>";
+const nowinwords = Object.entries(profile)
+.filter(([word,data])=>{const wins = data.counts.slice(0,6).reduce((a,b)=>a+b,0);
+const losses = data.counts.slice(6,12).reduce((a,b)=>a+b,0);
+return wins === 0 && losses > 0;})
+.map(([word])=>word.toUpperCase())
+.sort();
+html += nowinwords.length
+? nowinwords.join(", ")
+: "None";
 
 document
 .getElementById("profileWords")
@@ -653,6 +707,7 @@ if(!dictionary.includes(guess)){setMessage("That word is not in the dictionary."
 return;}
 
 try{localStorage.setItem("twordleFirstGuess",guess);}catch(e){}
+try{document.cookie = "twordleFirstGuess=" + encodeURIComponent(guess) + "; max-age=31536000; path=/; SameSite=Lax";}catch(e){}
 firstguess = guess;
 setMessage(`First guess saved: ${guess.toUpperCase()}`);}
 
@@ -663,10 +718,9 @@ popup.style.display = popup.style.display === "flex"
 : "flex";}
 
 function clearFirstGuess(){try{localStorage.removeItem("twordleFirstGuess");}catch(e){}
+try{document.cookie = "twordleFirstGuess=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
 firstguess = "";
-document
-.getElementById("saveGuess")
-.value = "";
+document.getElementById("saveGuess").value = "";
 toggleFirstGuessConfirm();
 setMessage("Saved first guess cleared.","notice");}
 
@@ -829,6 +883,11 @@ document
 .value = "";
 
 if(guess === answer){const finalscore = calculateFinalScore(answer, board.length);
+totalscore += finalscore;
+if(finalscore > highscore){highscore = finalscore;}
+gameswon++;
+saveScores();
+
 setMessage(`Solved! You earned ${finalscore} points!`,"solved");
 
 document
@@ -1100,6 +1159,7 @@ document
 await loadDictionary(savedDictionary);
 
 loadStats();
+loadScores();
 loadProfile();
 newGame();
 updateProfileButton();
