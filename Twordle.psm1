@@ -1,1115 +1,688 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Twordle</title>
-
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23e53935'/%3E%3Ctext x='50' y='40' font-family='Arial,sans-serif' font-size='60' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'%3ET%3C/text%3E%3Ctext x='50' y='60' font-family='Arial,sans-serif' font-size='60' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'%3EW%3C/text%3E%3C/svg%3E">
-
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-body{background:#000000; color:white; font-family:Arial,Helvetica,sans-serif; text-align:center; margin:0; padding:20px;}
-h1{margin-bottom:10px;}
-#message{height: 40px; margin-bottom:15px; color:white; font-weight:bold;}
-#message.solved{color:#00FF00 !important;}
-#message.error{color:#FF0000 !important;}
-#message.notice{color:#FFFFFF !important;}
-#message.warning{color:#F54927 !important;}
-
-#headerRow{display:grid; grid-template-columns: 220px 1fr 300px; gap:20px; max-width:1400px; margin:auto;}
-#headerRow h1{text-align:center; margin:0 0 15px 0;}
-
-#layout{display:grid; grid-template-columns: 220px 1fr 300px; gap:20px; max-width:1400px; margin:auto; align-items:start;}
-
-#helpButton, #scoreButton {color:#ff0000; cursor:pointer; font-size:16px; font-weight:bold;}
-#helpPopup, #scorePopup {display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1000; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;}
-#helpContent, #scoreContent {position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left; line-height:1.5;}
-#helpContent h2, #scoreContent h2{text-align:center; margin-top:0;}
-#helpContent button, #scoreContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
-#helpContent p, #scoreContent p{margin:12px 0;}
-#helpButton, #soundButton, #scoreButton{display:inline-block; cursor:pointer;}
-
-#scoreBoard {font-size:48px; font-weight:bold; color:#00FF00}
-
-#confirmPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
-#profilePopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
-#dictionaryPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
-#firstGuessPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
-
-#confirmContent{background:#222; border:1px solid #555; border-radius:8px; padding:10px; max-width:350px; width:100%; box-sizing:border-box; text-align:center;}
-#confirmContent h3{margin-top:10px; margin-bottom:15px;}
-#confirmContent p{margin:5px 0 12px;}
-#confirmContent button{margin:0 5px;}
-
-#toggleConfirm {font-size:12px}
-#firstGuess {margin-top:5px;}
-#saveGuess {margin-top:5px; background:#225555; border:1px solid #4466aa; border-radius:6px; color:#fff;}
-#profileConfirm {margin-top:5px;}
-#dictionarySelect{margin-top:5px; margin-bottom:10px; padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px; width:175px;}
-#newGame{color:#ffff00; cursor:pointer; font-size:16px; font-weight:bold;}
-
-#statsPanel{text-align:left;}
-
-#gamePanel{text-align:center;}
-#controls {margin-top:5px;}
-
-#sidePanel{position:relative; min-height:450px; max-height:450px;}
-#cheatPanel{position:absolute; inset:0; z-index:1;}
-#profilePanel{position:absolute; inset:0; z-index:2;}
-th{background:#227; font-weight: bold;}
-.profileword{cursor:pointer; color:#7db4ff;}
-.profileword:hover{text-decoration:underline;}
-
-#cheatPanel{display:none; text-align:left; border:1px solid #444; padding:10px; overflow-y:auto; max-height:450px;}
-#cheatHeader {text-align:center; font-size:20px; font-weight:bold; padding-bottom:10px;}
-#possibleWords{text-align:center; font-size:12px; line-height:1.5; word-wrap:break-word;}
-#currentWord{font-weight:bold; color:#538d4e;}
-
-#profilePanel{display:none; text-align:left; border:1px solid #444; padding:10px; overflow-y:auto; max-height:450px;}
-#profileHeader {text-align:center; font-size:20px; font-weight:bold; padding-bottom:10px;}
-#profileWords{text-align:center; font-size:12px; line-height:1.5; word-wrap:break-word;}
-
-#secondaryButtons{margin-top:10px; margin-bottom:20px;}
-#secondaryButtons button{margin:0 5px;}
-
-#board{display:flex; flex-direction:column; gap:5px; align-items:center; margin-bottom:20px;}
-.row{display:flex; gap:5px;}
-.tile{width:60px; height:60px; border:2px solid #3a3a3c; display:flex; justify-content:center; align-items:center; font-size:32px;font-weight:bold; text-transform:uppercase; transition:transform .2s;}
-
-.tile.revealed{animation:pop .15s ease-out;}
-@keyframes pop{0%{transform:scale(0.99);}
-99%{transform:scale(1.01);}
-100%{transform:scale(1);}}
-
-.green{background:#538d4e; border-color:#538d4e;}
-.yellow{background:#b59f3b; border-color:#b59f3b;}
-.gray{background:#3a3a3c; border-color:#3a3a3c;}
-#guess{background:#223355; border:1px solid #4466aa; border-radius:6px; color:#fff;}
-
-input{width:120px; height:35px; font-size:26px; text-transform:uppercase; text-align:center;}
-button{padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px;}
-button:active{transform:scale(0.95)}
-
-#keyboard{max-width:700px; margin:auto;}
-.keyrow{margin-top:5px;}
-.key{display:inline-block; width:32px; padding:10px 0; margin:2px; border-radius:4px; background:#818384; font-weight:bold; cursor:pointer; user-select:none;}
-.key.special{width:60px;}
-.key:active{transform:scale(0.95);}
-.key.green{background:#538d4e;}
-.key.yellow{background:#b59f3b;}
-.key.gray{background:#3a3a3c;}
-
-#playagain{display:none; margin-top:15px;}
-
-#footer{margin-top:100px; padding-bottom:20px; font-size:8px;}
-
-@media(max-width:1000px){body{padding:10px;}
-@media(max-width:1000px){#board .tile{width:min(12vw,48px); height:min(12vw,48px); font-size:min(8vw,32px);}}
-@media(max-width:1000px) and (max-height:800px){#board .tile{width:min(10vw,40px); height:min(10vw,40px); font-size:min(7vw,26px);}}
-@media(max-width:1000px) and (max-height:700px){#board .tile{width:min(8vw,32px); height:min(8vw,32px); font-size:min(6vw,22px);}}
-#headerRow{grid-template-columns:minmax(0,1fr);}
-#layout{grid-template-columns:minmax(0,1fr); gap:15px;}
-#statsPanel{order:2; width:auto;}
-#gamePanel{order:1; min-width:0;}
-#sidePanel{order:4; position:relative; width:100%;}
-#cheatPanel{min-width:0;}
-#profilePanel{min-width:0;}
-.tile{width:48px; height:48px; font-size:26px;}
-.key{width:27px; padding:9px 0; margin:1px;}}
-</style>
-
-</head>
-<body>
-
-<div id="headerRow">
-<div></div>
-<h1>Twordle</h1>
-<div></div>
-</div>
-
-<div id="helpPopup" onclick="if(event.target===this)toggleHelp()">
-<div id="helpContent">
-<button onclick="toggleHelp()">✕</button>
-<h2>How to Play Twordle v3.1</h2>
-<p>Guess the hidden five-letter word in six attempts.</p>
-<ul>
-<li>Enter any valid five-letter word.</li>
-<li>Press Enter to submit your guess.</li>
-<li>Each guess provides colour-coded clues.</li>
-</ul>
-<h3>Colour Clues</h3>
-<p><span class="green">Green</span> - Correct letter in the correct position.</p>
-<p><span class="yellow">Yellow</span> - Correct letter in the wrong position.</p>
-<p><span class="gray">Grey</span> - Letter is not in the word.</p>
-<h3>Additional Features</h3>
-<ul>
-<li>The keyboard at the bottom helps you keep track of all 3 colours.</li>
-<li>Current Word lets you keep track of correctly guessed letters in their right spots.</li>
-<li>If you guess 5 invalid words in the same round, you lose that game.</li>
-<li>Clear Stats to erase your history and start again.</li>
-</ul>
-<h3>Cheat Features</h3>
-<ul>
-<li>Hint will reveal the first unguessed letter, but not the whole word. This is the least offensive cheat.</li>
-<li>Evaluate will test a word to see how much it reduces the results, but be careful. It let's you test invalid words.</li>
-<li>Cheat Shows you all possible matches. You have to be really stumped to use this.</li>
-<li>Undo removes the last played word. This is the most egregious cheat.</li>
-</ul>
-<h3>Privacy</h3>
-<p>This page uses localStorage/cookies to save those stats and for no other reason.</p>
-<p style="text-align:center; font-weight:bold; margin-top:20px;">Have fun!</p>
-</div></div>
-
-<div id="scorePopup" onclick="if(event.target===this)toggleScore()">
-<div id="scoreContent"><button onclick="toggleScore()">✕</button>
-<h2>Scoring</h2>
-
-<p><b>🏆 Base Score:</b><br>
-Solve the word = 50 points</p>
-
-<p><b>⚡ Solve Bonus:</b><br>
-Turn 1: +50, Turn 2: +40, Turn 3: +30,<br>
-Turn 4: +20, Turn 5: +10, Turn 6: +0</p>
-
-<p><b>⭐ Word Bonuses:</b><br>
-+5 Rare Letter Word (V, X, Z, J, Q)<br>
-+5 Word with 4+ Vowels or No Vowels (A, E, I, O, U, Y)</p>
-
-<p><b>📈 Progress:</b><br>
-🟩 Green = 10<br>
-🟨 Yellow = 5</p>
-
-<p><b>❌ Penalties:</b><br>
-Known gray letter reused once = -1<br>
-Known gray letter reused twice = -2<br>
-Known gray letter reused 3 times = -3<br>
-Known gray letter reused 4 times = -4<br>
-Use a Hint = -5<br>
-Attempt an invalid word = -10<br>
-Use an Undo = -15<br>
-Use the Cheat panel = -20</p>
-
-<small>Progress shows how close you are to solving the word.<br>Solved words are worth 50 points plus bonuses and minus penalties.<br>Unsolved puzzles score 0.</small>
-</div>
-</div>
-
-<div id="confirmPopup" onclick="if(event.target===this)toggleConfirm()">
-<div id="confirmContent">
-<h3>Are you sure you want to clear your statistics?</h3>
-<p>This will permanently erase all your wins, losses, hints and invalid words.</p>
-<button onclick="clearCookie()">Yes, Clear Stats</button>
-<button onclick="toggleConfirm()">Cancel</button>
-</div></div>
-
-<div id="dictionaryPopup" onclick="if(event.target===this)toggleDictionaryPopup()">
-<div id="confirmContent">
-<h3>Change Dictionary?</h3>
-<p>Changing dictionaries will immediately start a new game.</p>
-<button onclick="changeDictionary()">Yes, Change Dictionary</button>
-<button onclick="cancelDictionaryChange()">Cancel</button>
-</div>
-</div>
-
-<div id="profilePopup" onclick="if(event.target===this)toggleProfileConfirm()">
-<div id="confirmContent">
-<h3>Are you sure you want to clear your player profile?</h3>
-<p>This will permanently erase all your word tracking, wins, and losses.</p>
-<button onclick="clearProfile()">Yes, Clear Profile</button>
-<button onclick="toggleProfileConfirm()">Cancel</button>
-</div>
-</div>
-
-<div id="firstGuessPopup" onclick="if(event.target===this)toggleFirstGuessConfirm()">
-<div id="confirmContent">
-<h3>Clear Saved First Guess?</h3>
-<p>Are you sure you want to clear the saved first guess "<span id="firstGuessWord"></span>"?</p>
-<button onclick="clearFirstGuess()">Yes, Clear First Guess</button>
-<button onclick="toggleFirstGuessConfirm()">Cancel</button>
-</div>
-</div>
-
-<div id="layout">
-<div id="statsPanel">
-<div id="helpButton" onclick="toggleHelp()">Help ?</div> | <div id="soundButton" onclick="toggleSound()">🔊</div>| <div id="scoreButton" onclick="toggleScore()">🏆</div><br>
-<br>
-<div id="scoreBoard">000</div>
-<br>
-<div id="newGame" onclick="newGame()">New Game</div>
-<br>
-<div>Wins: <span id="wins">0</span></div>
-<div>Losses: <span id="losses">0</span></div>
-<br>
-<div>Win %: <span id="winpct">0</span></div>
-<div>Turns/Win: <span id="winavg">0</span></div>
-<div>Invalid Words: <span id="invalidcount">0</span></div>
-<br>
-<div style = "color:#ff0000;">Cheats Used:</div>
-<div>Hints: <span id="hintcount">0</span></div>
-<div>Cheats: <span id="cheatcount">0</span></div>
-<div>Undo: <span id="undocount">0</span></div>
-<br>
-<div><button onclick="toggleConfirm()">Clear Stats</button></div>
-<br>
-<div>Current Word: <span id="currentWord"></span></div>
-<br>
-<div><button id="profileButton" onclick="toggleProfile()">🔴 Player Profile</button><br>
-<div><input id="saveGuess" maxlength="5" autocomplete="off"><br>
-<button id="firstGuess" onclick="saveGuess()">Save First Guess</button></div>
-<button id="profileConfirm" onclick="toggleProfileConfirm()">Clear Profile</button>
-</div>
-<br>
-<div><select id="dictionarySelect" onchange="confirmDictionaryChange()"><option value="Twordle.txt" selected>Standard Dictionary</option><option value="SOWPODS5.txt">SOWPODS Extreme</option></select></div>
-</div>
-
-<div id="gamePanel">
-<div id="message"></div>
-<div id="board"></div>
-
-<div id="controls"><input id="guess" maxlength="5" autocomplete="off"> <button onclick="submitGuess()">Guess</button></div>
-<div id="secondaryButtons"><button id="hintButton" onclick="giveHint()">Hint</button><button id="evaluateButton" onclick="evaluateGuess()">Evaluate</button><button id="cheatButton" onclick="toggleCheat()">🔴 Cheat</button><button id="undoButton" onclick="undo()">Undo</button></div>
-<div id="keyboard"></div>
-
-<button id="playagain" onclick="newGame()">Play Again</button></div>
-
-<div id="sidePanel">
-<div id="cheatPanel">
-<div id="cheatHeader">Possible Words:</div>
-<div id="possibleWords"></div>
-</div>
-
-<div id="profilePanel">
-<div id="profileHeader">Player Profile:</div>
-<div id="profileWords"></div>
-</div>
-</div>
-</div>
-
-<div id="footer"><table><tr><td style="text-align:left;"><a href="https://github.com/Schvenn/Twirdle">Twordle on Github</a> is a WORDLE&trade; inspired clone created by Schvenn.<br><br>
-This version was created with the intent of allowing people to play<br>
-multiple rounds per day, and learn strategies.<br><br>
-<a href="https://www.nytimes.com/games/wordle/index.html" rel="noopener noreferrer" target="_blank">Original Wordle</a> |
-<a href="https://www.nytimes.com/2022/01/03/technology/wordle-word-game-creator.html" rel="noopener noreferrer" target="_blank">Original Creator</a> |
-<a href="https://www.nytco.com/press/the-new-york-times-acquires-wordle/" rel="noopener noreferrer" target="_blank">Ownership</a><br><br>
-Twordle is an independently developed word game and is not<br>
-affiliated with or endorsed by The New York Times Company.<br>
-WORDLE&trade; is a trademark of The New York Times Company.</td></tr></table></div>
-
-<script>
-// ------------------------ DEFINE VARIABLES ------------------------------------------------------
-let dictionary = [];
-let pendingDictionary = null;
-let currentDictionary = "Twordle.txt";
-let soundenabled = true;
-let answer = "";
-let turn = 0;
-let board = [];
-let gameover = false;
-let keyboard = {};
-let usedWords = [];
-let totalInvalidWords = 0;
-let invalidWords = 0;
-let evaluateEnabled = true;
-let cheatEnabled = false;
-let profileEnabled = true;
-let lastCheatTurn = -1;
-let wins = 0;
-let losses = 0;
-let totalWinTurns = 0;
-let totalHints = 0;
-let totalCheats = 0;
-let totalUndos = 0;
-let hintedPositions = [];
-let previousMatches = dictionary.length;
-let profile = {};
-let score = 0;
-let penaltyscore = 0;
-let cheatpenaltyapplied = false;
-let grayletteruses = {};
-let progressscore = 0;
-let positionvalues = [0,0,0,0,0];
-const audiocontext = new (window.AudioContext || window.webkitAudioContext)();
-const ismobile = navigator.maxTouchPoints > 0;
-
-
-// ------------------------ DICTIONARY ------------------------------------------------------------
-async function loadDictionary(file){const response = await fetch(file);
-if(!response.ok){throw new Error(`Unable to load dictionary: ${file}`);}
-const text = await response.text();
-dictionary = text
-.split(/\r?\n/)
-.map(word => word.trim().toLowerCase())
-.filter(word => /^[a-z]{5}$/.test(word));
-currentDictionary = file;}
-
-async function changeDictionary(){const file = pendingDictionary;
-localStorage.setItem("twordleDictionary",file);
-await loadDictionary(file);
-newGame();
-setMessage(file === "Twordle.txt"
-? `Standard dictionary loaded (${dictionary.length.toLocaleString()} words).`
-: `SOWPODS Extreme dictionary loaded (${dictionary.length.toLocaleString()} words).`,
-"notice");
-pendingDictionary = null;
-toggleDictionaryPopup();}
-
-
-// ------------------------ TOGGLES ---------------------------------------------------------------
-function toggleHelp(){playClickSound();
-const popup=document.getElementById("helpPopup");
-popup.style.display=popup.style.display==="flex"?"none":"flex";}
-
-function toggleSound(){if(soundenabled) playClickSound();
-soundenabled = !soundenabled;
-
-if(soundenabled) playClickSound();
-updateSoundButton();}
-
-function updateSoundButton(){document.getElementById("soundButton").textContent = soundenabled ? "🔊" : "🔇";}
-
-function toggleScore(){playClickSound();
-const popup=document.getElementById("scorePopup");
-popup.style.display=popup.style.display==="flex"?"none":"flex";}
-
-
-// ------------------------ SCORING ---------------------------------------------------------------
-function scoreGuess(guess, answerWord){let colors = ["gray","gray","gray","gray","gray"];
-let remaining = answerWord.split("");
-
-for(let i = 0; i < 5; i++){if(guess[i] === answerWord[i]){colors[i] = "green";
-remaining[i] = null;}}
-
-for(let i = 0; i < 5; i++){if(colors[i] === "green")
-continue;
-
-const idx = remaining.indexOf(guess[i]);
-if(idx >= 0){colors[i] = "yellow";
-remaining[idx] = null;}}
-
-return colors;}
-
-function updateScoreBoard(value){document.getElementById("scoreBoard").textContent = Math.max(0,value).toString().padStart(3,"0");}
-
-function updateLiveScore(){updateScoreBoard(calculateProgressScore());}
-
-function resetScore(){progressscore = 0;
-penaltyscore = 0;
-positionvalues = [0,0,0,0,0];
-grayletteruses = {};
-updateLiveScore();}
-
-function calculateProgressScore(){return Math.max(0, progressscore - penaltyscore);}
-
-function addLetterProgress(colors){for(let i = 0;i < 5;i++){let value = 0;
-
-if(colors[i] === "green"){value = 10;}
-else if(colors[i] === "yellow"){value = 5;}
-if(value > positionvalues[i]){progressscore += value - positionvalues[i];
-positionvalues[i] = value;}}
-updateLiveScore();}
-
-function getSolveBonus(turn){return Math.max(0,(6 - turn) * 10);}
-
-function hasRareLetter(word){return /[VXZJQ]/i.test(word);}
-
-function qualifiesVowelBonus(word){const vowels = (word.match(/[AEIOUY]/gi) || []).length;
-return vowels >= 4 || vowels === 0;}
-
-function applyGrayPenalties(guess,colors){for(let i = 0;i < 5;i++){if(colors[i] !== "gray") continue;
-const letter = guess[i];
-
-if(!(letter in grayletteruses)){grayletteruses[letter] = 0;
-continue;}
-grayletteruses[letter]++;
-penaltyscore += grayletteruses[letter];}
-updateLiveScore();}
-
-function rebuildScore(){progressscore = 0;
-positionvalues = [0,0,0,0,0];
-grayletteruses = {};
-for(const row of board){addLetterProgress(row.colors);
-applyGrayPenalties(row.word.toLowerCase(),row.colors);}
-updateLiveScore();}
-
-function calculateFinalScore(answer, turnSolved){let finalscore = 50;
-finalscore += getSolveBonus(turnSolved);
-if(hasRareLetter(answer)){finalscore += 5;}
-if(qualifiesVowelBonus(answer)){finalscore += 5;}
-finalscore -= penaltyscore;
-finalscore = Math.max(0,finalscore);
-score = finalscore;
-updateScoreBoard(score);
-return finalscore;}
-
-
-// ------------------------ CHEAT -----------------------------------------------------------------
-function toggleCheat(){cheatEnabled = !cheatEnabled;
-if(cheatEnabled && profileEnabled){profileEnabled = false;
-document
-.getElementById("profilePanel")
-.style.display = "none";
-updateProfileButton();
-setMessage("Player Profile turned off.","notice");}
-
-updateCheatButton();
-
-document
-.getElementById("cheatPanel")
-.style.display = cheatEnabled
-? "block"
-: "none";
-
-if(cheatEnabled) {beep(500,0.05,"triangle", 0.03);
-setTimeout(()=>beep(700,0.05,"triangle", 0.03),50);
-setTimeout(()=>beep(900,0.08,"triangle", 0.03),100);}
-
-if(cheatEnabled && turn > 0 && lastCheatTurn !== turn){totalCheats++;
-lastCheatTurn = turn;}
-
-if(cheatEnabled && turn > 0 && !cheatpenaltyapplied){penaltyscore += 20;
-updateLiveScore();
-cheatpenaltyapplied = true;}
-
-updatePossibleWords();
-updateStats();}
-
-function updateCheatButton(){document
-.getElementById("cheatButton")
-.textContent = (cheatEnabled ? "🟢 " : "🔴 ") + "Cheat";}
-
-function updatePossibleWords(){if(!cheatEnabled)
-return;
-
-const matches = dictionary.filter(word => wordMatchesBoard(word));
-
-document
-.getElementById("possibleWords")
-.innerHTML = "<b>" + matches.length + (matches.length === 1 ? " match" : " matches") + "</b><br><br>" + matches.join(", ");}
-
-
-// ------------------------ HINT & UNDO -----------------------------------------------------------
-function giveHint(){if(gameover)
-return;
-
-let revealed = [];
-for(let i=0;i<5;i++){if(hintedPositions.includes(i) || board.some(row => row.colors[i] === "green")){revealed.push(i);}}
-
-if(revealed.length >= 4){setMessage("No more hints available.","warning");
-return;}
-
-for(let i=0;i<4;i++){if(!revealed.includes(i)){hintedPositions.push(i);
-penaltyscore += 5;
-updateLiveScore();
-totalHints++;
-updateStats();
-updatePossibleWords();
-setMessage("Hint revealed.","notice");
-return;}}}
-
-function undo(){if(gameover || board.length === 0) {return;}
-totalUndos++;
-penaltyscore += 15;
-updateLiveScore();
-beep(1000,0.03,"triangle", 0.03);
-setTimeout(()=>beep(850,0.03,"triangle", 0.03),30);
-setTimeout(()=>beep(700,0.05,"triangle", 0.03),60);
-board.pop();
-usedWords.pop();
-rebuildScore();
-turn = Math.max(0, turn - 1);
-keyboard = {};
-buildKeyboard();
-for(const row of board){updateKeyboard(row.word.toLowerCase(), row.colors);}
-renderBoard();
-updatePossibleWords();
-updateStats();
-setMessage("Last guess removed.","notice");}
-
-
-// ------------------------ EVALUATE --------------------------------------------------------------
-function updateEvaluateButton(){document
-.getElementById("evaluateButton")
-.textContent = (evaluateEnabled ? "🟢 " : "🔴 ") + "Evaluate";}
-
-function updateEvaluateStatus(){if(!evaluateEnabled){return;}
-const matches = dictionary.filter(word => wordMatchesBoard(word));
-setMessage(`Based on your current board, there ${matches.length === 1 ? "is 1 possible match." : `are ${matches.length.toLocaleString()} possible matches.`}`,"notice");}
-
-
-// ------------------------ PLAYER PROFILE --------------------------------------------------------
-function toggleProfile(){profileEnabled = !profileEnabled;
-if(profileEnabled && cheatEnabled){cheatEnabled = false;
-document
-.getElementById("cheatPanel")
-.style.display = "none";
-updateCheatButton();
-setMessage("Cheat turned off.","notice");}
-
-updateProfileButton();
-document
-.getElementById("profilePanel")
-.style.display = profileEnabled
-? "block"
-: "none";
-updateProfileWords();}
-
-function updateProfileButton(){document
-.getElementById("profileButton")
-.textContent = (profileEnabled ? "🟢 " : "🔴 ") + "Player Profile";}
-
-function saveProfile(){const data = JSON.stringify(profile);
-try{localStorage.setItem("twordleProfile",data);}catch(e){}
-try{document.cookie = "twordleProfile=" + encodeURIComponent(data) + "; max-age=31536000; path=/; SameSite=Lax";}catch(e){}}
-
-function loadProfile(){let data = null;
-try{data = localStorage.getItem("twordleProfile");}catch(e){}
-
-if(!data){const cookie = document.cookie.split("; ").find(row => row.startsWith("twordleProfile="));
-
-if(cookie){data = decodeURIComponent(cookie.substring("twordleProfile=".length));}}
-
-if(data){try{profile = JSON.parse(data);}catch(e){profile = {};}}
-
-try{firstguess = localStorage.getItem("twordleFirstGuess") || "";}catch(e){}
-document.getElementById("saveGuess").value = firstguess.toUpperCase();}
-
-function toggleProfileConfirm(){const popup=document.getElementById("profilePopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
-
-function clearProfile(){try{document.cookie = "twordleProfile=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
-try{localStorage.removeItem("twordleProfile");}catch(e){}
-try{localStorage.removeItem("twordleFirstGuess");}catch(e){}
-location.reload();}
-
-function ensureProfileWord(word){if(!profile[word]){profile[word] = {date:"", counts:[0,0,0,0,0,0,0,0,0,0,0,0]};}}
-
-function updateProfileWords(){const topwords = Object.entries(profile)
-.filter(([word,data]) => data.counts.slice(0,6).reduce((a,b) => a + b, 0) > 0)
-.sort((a,b) => {const awins = a[1].counts.slice(0,6).reduce((x,y) => x + y, 0);
-const bwins = b[1].counts.slice(0,6).reduce((x,y) => x + y, 0);
-if(bwins !== awins) {return bwins - awins;}
-const apos = a[1].counts.findIndex((count,i) => i < 6 && count > 0);
-const bpos = b[1].counts.findIndex((count,i) => i < 6 && count > 0);
-return apos - bpos;})
-.slice(0,10);
-
-let html = "<hr><h3>Top Winning Words:</h3>";
-html += "<table border='1' style='width:100%; border-collapse:collapse; text-align:center;'>";
-html += "<tr><th rowspan=2>Word</th><th colspan=6>Round</th></tr> <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr>";
-
-for(const [word,data] of topwords){html += "<tr>";
-html += `<td class="profileword" data-word="${word}">${word.toUpperCase()}</td>`;
-for(let i = 0; i < 6; i++){html += `<td>${data.counts[i]}</td>`;}
-html += "</tr>";}
-html += "</table><br>";
-
-html += "<hr><h3>Words Without a Win:</h3>";
-html += "<table border='1' style='width:100%; border-collapse:collapse; text-align:center;'>";
-html += "<tr><th rowspan=2>Word</th><th colspan=6>Round</th></tr> <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr>";
-
-for(const [word,data] of Object.entries(profile)){const wins = data.counts.slice(0,6).reduce((a,b) => a + b, 0);
-
-if(wins === 0 && losses > 0){html += "<tr>";
-html += `<td>${word.toUpperCase()}</td>`;
-
-for(let i = 6; i < 12; i++){html += `<td>${data.counts[i]}</td>`;}
-html += "</tr>";}}
-html += "</table>";
-
-document
-.getElementById("profileWords")
-.innerHTML = html;
-
-document.querySelectorAll(".profileword").forEach(cell=>{cell.addEventListener("click",()=>{if(gameover) return;
-const guessinput = document.getElementById("guess");
-guessinput.value = "";
-guessinput.value = cell.dataset.word.toUpperCase();
-beep(800,0.01,"triangle");
-guessinput.focus();});});}
-
-function updateProfile(result){const today = new Date().toISOString().split("T")[0];
-for(let i = 0; i < usedWords.length; i++){const word = usedWords[i];
-
-if(!profile[word]){profile[word] = {date:today,counts:[0,0,0,0,0,0,0,0,0,0,0,0]};}
-profile[word].date = today;
-
-if(result === "win"){profile[word].counts[i]++;}
-
-if(result === "loss"){profile[word].counts[i + 6]++;}}}
-
-
-// ------------------------ FIRST GUESS -----------------------------------------------------------
-function saveGuess(){const guess = document
-.getElementById("saveGuess")
-.value
-.toLowerCase()
-.trim();
-
-if(!guess){if(firstguess){toggleFirstGuessConfirm();}
-return;}
-
-if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word.");
-return;}
-
-if(!dictionary.includes(guess)){setMessage("That word is not in the dictionary.");
-return;}
-
-try{localStorage.setItem("twordleFirstGuess",guess);}catch(e){}
-firstguess = guess;
-setMessage(`First guess saved: ${guess.toUpperCase()}`);}
-
-function toggleFirstGuessConfirm(){document.getElementById("firstGuessWord").textContent = firstguess.toUpperCase();
-const popup = document.getElementById("firstGuessPopup");
-popup.style.display = popup.style.display === "flex"
-? "none"
-: "flex";}
-
-function clearFirstGuess(){try{localStorage.removeItem("twordleFirstGuess");}catch(e){}
-firstguess = "";
-document
-.getElementById("saveGuess")
-.value = "";
-toggleFirstGuessConfirm();
-setMessage("Saved first guess cleared.","notice");}
-
-
-// ------------------------ STATS -----------------------------------------------------------------
-function saveStats(){const stats = JSON.stringify({wins:wins,losses:losses,totalHints:totalHints,totalInvalidWords:totalInvalidWords,totalWinTurns:totalWinTurns,totalCheats:totalCheats,totalUndos:totalUndos});
-try{localStorage.setItem("twordleStats",stats);}catch(e){console.warn("Unable to save TWORDLE stats to localStorage.");}
-try{document.cookie = "twordleStats=" + encodeURIComponent(stats) + "; max-age=31536000; path=/; SameSite=Lax";}catch(e){console.warn("Unable to save TWORDLE stats cookie.");}}
-
-function loadStats(){let stats = null;
-try{stats = localStorage.getItem("twordleStats");}catch(e){}
-if(!stats){const cookie = document.cookie.split("; ").find(row => row.startsWith("twordleStats="));
-if(cookie){stats = decodeURIComponent(cookie.substring("twordleStats=".length));}}
-if(stats){try{const data = JSON.parse(stats);
-wins = Number(data.wins) || 0;
-losses = Number(data.losses) || 0;
-totalWinTurns = Number(data.totalWinTurns) || 0;
-totalHints = Number(data.totalHints) || 0;
-totalInvalidWords = Number(data.totalInvalidWords) || 0;
-totalCheats = Number(data.totalCheats) || 0;
-totalUndos = Number(data.totalUndos) || 0;}catch(e){console.warn("Unable to load TWORDLE stats.");}}}
-
-function toggleConfirm(){const popup=document.getElementById("confirmPopup");popup.style.display=popup.style.display==="flex"?"none":"flex";}
-
-function clearCookie(){try{document.cookie = "twordleStats=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}catch(e){}
-try{localStorage.removeItem("twordleStats");}catch(e){}
-location.reload();}
-
-function updateStats(){document
-.getElementById("wins")
-.textContent = wins;
-
-document
-.getElementById("losses")
-.textContent = losses;
-
-document
-.getElementById("winavg")
-.textContent = wins? (totalWinTurns / wins).toFixed(1): "0";
-
-document
-.getElementById("hintcount")
-.textContent = totalHints;
-
-document
-.getElementById("currentWord")
-.textContent = answer.split("").map((letter,i) =>
-hintedPositions.includes(i) || board.some(row => row.colors[i] === "green")
-? letter.toUpperCase()
-: "_").join("");
-
-document
-.getElementById("invalidcount")
-.textContent = totalInvalidWords;
-
-const total = wins + losses;
-
-document
-.getElementById("winpct")
-.textContent =
-total
-? Math.round(wins / total * 100): 0;
-
-document
-.getElementById("cheatcount")
-.textContent = totalCheats;
-
-document
-.getElementById("undocount")
-.textContent = totalUndos;
-
-saveStats();
-updateProfileWords();
-saveProfile();}
-
-
-// ------------------------ DICTIONARY ------------------------------------------------------------
-function toggleDictionaryPopup(){const popup = document.getElementById("dictionaryPopup");
-popup.style.display = popup.style.display === "flex"
-? "none"
-: "flex";}
-
-function confirmDictionaryChange(){const selected = document
-.getElementById("dictionarySelect")
-.value;
-
-if(selected === currentDictionary){return;}
-pendingDictionary = selected;
-toggleDictionaryPopup();}
-
-function cancelDictionaryChange(){document
-.getElementById("dictionarySelect")
-.value = currentDictionary;
-toggleDictionaryPopup();}
-
-
-// ------------------------ GAME LOGIC ------------------------------------------------------------
-function submitGuess(){if(gameover)
-return;
-
-let guess = document
-.getElementById("guess")
-.value
-.trim()
-.toLowerCase();
-
-if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word.","notice");
-beep(150,0.25,"sawtooth", 0.02);
-return;}
-
-if(usedWords.includes(guess)){setMessage(`${guess.toUpperCase()} has already been guessed.`,"notice");
-document.getElementById("guess").value = "";
-beep(300,0.12,"square", 0.02);
-setTimeout(()=>beep(200,0.12,"square", 0.02),100);
-return;}
-
-if(!dictionary.includes(guess)){invalidWords++;
-totalInvalidWords++;
-penaltyscore += 10;
-updateLiveScore();
-updateStats();
-if(invalidWords >= 5){setMessage(`Too many invalid words. Answer: ${answer.toUpperCase()}`,"error");
-document.getElementById("guess").value = "";
-gameover = true;
-losses++;
-playLoseSound();
-updateStats();
-updateProfile("loss");
-document
-.getElementById("playagain")
-.style.display = "inline-block";
-return;}
-
-setMessage(`${guess.toUpperCase()} is not in this dictionary. ${5 - invalidWords} invalid guesses remaining.`,"warning");
-document.getElementById("guess").value = "";
-setTimeout(()=>beep(200,0.12,"square", 0.02),100);
-beep(150,0.25,"sawtooth", 0.02);
-return;}
-usedWords.push(guess);
-const colors = scoreGuess(guess, answer);
-addLetterProgress(colors);
-applyGrayPenalties(guess,colors);
-board.push({word:guess.toUpperCase(), colors:colors, revealed:[false,false,false,false,false]});
-board.activeRow = board.length - 1;
-updateKeyboard(guess,colors);
-renderBoard();
-revealRow(board.length - 1);
-
-updatePossibleWords();
-updateStats();
-
-document
-.getElementById("cheatPanel")
-.style.display = "none";
-cheatEnabled = false;
-updateCheatButton();
-
-document
-.getElementById("guess")
-.value = "";
-
-if(guess === answer){const finalscore = calculateFinalScore(answer, board.length);
-setMessage(`Solved! You earned ${finalscore} points!`,"solved");
-
-document
-.getElementById("playagain")
-.style.display = "inline-block";
-
-gameover = true;
-wins++;
-totalWinTurns += board.length;
-updateProfile("win");
-updateStats();
-beep(523,0.08,"triangle");
-setTimeout(()=>beep(659,0.08,"triangle"),80);
-setTimeout(()=>beep(784,0.10,"triangle"),160);
-setTimeout(()=>beep(1047,0.35,"square"),250);
-return;}
-turn++;
-
-if(turn >= 6){setMessage("Answer: " + answer.toUpperCase(),"error");
-playLoseSound();
-
-document
-.getElementById("playagain")
-.style.display = "inline-block";
-
-gameover = true;
-losses++;
-updateProfile("loss");
-updateStats();
-return;}
-
-updateEvaluateStatus();}
-
-function evaluateGuess(){const guess = document
-.getElementById("guess")
-.value
-.trim()
-.toLowerCase();
-
-if(!guess){if(evaluateEnabled){evaluateEnabled = false;
-updateEvaluateButton();
-setMessage("Evaluate is now turned off.","notice");
-return;}
-evaluateEnabled = true;
-updateEvaluateButton();
-const matches = dictionary.filter(word => wordMatchesBoard(word));
-setMessage(`Based on your current board, there ${matches.length === 1 ? "is" : "are"} ${matches.length.toLocaleString()} possible ${matches.length === 1 ? "match" : "matches"}.`,"notice");
-return;}
-
-if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word to evaluate.");return;}
-const candidates = dictionary.filter(word => wordMatchesBoard(word));
-const before = candidates.length;
-let totalRemaining = 0;
-
-if(board.length === 0){setMessage("Submit your first guess before using Evaluate.","notice");
-return;}
-
-for(const possibleAnswer of candidates){const pattern = scoreGuess(guess, possibleAnswer);
-let remaining = 0;
-
-for(const candidate of candidates){const test = scoreGuess(guess, candidate);
-let same = true;
-
-for(let i = 0; i < 5; i++){if(test[i] !== pattern[i]){same = false;
-break;}}
-
-if(same) remaining++;}
-totalRemaining += remaining;}
-
-const averageRemaining = Math.round(totalRemaining / before);
-const reduction = before - averageRemaining;
-const percent = before ? Math.round(reduction / before * 100) : 0;
-setMessage(`${guess.toUpperCase()} is expected to reduce ${before} possibilites to about ${averageRemaining} (↓${percent}%).`,"message");}
-
-function wordMatchesBoard(word){for(const row of board){const test = scoreGuess(row.word.toLowerCase(), word);
-for(let i=0;i<5;i++){if(test[i] !== row.colors[i]){return false;}}}
-
-for(const i of hintedPositions){if(word[i] !== answer[i]){return false;}}
-return true;}
-
-function revealRow(rowindex){const row = board[rowindex];
-console.log("reveal");
-for(let i = 0; i < 5; i++){setTimeout(()=>{
-row.revealed[i] = true;
-
-if(row.colors[i] === "green"){beep(900,0.04,"triangle",0.02);}
-else if(row.colors[i] === "yellow"){beep(700,0.03,"triangle",0.02);}
-else{beep(300,0.02,"square",0.02);}
-renderBoard();
-if(i === 4){board.activeRow = -1;}},i * 200);}}
-
-function newGame(){answer = dictionary[Math.floor(Math.random() * dictionary.length)];
-resetScore();
-grayletteruses = {};
-board = [];
-keyboard = {};
-usedWords = [];
-invalidWords = 0;
-turn = 0;
-gameover = false;
-hintedPositions = [];
-lastCheatTurn = -1;
-cheatpenaltyapplied = false;
-
-document
-.getElementById("cheatPanel")
-.style.display = "none";
-cheatEnabled = false;
-updateCheatButton();
-
-updateProfileButton();
-
-document
-.getElementById("playagain")
-.style.display = "none";
-
-document
-.getElementById("guess")
-.value = firstguess
-? firstguess.toUpperCase()
-: "";
-
-setMessage("");
-buildKeyboard();
-updateEvaluateButton();
-
-
-renderBoard();
-updateStats();
-document.getElementById("guess").focus();
-
-if(firstguess){submitGuess();}
-
-updateProfileWords();
-document.getElementById("possibleWords").innerHTML = "";
-beep(523,0.10,"sine", 0.02);
-setTimeout(()=>beep(784,0.15,"sine", 0.02),100);}
-
-
-// ------------------------ KEYBOARD --------------------------------------------------------------
-
-function buildKeyboard(){const rows = ["QWERTYUIOP",
-"ASDFGHJKL",
-"←ZXCVBNM↵"];
-let html = "";
-
-for(const row of rows){html += '<div class="keyrow">';
-
-for(const letter of row){const special = letter === "←" || letter === "↵"
-? " special"
-: "";
-
-html += `<span class="key${special}" id="key-${letter}">${letter}</span>`;}
-html += "</div>";}
-
-document.getElementById("keyboard").innerHTML = html;
-
-document.querySelectorAll("#keyboard .key").forEach(key=>{key.addEventListener("click",()=>{
-if(gameover) return;
-const input = document.getElementById("guess");
-const keytext = key.textContent;
-
-if(keytext === "←"){input.value = input.value.slice(0,-1);
-beep(600,0.01,"triangle");
-return;}
-
-if(keytext === "↵"){submitGuess();
-return;}
-
-if(input.value.length < 5){input.value += keytext.toLowerCase();
-beep(800,0.01,"triangle");}});});}
-
-function renderBoard(){const boardDiv =
-document.getElementById("board");
-let html = "";
-for(let r = 0; r < 6; r++){html += '<div class="row">';
-
-if(board[r]){const row = board[r];
-for(let c = 0; c < 5; c++){const color = row.revealed[c] ? row.colors[c] : "";
-const revealclass = board.activeRow === r && row.revealed[c]
-? "revealed"
-: "";
-html += `<div class="tile ${color} ${revealclass}">${row.word[c]}</div>`;}}
-
-else {for(let c = 0; c < 5; c++){html += '<div class="tile"></div>';}}
-html += '</div>';}
-boardDiv.innerHTML = html;}
-
-function updateKeyboard(word,colors){for(let i = 0; i < 5; i++){const letter = word[i].toUpperCase();
-const key = document.getElementById(`key-${letter}`);
-const current = keyboard[letter];
-const next = colors[i];
-if(next === "green"){keyboard[letter] = "green";}
-else if(next === "yellow" && current !== "green"){keyboard[letter] = "yellow";}
-else if(next === "gray" && !current){keyboard[letter] = "gray";}
-key.className = "key " + keyboard[letter];}}
-
-
-// ------------------------ MESSAGE ---------------------------------------------------------------
-function setMessage(text,type="notice"){const message = document.getElementById("message");
-message.textContent = text;
-message.className = type;}
-
-
-// ------------------------ AUDIO -----------------------------------------------------------------
-function beep(freq,duration,type="sine",volume=0.1){if(audiocontext.state === "suspended"){audiocontext.resume();}
-const osc = audiocontext.createOscillator();
-const gain = audiocontext.createGain();
-osc.type = type;
-osc.frequency.value = freq;
-osc.connect(gain);
-gain.connect(audiocontext.destination);
-gain.gain.value = volume;
-osc.start();
-gain.gain.exponentialRampToValueAtTime(0.0001, audiocontext.currentTime + duration);
-osc.stop(audiocontext.currentTime + duration);
-osc.onended = ()=>{osc.disconnect();
-gain.disconnect();};}
-
-function playLoseSound(){const ctx = new AudioContext();
-const osc = ctx.createOscillator();
-const gain = ctx.createGain();
-osc.type = "sawtooth";
-osc.frequency.setValueAtTime(250,ctx.currentTime);
-osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.75);
-osc.connect(gain);
-gain.connect(ctx.destination);
-gain.gain.setValueAtTime(0.03,ctx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.75);
-osc.start();
-osc.stop(ctx.currentTime + 0.75);}
-
-function playClickSound(){beep(1200,0.01,"triangle");}
-
-
-// ------------------------ EVENT LISTENERS -------------------------------------------------------
-document.getElementById("guess").addEventListener("keydown",e=>{const input = e.target;
-if(input.value.length >= 5 && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey){e.preventDefault();
-beep(250,0.01,"square");
-return;}
-
-if(e.key.length === 1) beep(800,0.01,"triangle");
-if(e.key === "Backspace") beep(600,0.01,"triangle");
-if(e.key === "Delete") beep(600,0.01,"triangle");
-
-if(e.key === "Enter"){if(gameover){newGame();}
-else{submitGuess();}}});
-
-document.getElementById("saveGuess").addEventListener("keydown",e=>{if(e.key.length === 1) beep(800,0.01,"triangle");
-if(e.key === "Backspace") beep(600,0.01,"triangle");
-if(e.key === "Delete") beep(600,0.01,"triangle");
-
-if(e.key === "Enter"){saveGuess();}});
-
-document.addEventListener("click",e=>{if(e.target.closest("button") && !ismobile){document.getElementById("guess").focus();}});
-
-document.addEventListener("click",e=>{if(e.target.matches("button")){playClickSound();}});
-
-document.getElementById("board").addEventListener("click",()=>{playClickSound();
-document.getElementById("guess").focus();});
-
-if(window.visualViewport){window.visualViewport.addEventListener("resize",()=>{document.body.classList.toggle("keyboardOpen",window.visualViewport.height < window.innerHeight * 0.75);});}
-
-// ------------------------ INITIALIZATION --------------------------------------------------------
-async function initialize(){const savedDictionary = localStorage.getItem("twordleDictionary") || "Twordle.txt";
-document
-.getElementById("dictionarySelect")
-.value = savedDictionary;
-await loadDictionary(savedDictionary);
-
-loadStats();
-loadProfile();
-newGame();
-updateProfileButton();
-document.getElementById("profilePanel").style.display = profileEnabled ? "block" : "none";
-updateProfileWords();}
-
-initialize();
-</script>
-
-</body>
-</html>
+function Twordle ([string[]]$TestWords, [switch]$MoreDetails, [string[]]$Find, [string]$Exclude, [string]$Import, [switch]$Force, [switch]$Play, [switch]$Cheat, [string]$First, [switch]$Help) {# Twordle/Wordle word helper and game.
+
+# ----------------- HELP --------------------------------------------------------------------------
+function help {# Inline help.
+# Select content.
+$scripthelp = Get-Content -Raw -Path $PSCommandPath; $sections = [regex]::Matches($scripthelp, "(?im)^## (.+?)(?=\r?\n)"); $selection = $null; $lines = @(); $wrappedLines = @(); $position = 0; $pageSize = 30; $inputBuffer = ""
+
+# Modify fields sent to it with proper word wrapping.
+function wordwrap ($field, $maximumlinelength) {if ($null -eq $field) {return $null}
+$breakchars = ',.;?!\/ '; $wrapped = @()
+if (-not $maximumlinelength) {[int]$maximumlinelength = (100, $Host.UI.RawUI.WindowSize.Width | Measure-Object -Maximum).Maximum}
+if ($maximumlinelength -lt 60) {[int]$maximumlinelength = 60}
+if ($maximumlinelength -gt $Host.UI.RawUI.BufferSize.Width) {[int]$maximumlinelength = $Host.UI.RawUI.BufferSize.Width}
+foreach ($line in $field -split "`n", [System.StringSplitOptions]::None) {if ($line -eq "") {$wrapped += ""; continue}
+$remaining = $line
+while ($remaining.Length -gt $maximumlinelength) {$segment = $remaining.Substring(0, $maximumlinelength); $breakIndex = -1
+foreach ($char in $breakchars.ToCharArray()) {$index = $segment.LastIndexOf($char)
+if ($index -gt $breakIndex) {$breakIndex = $index}}
+if ($breakIndex -lt 0) {$breakIndex = $maximumlinelength - 1}
+$chunk = $segment.Substring(0, $breakIndex + 1); $wrapped += $chunk; $remaining = $remaining.Substring($breakIndex + 1)}
+if ($remaining.Length -gt 0 -or $line -eq "") {$wrapped += $remaining}}
+return ($wrapped -join "`n")}
+
+# Display a horizontal line.
+function line ($colour, $length, [switch]$pre, [switch]$post, [switch]$double) {if (-not $length) {[int]$length = (100, $Host.UI.RawUI.WindowSize.Width | Measure-Object -Maximum).Maximum}
+if ($length) {if ($length -lt 60) {[int]$length = 60}
+if ($length -gt $Host.UI.RawUI.BufferSize.Width) {[int]$length = $Host.UI.RawUI.BufferSize.Width}}
+if ($pre) {Write-Host ""}
+$character = if ($double) {"="} else {"-"}
+Write-Host -f $colour ($character * $length)
+if ($post) {Write-Host ""}}
+
+
+function scripthelp ($section) {$pattern = "(?ims)^## ($([regex]::Escape($section)).*?)(?=^##|\z)"; $match = [regex]::Match($scripthelp, $pattern); $lines = $match.Groups[1].Value.TrimEnd() -split "`r?`n", 2; if ($lines.Count -gt 1) {$wrappedLines = (wordwrap $lines[1] 100) -split "`n", [System.StringSplitOptions]::None}
+else {$wrappedLines = @()}
+$position = 0}
+
+# Display Table of Contents.
+while ($true) {cls; Write-Host -f cyan "$(Get-ChildItem (Split-Path $PSCommandPath) | Where-Object { $_.FullName -ieq $PSCommandPath } | Select-Object -ExpandProperty BaseName) Help Sections:`n"
+
+if ($sections.Count -gt 7) {$half = [Math]::Ceiling($sections.Count / 2)
+for ($i = 0; $i -lt $half; $i++) {$leftIndex = $i; $rightIndex = $i + $half; $leftNumber  = "{0,2}." -f ($leftIndex + 1); $leftLabel   = " $($sections[$leftIndex].Groups[1].Value)"; $leftOutput  = [string]::Empty
+
+if ($rightIndex -lt $sections.Count) {$rightNumber = "{0,2}." -f ($rightIndex + 1); $rightLabel  = " $($sections[$rightIndex].Groups[1].Value)"; Write-Host -f cyan $leftNumber -n; Write-Host -f white $leftLabel -n; $pad = 40 - ($leftNumber.Length + $leftLabel.Length)
+if ($pad -gt 0) {Write-Host (" " * $pad) -n}; Write-Host -f cyan $rightNumber -n; Write-Host -f white $rightLabel}
+else {Write-Host -f cyan $leftNumber -n; Write-Host -f white $leftLabel}}}
+
+else {for ($i = 0; $i -lt $sections.Count; $i++) {Write-Host -f cyan ("{0,2}. " -f ($i + 1)) -n; Write-Host -f white "$($sections[$i].Groups[1].Value)"}}
+
+# Display Header.
+line yellow 100
+if ($lines.Count -gt 0) {Write-Host  -f yellow $lines[0]}
+else {Write-Host "Choose a section to view." -f darkgray}
+line yellow 100
+
+# Display content.
+$end = [Math]::Min($position + $pageSize, $wrappedLines.Count)
+for ($i = $position; $i -lt $end; $i++) {Write-Host -f white $wrappedLines[$i]}
+
+# Pad display section with blank lines.
+for ($j = 0; $j -lt ($pageSize - ($end - $position)); $j++) {Write-Host ""}
+
+# Display menu options.
+line yellow 100; Write-Host -f white "[↑/↓]  [PgUp/PgDn]  [Home/End]  |  [#] Select section  |  [Q] Quit  " -n; if ($inputBuffer.length -gt 0) {Write-Host -f cyan "section: $inputBuffer" -n}; $key = [System.Console]::ReadKey($true)
+
+# Define interaction.
+switch ($key.Key) {'UpArrow' {if ($position -gt 0) { $position-- }; $inputBuffer = ""}
+'DownArrow' {if ($position -lt ($wrappedLines.Count - $pageSize)) { $position++ }; $inputBuffer = ""}
+'PageUp' {$position -= 30; if ($position -lt 0) {$position = 0}; $inputBuffer = ""}
+'PageDown' {$position += 30; $maxStart = [Math]::Max(0, $wrappedLines.Count - $pageSize); if ($position -gt $maxStart) {$position = $maxStart}; $inputBuffer = ""}
+'Home' {$position = 0; $inputBuffer = ""}
+'End' {$maxStart = [Math]::Max(0, $wrappedLines.Count - $pageSize); $position = $maxStart; $inputBuffer = ""}
+
+'Enter' {if ($inputBuffer -eq "") {"`n"; return}
+elseif ($inputBuffer -match '^\d+$') {$index = [int]$inputBuffer
+if ($index -ge 1 -and $index -le $sections.Count) {$selection = $index; $pattern = "(?ims)^## ($([regex]::Escape($sections[$selection-1].Groups[1].Value)).*?)(?=^##|\z)"; $match = [regex]::Match($scripthelp, $pattern); $block = $match.Groups[1].Value.TrimEnd(); $lines = $block -split "`r?`n", 2
+if ($lines.Count -gt 1) {$wrappedLines = (wordwrap $lines[1] 100) -split "`n", [System.StringSplitOptions]::None}
+else {$wrappedLines = @()}
+$position = 0}}
+$inputBuffer = ""}
+
+default {$char = $key.KeyChar
+if ($char -match '^[Qq]$') {"`n"; return}
+elseif ($char -match '^\d$') {$inputBuffer += $char}
+else {$inputBuffer = ""}}}}}
+
+# ----------------- IMPORT & CALCULATE STATISTICS -------------------------------------------------
+function ImportTwordleList {param([string]$path = (Join-Path $PSScriptRoot 'twordle.txt'))
+$script:words = Get-Content $path | ForEach-Object {$_.Trim().ToLower()} | Where-Object {$_ -match '^[a-z]{5}$'} | Sort-Object -Unique
+$letterfreq = @{}
+$positionfreq = @{}
+
+foreach ($i in 0..4) {$positionfreq[$i] = @{}}
+
+foreach ($word in $script:words) {foreach ($letter in ($word.ToCharArray() | Select-Object -Unique)) {if (!$letterfreq.ContainsKey($letter)) {$letterfreq[$letter] = 0}
+$letterfreq[$letter]++}
+
+for ($i = 0; $i -lt 5; $i++) {$letter = $word[$i]
+if (!$positionfreq[$i].ContainsKey($letter)) {$positionfreq[$i][$letter] = 0}
+$positionfreq[$i][$letter]++}}
+
+$script:stats = [pscustomobject]@{Words = $script:words
+LetterFreq = $letterfreq
+PositionFreq = $positionfreq}
+
+$results = foreach ($word in $script:words) {$score = TestTwordleWords $word
+
+[pscustomobject]@{Word = $word
+Presence = $score.Presence
+Position = $score.Position
+TotalScore = $score.TotalScore}}
+
+$topfirst = $results | Sort-Object TotalScore -Descending | Select-Object -First 5
+$firstcandidates = $topfirst | ForEach-Object {$test = TestTwordleWords $_.Word
+[pscustomobject]@{Candidate = $_.Word
+Presence = $_.Presence
+Position = $_.Position
+TotalScore = $_.TotalScore
+Reduction = [int]$test.Reduction
+Remaining = [int]$test.Remainder
+Improvement = $test.Improvement.PadLeft(11)}}
+$bestfirst = $firstcandidates | Sort-Object Remaining | Select-Object -First 1
+$used = $bestfirst.Candidate.ToCharArray()
+
+$topsecond = $results | Where-Object {($_.Word.ToCharArray() | Where-Object {$_ -in $used}).Count -eq 0} | Sort-Object TotalScore -Descending |
+Select-Object -First 5
+$secondcandidates = $topsecond | ForEach-Object {$test = TestTwordleWords @($bestfirst.Candidate,$_.Word)
+[pscustomobject]@{Candidate = $_.Word
+Presence = $_.Presence
+Position = $_.Position
+TotalScore = $_.TotalScore
+Reduction = [int]$test.Reduction
+Remaining = [int]$test.Remainder
+Improvement = $test.Improvement.PadLeft(11)}}
+$bestsecond = $secondcandidates | Sort-Object Remaining | Select-Object -First 1
+$used += $bestsecond.Candidate.ToCharArray()
+
+$topthird = $results | Where-Object {($_.Word.ToCharArray() | Where-Object {$_ -in $used}).Count -eq 0} | Sort-Object TotalScore -Descending | Select-Object -First 5
+$thirdcandidates = $topthird | ForEach-Object {
+$test = TestTwordleWords @($bestfirst.Candidate,$bestsecond.Candidate,$_.Word)
+[pscustomobject]@{Candidate = $_.Word
+Presence = $_.Presence
+Position = $_.Position
+TotalScore = $_.TotalScore
+Reduction = [int]$test.Reduction
+Remaining = [int]$test.Remainder
+Improvement = $test.Improvement.PadLeft(11)}}
+$bestthird = $thirdcandidates | Sort-Object Remaining | Select-Object -First 1
+
+$firstposition = foreach ($i in 0..4) {($positionfreq[$i].GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1).Key}
+$secondposition = foreach ($i in 0..4) {($positionfreq[$i].GetEnumerator() | Sort-Object Value -Descending | Select-Object -Skip 1 -First 1).Key}
+$thirdposition = foreach ($i in 0..4) {($positionfreq[$i].GetEnumerator() | Sort-Object Value -Descending | Select-Object -Skip 2 -First 1).Key}
+
+$OtherFirstWordCandidates = ($topfirst.Word | Where-Object {$_ -ne $bestfirst.Candidate}) -join ', '
+$OtherSecondWordCandidates = ($topsecond.Word | Where-Object {$_ -ne $bestsecond.Candidate}) -join ', '
+$OtherThirdWordCandidates = ($topthird.Word | Where-Object {$_ -ne $bestthird.Candidate}) -join ', '
+
+if ($TestWords) {Write-Host -f green "`nPresence" -n; Write-Host -f white " is the sum of all occurrences of the letters in the word present within the dictionary, represented as a single word."
+Write-Host -f green "Position" -n; Write-Host -f white " is the sum of all occurrences of the letters in their current positions within the dictionary, represented as a single word."
+Write-Host -f green "TotalScore" -n; Write-Host -f white " is the sum of these two values."
+Write-Host -f white "`nTop-scoring candidates are further ranked by their ability to reduce the remaining word pool."}
+
+if ($Import -or $TestWords -and !$MoreDetails) {[pscustomobject]@{DictionaryFile = Split-Path $path -Leaf
+WordCount = $script:words.Count
+BestFirstGuess = $bestfirst.Candidate
+Reduction  = $script:words.Count - $bestfirst.Remaining
+RemainingAfterFirst = $bestfirst.Remaining
+TurnOneCandidates  = $OtherFirstWordCandidates
+BestSecondGuess = $bestsecond.Candidate
+RemainingAfterSecond = $bestsecond.Remaining
+TurnTwoCandidates = $OtherSecondWordCandidates
+BestThirdGuess = $bestthird.Candidate
+RemainingAfterThird = $bestthird.Remaining
+TurnThreeCandidates  = $OtherThirdWordCandidates
+MostCommonFirstPosition = ($firstposition -join ',')
+SecondPosition = ($secondposition -join ',')
+ThirdPosition = ($thirdposition -join ',')} | Format-List
+Write-Host -f Yellow ("-" * 100)}
+
+if ($MoreDetails) {($firstcandidates | Select-Object @{n='Turn';e={1}},@{n='Candidate';e={"{0,9}" -f $_.Candidate}},* -ExcludeProperty Candidate) + ($secondcandidates | Select-Object @{n='Turn';e={2}},@{n='Candidate';e={"{0,9}" -f $_.Candidate}},* -ExcludeProperty Candidate) + ($thirdcandidates | Select-Object @{n='Turn';e={3}},@{n='Candidate';e={"{0,9}" -f $_.Candidate}},* -ExcludeProperty Candidate) | Format-Table
+Write-Host -f yellow ('-' * 100)}}
+
+# ----------------- TESTWORDS ---------------------------------------------------------------------
+function TestTwordleWords {param([string[]]$guess)
+
+if ($guess.Count -gt 3) {Write-Host -f yellow "Ignoring extra words beyond the first three.`n"
+$guess = $guess | Select-Object -First 3}
+$usedletters = @{}
+$Position = 0
+$Presence = 0
+$showproceedingwarning = $false
+
+foreach ($word in $guess) {if ($word.Length -ne 5) {Write-Host -f red "Warning: '$word' is not a 5-letter word."}
+
+if ($word.ToLower() -notin $script:words) {Write-Host -f red "Warning: '$word' was not found in the Twordle word list."
+$showproceedingwarning = $true}}
+
+if ($showproceedingwarning) {Write-Host "Exiting.`n"
+return}
+
+$presencepct = @()
+$positionpct = @()
+foreach ($word in $guess) {for ($i = 0; $i -lt 5; $i++) {$letter = $word[$i]
+if (!$usedletters.ContainsKey($letter)) {$usedletters[$letter] = $true
+
+if ($script:stats.LetterFreq.ContainsKey($letter)) {$Presence += $script:stats.LetterFreq[$letter]
+$presencepct += ($script:stats.LetterFreq[$letter] / $script:words.Count)}}
+
+if ($script:stats.PositionFreq[$i].ContainsKey($letter)) {$Position += $script:stats.PositionFreq[$i][$letter]
+
+$positionpct += ($script:stats.PositionFreq[$i][$letter] / $script:words.Count)}}}
+
+$reducedto = $null
+$reductionpct = $null
+
+$avgpresence = ($presencepct | Measure-Object -Average).Average
+$avgposition = ($positionpct | Measure-Object -Average).Average
+$reducedto = [math]::Round($script:words.Count * $avgpresence * $avgposition)
+$reductionpct = [math]::Round((1 - ($reducedto / $script:words.Count)) * 100, 0)
+
+[pscustomobject]@{Turns = ($guess -join ', ')
+UniqueLetters = $usedletters.Count
+Coverage = "{0,2}%" -f [int][math]::Round(($usedletters.Count / 26) * 100, 0)
+Presence = [math]::Round($Presence / $script:words.Count, 2)
+Position = [math]::Round($Position / $script:words.Count, 2)
+TotalScore = [math]::Round(($Presence + $Position) / $script:words.Count, 2)
+Reduction = $script:words.Count - $reducedto
+Remainder = $reducedto
+Improvement = "$($reductionpct)%"}}
+
+# ----------------- FINDWORDS ---------------------------------------------------------------------
+function FindWord {param([string[]]$Find, [string]$Exclude)
+$patterns = $Find
+$correctpositions = @{}
+$misplacedletters = @{}
+$requiredletters = @{}
+foreach ($i in 0..4) {$misplacedletters[$i] = @()}
+foreach ($pattern in $patterns) {if ($pattern.Length -ne 5) {Write-Host -f red "`nInvalid pattern: $pattern`n"
+return}
+for ($i = 0; $i -lt 5; $i++) {$char = $pattern[$i]
+if ($char -eq '_') {continue}
+if ([char]::IsUpper($char)) {$letter = $char.ToString().ToLower()
+$correctpositions[$i] = $letter
+$requiredletters[$letter] = $true
+continue}
+if ([char]::IsLower($char)) {$letter = $char.ToString()
+$requiredletters[$letter] = $true
+if ($i -notin $correctpositions.Keys -or $correctpositions[$i] -ne $letter) {$misplacedletters[$i] += $letter}}}}
+$results = foreach ($word in $script:words) {$match = $true
+if ($Exclude) {foreach ($letter in $Exclude.ToLower().ToCharArray()) {if ($word.Contains($letter)) {$match = $false
+break}}}
+if (!$match) {continue}
+foreach ($letter in $requiredletters.Keys) {if (!$word.Contains($letter)) {$match = $false
+break}}
+if (!$match) {continue}
+foreach ($pos in $correctpositions.Keys) {if ($word[$pos] -ne $correctpositions[$pos]) {$match = $false
+break}}
+if (!$match) {continue}
+for ($i = 0; $i -lt 5; $i++) {foreach ($letter in $misplacedletters[$i]) {if ($correctpositions.ContainsKey($i) -and $correctpositions[$i] -eq $letter) {
+continue}
+if ($word[$i] -eq $letter) {$match = $false
+break}}
+if (!$match) {break}}
+if ($match) {$word}}
+
+if ($results.Count -gt 250 -and -not $Force) {Write-Host -f white "`nThere are too many matches (" -n; Write-Host -f red "$($results.Count)" -n; Write-Host -f white "). Add more letters to the " -n; Write-Host -f cyan "Find" -n; Write-Host -f white ", or " -n; Write-Host -f cyan "Exclude" -n; Write-Host -f white " letter patterns or use the " -n; Write-Host -f cyan "Force" -n; Write-Host -f white " parameter.`n"
+return}
+
+if (-not $Import) {[pscustomobject]@{DictionaryFile = 'twordle.txt'
+WordCount = $script:words.Count}
+if (-not $Cheat) {Write-Host -f yellow ("-" * 100)
+Write-Host ""}}
+
+[pscustomobject]@{Pattern = $Find
+Exclude = $Exclude
+Matches = $results.Count
+Words   = $results -join ', '}}
+
+# ----------------- GAME --------------------------------------------------------------------------
+if ($Play) {$Wins = 0
+$Losses = 0
+$script:Hints = 0
+$script:hintedpositions = @{}
+
+# ----------------- DISPLAY PLAY FIELD ------------------------------------------------------------
+function ShowBoard {Clear-Host
+
+$hinttext = ''
+for ($i = 0; $i -lt 5; $i++) {$known = $false
+foreach ($row in $board) {if ($row.Colors[$i] -eq 'Green') {$known = $true
+break}}
+
+if ($known -or $script:hintedpositions.ContainsKey($i)) {$hinttext += $answer[$i]}
+else {$hinttext += '_'}}
+
+if ($hinttext -eq '_____') {$hinttext = '(F4:Hint)'}
+
+Write-Host -f yellow ("Twordle".PadLeft(19)) -n; Write-Host -f green ($hinttext.ToUpper().PadLeft(12))
+Write-Host -f yellow (" {0,2} Wins / {1,2} Losses / {2,2} Hints" -f $Wins,$Losses,$script:Hints)
+Write-Host -f yellow ("-" * 32)
+
+foreach ($row in $board) {Write-Host "`t    " -n
+for ($i = 0; $i -lt 5; $i++) {Write-Host "$($row.Word[$i]) " -f $row.Colors[$i] -n}
+Write-Host}
+
+for ($i = $board.Count; $i -lt 6; $i++) {Write-Host "`t    _ _ _ _ _"}
+Write-Host ""
+
+foreach ($row in @('  ABCDEFGHIJKLM','  NOPQRSTUVWXYZ')) {foreach ($letter in $row.ToCharArray()) {$color = $keyboard[$letter.ToString().ToLower()]
+if (!$color) {$color = 'White'}
+Write-Host "$letter " -f $color -n}
+Write-Host ""}
+Write-Host ""
+
+if ($turn -lt 7) {Write-Host -f White "Turn $turn`n"}
+
+if ($Cheat -and $turn -gt 1) {$results = FindWord $patterns $excluded
+
+if ($results) {$words = ($results.Words -split ', ') | Where-Object {$_ -and $_ -notin $usedwords}
+$matches = $words.Count
+Write-Host -f Yellow "There are$($results.Matches) possible matches: " -n
+
+if ($matches -le 250) {Write-Host -f White ($words -join ', ')}
+elseif ($matches -gt 250 -and $Force) {Write-Host -f White ($words -join ', ')}
+Write-Host ""}}}
+
+# ----------------- COLOURIZE ALPHABET ------------------------------------------------------------
+function UpdateKeyboard {param($guess,$colors)
+for ($i = 0; $i -lt 5; $i++) {$letter = $guess[$i].ToString().ToLower()
+$color  = $colors[$i]
+switch ($color) {'Green' {$keyboard[$letter] = 'Green'}
+'Yellow' {if ($keyboard[$letter] -ne 'Green') {$keyboard[$letter] = 'Yellow'}}
+'DarkGray' {if ($keyboard[$letter] -notin 'Green','Yellow') {$keyboard[$letter] = 'DarkGray'}}}}}
+
+# ----------------- INPUT -------------------------------------------------------------------------
+function ReadTwordleInput {param([string]$Prompt, [int]$Length = 5, [switch]$YesNo)
+Write-Host -f White $Prompt -n
+$text = ''
+while ($true) {$key = [Console]::ReadKey($true)
+switch ($key.Key) {'Escape' {return '__QUIT__'}
+
+'F4' {$unknown = foreach ($i in 0..4) {if ($script:hintedpositions.ContainsKey($i)) {continue}
+$known = $false
+
+foreach ($row in $board) {if ($row.Colors[$i] -eq 'Green') {$known = $true
+break}}
+
+if (-not $known) {$i}}
+
+if ($unknown.Count -le 1) {ShowBoard
+Write-Host -f Red "No more hints available.`n"
+Write-Host -f White $Prompt -n; Write-Host -f Cyan $text.ToUpper() -n
+continue}
+
+$script:hintedpositions[$unknown[0]] = $true
+$script:Hints++
+ShowBoard
+Write-Host -f White $Prompt -n; Write-Host -f Cyan $text.ToUpper() -n
+continue}
+
+'Backspace' {if ($text.Length) {$text = $text.Substring(0,$text.Length - 1)
+Write-Host "`b `b" -n}}
+
+'Enter' {if ($YesNo) {Write-Host ""; return $text}
+if ($text.Length -eq $Length) {Write-Host ""; return $text.ToLower()}}
+
+default {if ($YesNo) {if ($key.KeyChar) {$text += $key.KeyChar.ToString().ToLower()
+Write-Host -f Cyan $key.KeyChar.ToString().ToUpper() -n}}
+
+elseif ($key.KeyChar -match '[a-zA-Z]' -and $text.Length -lt $Length) {$text += $key.KeyChar
+Write-Host -f Cyan $key.KeyChar.ToString().ToUpper() -n}}}}}
+
+do {$board = @()
+$keyboard = @{}
+$patterns = @()
+$excluded = ''
+$failedword = 0
+
+if ($Import) {ImportTwordleList $Import}
+else {ImportTwordleList}
+
+$answer = Get-Random $script:words
+
+foreach ($letter in 'abcdefghijklmnopqrstuvwxyz'.ToCharArray()) {$keyboard["$letter"] = 'White'}
+$won = $false
+$usedwords = @()
+
+for ($turn = 1; $turn -le 6; $turn++) {ShowBoard
+
+# ----------------- VALIDATE FIRST WORD PARAMETER -------------------------------------------------
+if ($turn -eq 1 -and $First.ToLower() -in $script:words) {$guess = $First.ToLower()}
+elseif ($turn -eq 1 -and $First) {do {$guess = ReadTwordleInput "First Guess: "
+
+if ($guess -eq '__QUIT__') {Write-Host -f Cyan "`n`nExiting.`n"
+return}
+
+if ($guess -notin $script:words) {ShowBoard
+Write-Host -f Red "That word is not in this game dictionary.`n"}}
+
+until ($guess -match '^[a-z]{5}$' -and $script:words -contains $guess)
+$First = $guess}
+
+# ----------------- VALIDATE WORD INPUTS ----------------------------------------------------------
+else {do {$guess = ReadTwordleInput "Guess: "
+if ($guess -eq '__QUIT__') {Write-Host -f Cyan "`n`nExiting.`n"
+return}
+
+if ($guess -notin $script:words) {ShowBoard
+$failedword++
+Write-Host -f cyan ($guess.ToUpper()) -n; Write-Host -f Yellow " is not found in this dictionary.`nIf you make " -n; Write-Host -f red (5 - $failedword) -n; Write-Host -f Yellow " more you lose the round.`n"}
+
+if ($failedword -gt 4) {$forfeit = $true
+break}
+
+if ($guess -in $usedwords) {Showboard
+Write-Host -f Red "You already guessed " -n; Write-Host -f Cyan "$($guess.ToUpper())" -n; Write-Host -f Red ".`n"}}
+
+until ($guess -match '^[a-z]{5}$' -and $script:words -contains $guess -and $guess -notin $usedwords)}
+if ($forfeit) {break}
+$usedwords += $guess
+$colors = @('DarkGray','DarkGray','DarkGray','DarkGray','DarkGray')
+$remaining = $answer.ToCharArray()
+
+for ($i = 0; $i -lt 5; $i++) {if ($guess[$i] -eq $answer[$i]) {$colors[$i] = 'Green'
+$remaining[$i] = $null}}
+
+for ($i = 0; $i -lt 5; $i++) {if ($colors[$i] -eq 'Green') {continue}
+$idx = [array]::IndexOf($remaining,$guess[$i])
+
+if ($idx -ge 0) {$colors[$i] = 'Yellow'
+$remaining[$idx] = $null}}
+$knownletters = @()
+
+for ($i = 0; $i -lt 5; $i++) {if ($colors[$i] -in 'Green','Yellow') {$knownletters += $guess[$i]}}
+$pattern = ''
+
+for ($i = 0; $i -lt 5; $i++) {switch ($colors[$i]) {'Green' {$pattern += $guess[$i].ToString().ToUpper()}
+'Yellow' {$pattern += $guess[$i]}
+default {$pattern += '_'
+
+if ($guess[$i] -notin $knownletters -and $excluded -notmatch [regex]::Escape($guess[$i])) {$excluded += $guess[$i]}}}}
+$patterns += $pattern
+$board += [pscustomobject]@{Word = $guess.ToUpper()
+Colors = $colors}
+UpdateKeyboard $guess $colors
+
+if ($guess -eq $answer) {$won = $true
+$Wins++
+ShowBoard
+Write-Host -f green "Solved in $turn guesses!`n"
+break}}
+
+if (!$won) {$Losses++
+ShowBoard
+if ($forfeit) {Write-Host -f Red "Too many invalid words guessed.`n"}
+Write-Host -f White "Answer: " -n
+Write-Host -f Red "$($answer.ToUpper())`n"}
+$playagain = ReadTwordleInput "Play again? (Y/N) " -YesNo
+$script:hintedpositions = @{}
+$failedword = 0
+$forfeit = $false
+
+if ($guess -eq '__QUIT__') {Write-Host -f Cyan "`n`nExiting.`n"; return}} 
+until ($playagain -notmatch '^(?i)y(es)?$')
+
+Write-Host ""; return}
+
+# ----------------- CALL UTILITIES ----------------------------------------------------------------
+if ($help) {help; return}
+Write-Host -f yellow "`n`t`t`t`tTwordle Solver"
+Write-Host -f yellow ("-" * 100)
+
+if ($Import) {ImportTwordleList $Import}
+else {ImportTwordleList}
+if (-not $Find -and -not $Exclude -and $Import){Write-Host -f yellow ("-" * 100)}
+
+if ($args.Count -gt 0 -and $args[0] -match '(?i)^[a-z]{5},[a-z]{5}$') {$TestWords = $args[0]}
+if ($TestWords){TestTwordleWords $TestWords}
+if ($Find) {Findword $Find $Exclude | Format-List}
+
+# ----------------- HELP SCREEN -------------------------------------------------------------------
+if (-not $TestWords -and -not $Find) {Write-Host -f cyan "Usage: Twordle -Import <importfile> -TestWords <word1,word2,word3> -MoreDetails -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -First <word> -Cheat -Help`n"
+Write-Host -f cyan "Import" -n; Write-Host -f white " can be used universally to specify a custom word list.`n"
+Write-Host -f cyan "TestWords" -n; Write-Host -f white " allows you score and compare up to 3 opening turns and can be used with " -n; Write-Host -f cyan "MoreDetails" -n; Write-Host -f white " to see additional words.`n"
+Write-Host -f cyan "Find, Exclude," -n; Write-Host -f white " and " -n; Write-Host -f cyan "Force" -n; Write-Host -f white " work together."
+Write-Host -f cyan "Play, First, Cheat," -n; Write-Host -f white " and " -n; Write-Host -f cyan "Force" -n; Write-Host -f white " also work together.`n"
+Write-Host -f yellow ("-"*80)
+Write-Host -f yellow "`nFor the " -n; Write-Host -f cyan "Find" -n; Write-Host -f yellow " parameter:`n"
+Write-Host -f white "Uppercase letters" -n; Write-Host -f yellow "`trepresent the correct letters, in the correct position."
+Write-Host -f white "Underscores" -n; Write-Host -f yellow "`t`trepresent unknowns."
+Write-Host -f white "Lowercase letters" -n; Write-Host -f yellow "`trepresent the correct letters, but incorrect location."
+Write-Host -f white "Commas" -n; Write-Host -f yellow "`t`t`tseparates multiple, sequential guesses."
+Write-Host -f cyan "Exclude" -n; Write-Host -f yellow "`t`t`tlists letters that cannot be included in the results."
+Write-Host -f cyan "Force" -n; Write-Host -f yellow "`t`t`tforces the display of all results, even if they exceed 250.`n"
+Write-Host -f yellow ("-"*80)
+Write-Host -f green "`nPlay" -n; Write-Host -f yellow "`tallows you to play the game."
+Write-Host -f green "First" -n; Write-Host -f yellow "`tdefines the first play to always use for every game."
+Write-Host -f green "Cheat" -n; Write-Host -f yellow "`tdisplays  possible results after each turn."
+Write-Host -f green "Force" -n; Write-Host -f yellow "`tforces the display of all results, even if they exceed 250.`n"
+Write-Host -f yellow ("-"*80)
+Write-Host -f white "`nExample Usages:`n"
+Write-Host -f gray "Twordle -TestWords slate,round`nTwordle -Find t_R_s,__RST`nTwordle -Find t_R_s,__RST -Exclude eaud`nTwordle -Find ___ED -Force`nTwordle -Play -First slate -Cheat -Force`n"
+Write-Host -f yellow ("-" * 100)
+Write-Host ""
+return}}
+
+Export-ModuleMember -function Twordle
+
+# Helptext.
+
+<#
+## Twordle
+This module serves two purposes:
+
+* The first is to provide a number of utilities to help play Wordle/Twirdle.
+* The second is to actually play an offline version of the game called Twordle.
+
+Usage: Twordle  -Import <importfile> 
+		-TestWords <word1,word2,word3> -MoreDetails
+		-Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force 
+		-Play -First <word> -Cheat -Force
+		-Help
+
+You can use -Import to define a custom dictionary file.
+The TestWords option provides a weighted statistical analysis of various plays.
+The Find option is a cheat tool to assist in solving the puzzle.
+The Play option lets you play an offline version of the game.
+
+---------------------------------------------------------------------------------------------------
+TestWords allows you to evaluate from one to three opening plays to determine their mathematical effectiveness against other words.
+
+Example Usages:
+
+Twordle -TestWords slate
+Twordle -TestWords slate,round,wimpy
+
+Use the -MoreDetails switch to see the 15 top candidates.
+
+---------------------------------------------------------------------------------------------------
+FindWords allows you to display a list of words that match a specific pattern:
+
+	Uppercase letters       represent the correct letters, in the correct position.
+	Underscores             represent unknowns.
+	Lowercase letters       represent the correct letters, but incorrect location.
+	Commas                  separates multiple, sequential guesses.
+
+* Exclude is used in conjunction with Find to define which letters have already been ruled out, in order to further reduce the resulting set of possibilities.
+* Force will display all results, even if there are more than 250.
+
+Example Usages:
+
+Twordle -Find t_R_s,__RST
+Twordle -Find t_R_s,__RST -Exclude eaud
+Twordle -Find ___ED -Force
+
+---------------------------------------------------------------------------------------------------
+If you choose to play the game there are a few options that can be configured:
+
+	* First defines the first word to play in every game, useful for long sessions.
+	* Cheat dynamically displays all the possible word matches after your first turn.
+	* Force will display all results, even if there are more than 250.
+
+During gameplay, pressing F4 will reveal each subsequent letter, but the scoreboard at the top will keep track of this. This hint function is independent of the Cheat function.
+## Sample TestWords Screens
+C:\Users\Public\Desktop> Twordle -TestWords tares,doily,punch
+
+                                Twordle Solver
+----------------------------------------------------------------------------------------------------
+
+Presence is the sum of all occurrences of the letters in the word present within the dictionary, represented as a single word.
+Position is the sum of all occurrences of the letters in their current positions within the dictionary, represented as a single word.
+TotalScore is the sum of these two values.
+
+Top-scoring candidates are further ranked by their ability to reduce the remaining word pool.
+
+Turn Candidate Presence Position TotalScore Reduction Remaining Improvement
+---- --------- -------- -------- ---------- --------- --------- -----------
+   1     tares     1.87     0.83       2.70      5400       357         94%
+   1     rates     1.87     0.78       2.65      5422       335         94%
+   1     dares     1.81     0.82       2.63      5416       341         94%
+   1     cares     1.78     0.84       2.62      5413       344         94%
+   1     tales     1.81     0.81       2.62      5418       339         94%
+   2     doily     1.15     0.48       1.63      5538       219         96%
+   2     could     1.08     0.43       1.51      5553       204         96%
+   2     doing     1.08     0.38       1.46      5561       196         97%
+   2     pound     1.04     0.42       1.46      5556       201         97%
+   2     mould     1.06     0.40       1.46      5558       199         97%
+   3     plumy     0.88     0.33       1.21      5611       146         97%
+   3     lumpy     0.88     0.33       1.20      5612       145         97%
+   3     bulky     0.80     0.39       1.19      5608       149         97%
+   3     hulky     0.82     0.36       1.18      5611       146         97%
+   3     lucky     0.84     0.33       1.17      5613       144         97%
+
+----------------------------------------------------------------------------------------------------
+
+Turns         : tares, doily, punch
+UniqueLetters : 15
+Coverage      : 58%
+Presence      : 3.87
+Position      : 1.61
+TotalScore    : 5.48
+Reduction     : 5597
+Remainder     : 160
+Improvement   : 97%
+
+## Sample Find Screen
+C:\Users\Public\Desktop> Twordle -find __a_e,ra__y,_rea_ -exclude dmnqstlz
+
+                                Twordle Solver
+----------------------------------------------------------------------------------------------------
+DictionaryFile : twordle.txt
+WordCount      : 5757
+
+----------------------------------------------------------------------------------------------------
+Pattern : {__a_e, ra__y, _rea_}
+Exclude : dmnqstlz
+Matches : 1
+Words   : yerba
+
+## Gameplay
+* Guess the correct 5 letter word by round 6 in order to win.
+* The scoreboard at the top of the screen keeps track of your wins, losses and the number of hints used this session.
+* The game will not let you replay a word.
+* If you guess 5 invalid words within 1 game, you lose.
+* If you fail to guess the word by the 6th round, you lose.
+* If you think about The Game, you lose. IYKYK.
+* Press ESC to quit.
+
+* Correct letters in the correct place will appear in green.
+* Misplaced letters will appear in yellow.
+* Incorrect letters will appear in dark grey.
+* The alphabet at the bottom will do the same, so that you can keep track of what letters are in play and those that are not yet played.
+
+* You can import a custom dictionary with the -Import parameter.
+* The default dictionary ships with over 5700 words.
+
+* The first 250 dictionary matches will dynamically appear on screen each turn, if the -Cheat parameter is used.
+* All dictionary matches will dynamically appear on screen each turn, if the -Force parameter is also used.
+
+* The hint function is accessed by pressing F4.
+* Pressing F4 will display each unguessed letter in its correct position sequentially.
+* You cannot use the hint function to display all 5 letters.
+
+----------------------------------------------------------------------------------------------------
+Sample Game Screen:
+
+            Twordle       LATER
+  1 Wins /  0 Losses /  1 Hints
+--------------------------------
+            S L A T E
+            R O U N D
+            W I M P Y
+            L A T E R
+            _ _ _ _ _
+            _ _ _ _ _
+
+    A B C D E F G H I J K L M
+    N O P Q R S T U V W X Y Z
+
+Turn 4
+
+Solved in 4 guesses!
+
+Play again? (Y/N)
+
+## License
+MIT License
+
+Copyright (c) 2026 Craig Plath
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+##>
