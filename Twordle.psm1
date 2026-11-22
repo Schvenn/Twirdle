@@ -277,7 +277,6 @@ Matches = $results.Count
 Words   = $results -join ', '}}
 
 # ----------------- BUILDDEFINITIONS --------------------------------------------------------------
-
 function BuildDefinitions {param([string]$path = (Join-Path $PSScriptRoot 'twordle.txt'), [string]$jsonpath = (Join-Path $PSScriptRoot 'Definitions.json'))
 $wordstodefine = Get-Content $path
 
@@ -318,12 +317,11 @@ Write-Host -f Yellow "`nPass $pass of 10"
 $missingwords = foreach($word in $wordstodefine){
 $key = $word.ToLower()
 
-if(-not $definitions.ContainsKey($key) -or $null -eq $definitions[$key] -or ((-not $definitions[$key].ContainsKey('definition') -or [string]::IsNullOrWhiteSpace($definitions[$key].definition)) -and (-not $definitions[$key].ContainsKey('notfound') -or -not $definitions[$key].notfound))){$word}}
+if(-not $definitions.ContainsKey($key) -or $null -eq $definitions[$key] -or ((-not $definitions[$key].ContainsKey('definition') -or [string]::IsNullOrWhiteSpace($definitions[$key].definition)))){$word}}
 
 Write-Host -f Yellow "`n$($missingwords.Count) words require processing.`n"
 
-if($missingwords.Count -eq 0){
-Write-Host -f Green "All words have definitions or are marked 404."
+if($missingwords.Count -eq 0){Write-Host -f Green "All words have definitions or are unavailable."
 break}
 
 $updated = 0
@@ -335,10 +333,22 @@ $missingwords | ForEach-Object -Parallel {$word = $_
 
 try{$result = Invoke-RestMethod -Uri "https://api.dictionaryapi.dev/api/v2/entries/en/$word" -TimeoutSec 10
 $entry = $result[0]
+Write-Host -f Green "[DictionaryAPI] $word"
 [PSCustomObject]@{Word = $word.ToLower()
 Type = $entry.meanings[0].partOfSpeech
 Definition = $entry.meanings[0].definitions[0].definition
 Example = $entry.meanings[0].definitions[0].example
+NotFound = $false}}
+catch{try{$result = Invoke-RestMethod -Uri "https://en.wiktionary.org/api/rest_v1/page/definition/$word" -TimeoutSec 10
+$lang = $result.en | Select-Object -First 1
+$definition = ($lang.definitions | Select-Object -First 1).definition
+
+if($null -eq $lang -or [string]::IsNullOrWhiteSpace($definition)){throw}
+Write-Host -f Yellow "[Wiktionary] $word"
+[PSCustomObject]@{Word = $word.ToLower()
+Type = $lang.partOfSpeech
+Definition = $definition
+Example = ''
 NotFound = $false}}
 catch{$notfound = $false
 
@@ -348,7 +358,7 @@ catch{}
 Type = ''
 Definition = ''
 Example = ''
-NotFound = $notfound}}} -ThrottleLimit 3 | ForEach-Object {$definitions[$_.Word] = @{type = $_.Type
+NotFound = $notfound}}}} -ThrottleLimit 3 | ForEach-Object {$definitions[$_.Word] = @{type = $_.Type
 definition = $_.Definition
 example = $_.Example
 notfound = $_.NotFound}
@@ -360,15 +370,30 @@ $passnew++}
 
 if(($updated % 100) -eq 0){SaveDefinitions "$batchnew additional definitions found" $batchnew
 $batchnew = 0}}}
-else{Write-Host -f Yellow "PowerShell $($PSVersionTable.PSVersion) detected. Using single-thread mode.`n"
 
+else{Write-Host -f Yellow "PowerShell $($PSVersionTable.PSVersion) detected. Using single-thread mode.`n"
 foreach($word in $missingwords){Write-Host -f Cyan "[$(++$updated)/$($missingwords.Count)] Processing $word"
 
 try{$result = Invoke-RestMethod -Uri "https://api.dictionaryapi.dev/api/v2/entries/en/$word" -TimeoutSec 10
 $entry = $result[0]
+Write-Host -f Green "[DictionaryAPI] $word"
 $definitions[$word.ToLower()] = @{type = $entry.meanings[0].partOfSpeech
 definition = $entry.meanings[0].definitions[0].definition
 example = $entry.meanings[0].definitions[0].example
+notfound = $false}
+$new++
+$batchnew++
+$passnew++}
+
+catch{try{$result = Invoke-RestMethod -Uri "https://en.wiktionary.org/api/rest_v1/page/definition/$word" -TimeoutSec 10
+$lang = $result.en | Select-Object -First 1
+$definition = ($lang.definitions | Select-Object -First 1).definition
+
+if($null -eq $lang -or [string]::IsNullOrWhiteSpace($definition)){throw}
+Write-Host -f Green "[Wiktionary] $word"
+$definitions[$word.ToLower()] = @{type = $lang.partOfSpeech
+definition = $definition
+example = ''
 notfound = $false}
 $new++
 $batchnew++
@@ -377,14 +402,14 @@ catch{$notfound = $false
 
 try{if($_.Exception.Response.StatusCode.value__ -eq 404){$notfound = $true}}
 catch{}
-
 $definitions[$word.ToLower()] = @{type = ''
 definition = ''
 example = ''
-notfound = $notfound}}
+notfound = $notfound}}}
 
 if(($updated % 100) -eq 0){SaveDefinitions "$batchnew additional definitions found" $batchnew
 $batchnew = 0}
+
 Start-Sleep -Milliseconds 1000}}
 
 Write-Host -f Yellow ("-" * 100)
@@ -392,6 +417,7 @@ SaveDefinitions "Saving final definitions..." $new
 
 if($passnew -eq 0){Write-Host -f Yellow "No new definitions found during pass $pass. Stopping."
 break}}}
+
 
 # ----------------- GAME --------------------------------------------------------------------------
 if ($Play) {$Wins = 0
