@@ -342,7 +342,6 @@ Example = $entry.meanings[0].definitions[0].example
 NotFound = $false}}
 catch{try{$result = Invoke-RestMethod -Uri "https://en.wiktionary.org/api/rest_v1/page/definition/$word" -TimeoutSec 10
 $lang = $result.en | Select-Object -First 1
-$definition = ($lang.definitions | Select-Object -First 1).definition
 Add-Type -AssemblyName System.Web
 $definition = ($lang.definitions | Select-Object -First 1).definition
 $definition = [System.Web.HttpUtility]::HtmlDecode($definition)
@@ -395,7 +394,6 @@ $passnew++}
 
 catch{try{$result = Invoke-RestMethod -Uri "https://en.wiktionary.org/api/rest_v1/page/definition/$word" -TimeoutSec 10
 $lang = $result.en | Select-Object -First 1
-$definition = ($lang.definitions | Select-Object -First 1).definition
 Add-Type -AssemblyName System.Web
 $definition = ($lang.definitions | Select-Object -First 1).definition
 $definition = [System.Web.HttpUtility]::HtmlDecode($definition)
