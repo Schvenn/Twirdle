@@ -495,9 +495,10 @@ if (-not $Find -and -not $Exclude -and $Import){Write-Host -f yellow ("-" * 100)
 if ($args.Count -gt 0 -and $args[0] -match '(?i)^[a-z]{5},[a-z]{5}$') {$TestWords = $args[0]}
 if ($TestWords){TestTwordleWords $TestWords}
 if ($Find) {Findword $Find $Exclude | Format-List}
+if ($BuildDefinitions) {BuildDefinitions}
 
 # ----------------- HELP SCREEN -------------------------------------------------------------------
-if (-not $TestWords -and -not $Find) {Write-Host -f cyan "Usage: Twordle -Import <importfile> -TestWords <word1,word2,word3> -MoreDetails -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -First <word> -Cheat -BuildDefinitions -Help`n"
+if (-not $TestWords -and -not $Find -and -not $BuildDefinitions) {Write-Host -f cyan "Usage: Twordle -Import <importfile> -TestWords <word1,word2,word3> -MoreDetails -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -First <word> -Cheat -BuildDefinitions -Help`n"
 Write-Host -f cyan "Import" -n; Write-Host -f white " can be used universally to specify a custom word list.`n"
 Write-Host -f cyan "TestWords" -n; Write-Host -f white " allows you score and compare up to 3 opening turns and can be used with " -n; Write-Host -f cyan "MoreDetails" -n; Write-Host -f white " to see additional words.`n"
 Write-Host -f cyan "BuildDefinitions" -n; Write-Host -f white " creates a Definitions.json file of the chosen dictionary.`n"
