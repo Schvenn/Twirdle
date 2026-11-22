@@ -290,7 +290,8 @@ definition = $entry.meanings[0].definitions[0].definition
 example = $entry.meanings[0].definitions[0].example}}
 catch{$definitions[$word.ToLower()] = @{type = ""
 definition = ""
-example = ""}}}
+example = ""}}
+Start-Sleep -Milliseconds 100}
 $definitions | ConvertTo-Json -Depth 5 | Set-Content .\Definitions.json -Encoding UTF8;
 return}
 
