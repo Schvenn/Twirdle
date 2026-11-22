@@ -70,8 +70,9 @@ Here is a sample output:
 Usage: Twirdle -Import <importfile> -TestWords <word1,word2,word3> -MoreCandidates -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -First <word> -Cheat -Help
 ```
 `Import` can be used universally to specify a custom word list.<br><br>
-`TestWords` allows you score and compare up to 3 opening turns and can be used with MoreCandidates to see additional words.<br><br>
+`TestWords` allows you score and compare up to 3 opening turns and can be used with `MoreDetails` to see additional words.<br><br>
 `Find`, `Exclude`, and `Force` work together.<br>
+`BuildDefinitions` creates a `Definitions.json` file of the chosen dictionary.
 `Play`, `First`, `Cheat`, and `Force` also work together.<br>
 
 For the Find parameter:
