@@ -421,7 +421,7 @@ function showDefinition(word){playClickSound();
 const entry = definitions[word.toLowerCase()];
 document.getElementById("definitionWord").textContent = word.toUpperCase();
 if(entry){document.getElementById("definitionType").textContent = entry.type || "";
-document.getElementById("definitionText").textContent = entry.definition || "Definition unavailable.";
+document.getElementById("definitionText").innerHTML = entry.definition || `Local definition unavailable. <a href="https://www.thefreedictionary.com/${word}" target="_blank" rel="noopener noreferrer">Look up definition ↗</a>`;
 document.getElementById("definitionExample").textContent = entry.example
 ? `Example: ${entry.example}`
 : "";}
