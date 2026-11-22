@@ -332,6 +332,7 @@ if($parallel){Write-Host -f Green "PowerShell $($PSVersionTable.PSVersion) detec
 $missingwords | ForEach-Object -Parallel {$word = $_
 
 try{$result = Invoke-RestMethod -Uri "https://api.dictionaryapi.dev/api/v2/entries/en/$word" -TimeoutSec 10
+if($result.title){throw}
 $entry = $result[0]
 Write-Host -f Green "[DictionaryAPI] $word"
 [PSCustomObject]@{Word = $word.ToLower()
@@ -342,6 +343,12 @@ NotFound = $false}}
 catch{try{$result = Invoke-RestMethod -Uri "https://en.wiktionary.org/api/rest_v1/page/definition/$word" -TimeoutSec 10
 $lang = $result.en | Select-Object -First 1
 $definition = ($lang.definitions | Select-Object -First 1).definition
+Add-Type -AssemblyName System.Web
+$definition = ($lang.definitions | Select-Object -First 1).definition
+$definition = [System.Web.HttpUtility]::HtmlDecode($definition)
+$definition = $definition -replace '<[^>]+>',''
+$definition = $definition -replace '\s+',' '
+$definition = $definition.Trim()
 
 if($null -eq $lang -or [string]::IsNullOrWhiteSpace($definition)){throw}
 Write-Host -f Yellow "[Wiktionary] $word"
@@ -375,6 +382,7 @@ else{Write-Host -f Yellow "PowerShell $($PSVersionTable.PSVersion) detected. Usi
 foreach($word in $missingwords){Write-Host -f Cyan "[$(++$updated)/$($missingwords.Count)] Processing $word"
 
 try{$result = Invoke-RestMethod -Uri "https://api.dictionaryapi.dev/api/v2/entries/en/$word" -TimeoutSec 10
+if($result.title){throw}
 $entry = $result[0]
 Write-Host -f Green "[DictionaryAPI] $word"
 $definitions[$word.ToLower()] = @{type = $entry.meanings[0].partOfSpeech
@@ -388,9 +396,15 @@ $passnew++}
 catch{try{$result = Invoke-RestMethod -Uri "https://en.wiktionary.org/api/rest_v1/page/definition/$word" -TimeoutSec 10
 $lang = $result.en | Select-Object -First 1
 $definition = ($lang.definitions | Select-Object -First 1).definition
+Add-Type -AssemblyName System.Web
+$definition = ($lang.definitions | Select-Object -First 1).definition
+$definition = [System.Web.HttpUtility]::HtmlDecode($definition)
+$definition = $definition -replace '<[^>]+>',''
+$definition = $definition -replace '\s+',' '
+$definition = $definition.Trim()
 
 if($null -eq $lang -or [string]::IsNullOrWhiteSpace($definition)){throw}
-Write-Host -f Green "[Wiktionary] $word"
+Write-Host -f Yellow "[Wiktionary] $word"
 $definitions[$word.ToLower()] = @{type = $lang.partOfSpeech
 definition = $definition
 example = ''
