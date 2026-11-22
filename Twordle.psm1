@@ -310,7 +310,9 @@ Write-Host -f cyan "$([math]::Round(100 * $updated / $missingwords.Count,0))% co
 Write-Host -f yellow "$message ($new total). " -n
 Write-Host -f cyan "Saving..."
 
-$definitions | ConvertTo-Json -Depth 5 | Set-Content $jsonpath -Encoding UTF8
+$sorted = [ordered]@{}
+$definitions.Keys | Sort-Object | ForEach-Object {$sorted[$_] = $definitions[$_]}
+$sorted | ConvertTo-Json -Depth 5 | Set-Content $jsonpath -Encoding UTF8
 $definitions.GetEnumerator() | Where-Object {$_.Value.ContainsKey('definition') -and [string]::IsNullOrWhiteSpace($_.Value.definition)} | Select-Object -ExpandProperty Key | Sort-Object | Set-Content (Join-Path $PSScriptRoot 'MissingDefinitions.txt') -Encoding UTF8
 ShowDefinitionStats $new}
 
