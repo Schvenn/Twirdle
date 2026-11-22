@@ -277,23 +277,148 @@ Matches = $results.Count
 Words   = $results -join ', '}}
 
 # ----------------- BUILDDEFINITIONS --------------------------------------------------------------
-function BuildDefinitions {param([string]$path = (Join-Path $PSScriptRoot 'twordle.txt'))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function BuildDefinitions {param([string]$path = (Join-Path $PSScriptRoot 'twordle.txt'), [string]$jsonpath = (Join-Path $PSScriptRoot 'Definitions.json'))
 $wordstodefine = Get-Content $path
-$definitions = @{}
-$processed = 0
-foreach($word in $wordstodefine){$processed++
-Write-Host "[$processed/$($wordstodefine.Count)] $word"
+
+function ShowDefinitionStats {param([int]$new)
+$defined = 0
+$nulls = 0
+$notfound = 0
+
+foreach($entry in $definitions.Values){if($null -ne $entry -and $entry.ContainsKey('notfound') -and $entry.notfound){$notfound++}
+elseif($null -ne $entry -and $entry.ContainsKey('definition') -and -not [string]::IsNullOrWhiteSpace($entry.definition)){$defined++}
+else{$nulls++}}}
+
+function SaveDefinitions {param([string]$message,[int]$batchnew)
+if($batchnew -eq 0){Write-Host -f cyan "$([math]::Round(100 * $updated / $missingwords.Count,0))% complete..."
+return}
+Write-Host -f cyan "$([math]::Round(100 * $updated / $missingwords.Count,0))% complete. " -n
+Write-Host -f yellow "$message ($new total). " -n
+Write-Host -f cyan "Saving..."
+
+$definitions | ConvertTo-Json -Depth 5 | Set-Content $jsonpath -Encoding UTF8
+$definitions.GetEnumerator() | Where-Object {$_.Value.ContainsKey('definition') -and [string]::IsNullOrWhiteSpace($_.Value.definition)} | Select-Object -ExpandProperty Key | Sort-Object | Set-Content (Join-Path $PSScriptRoot 'MissingDefinitions.txt') -Encoding UTF8
+ShowDefinitionStats $new}
+
+if(Test-Path $jsonpath){Write-Host -f Cyan "`nLoading existing definitions..."
+$definitions = Get-Content $jsonpath -Raw | ConvertFrom-Json -AsHashtable}
+else{Write-Host -f Cyan "`nCreating new definitions collection..."
+$definitions = @{}}
+
+$parallel = $PSVersionTable.PSVersion.Major -ge 7
+$new = 0
+
+for($pass = 1; $pass -le 10; $pass++){
+
+Write-Host -f Yellow "`nPass $pass of 10"
+
+$missingwords = foreach($word in $wordstodefine){
+$key = $word.ToLower()
+
+if(-not $definitions.ContainsKey($key) -or $null -eq $definitions[$key] -or ((-not $definitions[$key].ContainsKey('definition') -or [string]::IsNullOrWhiteSpace($definitions[$key].definition)) -and (-not $definitions[$key].ContainsKey('notfound') -or -not $definitions[$key].notfound))){$word}}
+
+Write-Host -f Yellow "`n$($missingwords.Count) words require processing.`n"
+
+if($missingwords.Count -eq 0){
+Write-Host -f Green "All words have definitions or are marked 404."
+break}
+
+$updated = 0
+$batchnew = 0
+$passnew = 0
+
+if($parallel){Write-Host -f Green "PowerShell $($PSVersionTable.PSVersion) detected. Using parallel mode.`n"
+$missingwords | ForEach-Object -Parallel {$word = $_
+
+try{$result = Invoke-RestMethod -Uri "https://api.dictionaryapi.dev/api/v2/entries/en/$word" -TimeoutSec 10
+$entry = $result[0]
+[PSCustomObject]@{Word = $word.ToLower()
+Type = $entry.meanings[0].partOfSpeech
+Definition = $entry.meanings[0].definitions[0].definition
+Example = $entry.meanings[0].definitions[0].example
+NotFound = $false}}
+catch{$notfound = $false
+
+try{if($_.Exception.Response.StatusCode.value__ -eq 404){$notfound = $true}}
+catch{}
+[PSCustomObject]@{Word = $word.ToLower()
+Type = ''
+Definition = ''
+Example = ''
+NotFound = $notfound}}} -ThrottleLimit 3 | ForEach-Object {$definitions[$_.Word] = @{type = $_.Type
+definition = $_.Definition
+example = $_.Example
+notfound = $_.NotFound}
+$updated++
+
+if(-not [string]::IsNullOrWhiteSpace($_.Definition)){$new++
+$batchnew++
+$passnew++}
+
+if(($updated % 100) -eq 0){SaveDefinitions "$batchnew additional definitions found" $batchnew
+$batchnew = 0}}}
+else{Write-Host -f Yellow "PowerShell $($PSVersionTable.PSVersion) detected. Using single-thread mode.`n"
+
+foreach($word in $missingwords){Write-Host -f Cyan "[$(++$updated)/$($missingwords.Count)] Processing $word"
+
 try{$result = Invoke-RestMethod -Uri "https://api.dictionaryapi.dev/api/v2/entries/en/$word" -TimeoutSec 10
 $entry = $result[0]
 $definitions[$word.ToLower()] = @{type = $entry.meanings[0].partOfSpeech
 definition = $entry.meanings[0].definitions[0].definition
-example = $entry.meanings[0].definitions[0].example}}
-catch{$definitions[$word.ToLower()] = @{type = ""
-definition = ""
-example = ""}}
-Start-Sleep -Milliseconds 100}
-$definitions | ConvertTo-Json -Depth 5 | Set-Content .\Definitions.json -Encoding UTF8;
-return}
+example = $entry.meanings[0].definitions[0].example
+notfound = $false}
+$new++
+$batchnew++
+$passnew++}
+catch{$notfound = $false
+
+try{if($_.Exception.Response.StatusCode.value__ -eq 404){$notfound = $true}}
+catch{}
+
+$definitions[$word.ToLower()] = @{type = ''
+definition = ''
+example = ''
+notfound = $notfound}}
+
+if(($updated % 100) -eq 0){SaveDefinitions "$batchnew additional definitions found" $batchnew
+$batchnew = 0}
+Start-Sleep -Milliseconds 1000}}
+
+Write-Host -f Yellow ("-" * 100)
+SaveDefinitions "Saving final definitions..." $new
+
+if($passnew -eq 0){Write-Host -f Yellow "No new definitions found during pass $pass. Stopping."
+break}}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ----------------- GAME --------------------------------------------------------------------------
 if ($Play) {$Wins = 0
@@ -479,7 +604,7 @@ $script:hintedpositions = @{}
 $failedword = 0
 $forfeit = $false
 
-if ($guess -eq '__QUIT__') {Write-Host -f Cyan "`n`nExiting.`n"; return}} 
+if ($guess -eq '__QUIT__') {Write-Host -f Cyan "`n`nExiting.`n"; return}}
 until ($playagain -notmatch '^(?i)y(es)?$')
 
 Write-Host ""; return}
@@ -491,7 +616,7 @@ Write-Host -f yellow ("-" * 100)
 
 if ($Import) {ImportTwordleList $Import}
 else {ImportTwordleList}
-if (-not $Find -and -not $Exclude -and $Import){Write-Host -f yellow ("-" * 100)}
+if (-not $Find -and -not $Exclude -and -not $BuildDefinitions -and $Import){Write-Host -f yellow ("-" * 100)}
 
 if ($args.Count -gt 0 -and $args[0] -match '(?i)^[a-z]{5},[a-z]{5}$') {$TestWords = $args[0]}
 if ($TestWords){TestTwordleWords $TestWords}
@@ -537,12 +662,12 @@ This module serves two purposes:
 * The first is to provide a number of utilities to help play Wordle/Twirdle.
 * The second is to actually play an offline version of the game called Twordle.
 
-Usage: Twordle  -Import <importfile> 
-		-TestWords <word1,word2,word3> -MoreDetails
-		-Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force
-		-BuildDefinitions
-		-Play -First <word> -Cheat -Force
-		-Help
+Usage: Twordle  -Import <importfile>
+-TestWords <word1,word2,word3> -MoreDetails
+-Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force
+-BuildDefinitions
+-Play -First <word> -Cheat -Force
+-Help
 
 You can use -Import to define a custom dictionary file.
 The TestWords option provides a weighted statistical analysis of various plays.
@@ -563,10 +688,10 @@ Use the -MoreDetails switch to see the 15 top candidates.
 ---------------------------------------------------------------------------------------------------
 FindWords allows you to display a list of words that match a specific pattern:
 
-	Uppercase letters       represent the correct letters, in the correct position.
-	Underscores             represent unknowns.
-	Lowercase letters       represent the correct letters, but incorrect location.
-	Commas                  separates multiple, sequential guesses.
+Uppercase letters       represent the correct letters, in the correct position.
+Underscores             represent unknowns.
+Lowercase letters       represent the correct letters, but incorrect location.
+Commas                  separates multiple, sequential guesses.
 
 * Exclude is used in conjunction with Find to define which letters have already been ruled out, in order to further reduce the resulting set of possibilities.
 * Force will display all results, even if there are more than 250.
@@ -580,15 +705,15 @@ Twordle -Find ___ED -Force
 ---------------------------------------------------------------------------------------------------
 If you choose to play the game there are a few options that can be configured:
 
-	* First defines the first word to play in every game, useful for long sessions.
-	* Cheat dynamically displays all the possible word matches after your first turn.
-	* Force will display all results, even if there are more than 250.
+* First defines the first word to play in every game, useful for long sessions.
+* Cheat dynamically displays all the possible word matches after your first turn.
+* Force will display all results, even if there are more than 250.
 
 During gameplay, pressing F4 will reveal each subsequent letter, but the scoreboard at the top will keep track of this. This hint function is independent of the Cheat function.
 ## Sample TestWords Screens
 C:\Users\Public\Desktop> Twordle -TestWords tares,doily,punch
 
-                                Twordle Solver
+Twordle Solver
 ----------------------------------------------------------------------------------------------------
 
 Presence is the sum of all occurrences of the letters in the word present within the dictionary, represented as a single word.
@@ -599,21 +724,21 @@ Top-scoring candidates are further ranked by their ability to reduce the remaini
 
 Turn Candidate Presence Position TotalScore Reduction Remaining Improvement
 ---- --------- -------- -------- ---------- --------- --------- -----------
-   1     tares     1.87     0.83       2.70      5400       357         94%
-   1     rates     1.87     0.78       2.65      5422       335         94%
-   1     dares     1.81     0.82       2.63      5416       341         94%
-   1     cares     1.78     0.84       2.62      5413       344         94%
-   1     tales     1.81     0.81       2.62      5418       339         94%
-   2     doily     1.15     0.48       1.63      5538       219         96%
-   2     could     1.08     0.43       1.51      5553       204         96%
-   2     doing     1.08     0.38       1.46      5561       196         97%
-   2     pound     1.04     0.42       1.46      5556       201         97%
-   2     mould     1.06     0.40       1.46      5558       199         97%
-   3     plumy     0.88     0.33       1.21      5611       146         97%
-   3     lumpy     0.88     0.33       1.20      5612       145         97%
-   3     bulky     0.80     0.39       1.19      5608       149         97%
-   3     hulky     0.82     0.36       1.18      5611       146         97%
-   3     lucky     0.84     0.33       1.17      5613       144         97%
+1     tares     1.87     0.83       2.70      5400       357         94%
+1     rates     1.87     0.78       2.65      5422       335         94%
+1     dares     1.81     0.82       2.63      5416       341         94%
+1     cares     1.78     0.84       2.62      5413       344         94%
+1     tales     1.81     0.81       2.62      5418       339         94%
+2     doily     1.15     0.48       1.63      5538       219         96%
+2     could     1.08     0.43       1.51      5553       204         96%
+2     doing     1.08     0.38       1.46      5561       196         97%
+2     pound     1.04     0.42       1.46      5556       201         97%
+2     mould     1.06     0.40       1.46      5558       199         97%
+3     plumy     0.88     0.33       1.21      5611       146         97%
+3     lumpy     0.88     0.33       1.20      5612       145         97%
+3     bulky     0.80     0.39       1.19      5608       149         97%
+3     hulky     0.82     0.36       1.18      5611       146         97%
+3     lucky     0.84     0.33       1.17      5613       144         97%
 
 ----------------------------------------------------------------------------------------------------
 
@@ -630,7 +755,7 @@ Improvement   : 97%
 ## Sample Find Screen
 C:\Users\Public\Desktop> Twordle -find __a_e,ra__y,_rea_ -exclude dmnqstlz
 
-                                Twordle Solver
+Twordle Solver
 ----------------------------------------------------------------------------------------------------
 DictionaryFile : twordle.txt
 WordCount      : 5757
@@ -668,18 +793,18 @@ Words   : yerba
 ----------------------------------------------------------------------------------------------------
 Sample Game Screen:
 
-            Twordle       LATER
-  1 Wins /  0 Losses /  1 Hints
+Twordle       LATER
+1 Wins /  0 Losses /  1 Hints
 --------------------------------
-            S L A T E
-            R O U N D
-            W I M P Y
-            L A T E R
-            _ _ _ _ _
-            _ _ _ _ _
+S L A T E
+R O U N D
+W I M P Y
+L A T E R
+_ _ _ _ _
+_ _ _ _ _
 
-    A B C D E F G H I J K L M
-    N O P Q R S T U V W X Y Z
+A B C D E F G H I J K L M
+N O P Q R S T U V W X Y Z
 
 Turn 4
 
