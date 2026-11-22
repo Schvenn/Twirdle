@@ -50,6 +50,16 @@ h1{margin-bottom:10px;}
 #dictionarySelect{margin-top:5px; margin-bottom:10px; padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px; width:175px;}
 #newGame{color:#ffff00; cursor:pointer; font-size:16px; font-weight:bold;}
 
+#definitionPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;}
+#definitionContent{position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left; line-height:1.5;}
+#definitionContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
+#definitionContent h2{text-align:center; margin-top:0;}
+#definitionWord {color:#ffffb3; margin-bottom:10px;}
+#definitionType {color:#ffff00; margin-bottom:10px; font-style:italic;}
+#definitionText {color:#ffffff; margin-bottom:15px;}
+#definitionExample {color:#cccccc; font-size:14px;}
+.definitionLink {cursor:pointer; text-decoration:none;}
+
 #statsPanel{text-align:left;}
 
 #gamePanel{text-align:center;}
@@ -210,6 +220,16 @@ While working towards the solution, the score will update:<br>
 </div>
 </div>
 
+<div id="definitionPopup">
+<div id="definitionContent">
+<button onclick="toggleDefinition()">X</button>
+<h2 id="definitionWord"></h2>
+<div id="definitionType"></div>
+<div id="definitionText"></div>
+<div id="definitionExample"></div>
+</div>
+</div>
+
 <div id="profilePopup" onclick="if(event.target===this)toggleProfileConfirm()">
 <div id="confirmContent">
 <h3>Are you sure you want to clear your player profile?</h3>
@@ -299,6 +319,7 @@ WORDLE&trade; is a trademark of The New York Times Company.</td></tr></table></d
 let dictionary = [];
 let pendingDictionary = null;
 let currentDictionary = "Twordle.txt";
+let definitions = {};
 let soundenabled = true;
 let answer = "";
 let turn = 0;
@@ -356,6 +377,28 @@ setMessage(file === "Twordle.txt"
 pendingDictionary = null;
 toggleDictionaryPopup();}
 
+async function loadDefinitions(){try{const response = await fetch("Definitions.json");
+definitions = await response.json();}
+catch(e){console.error("Failed to load definitions.",e);definitions = {};}}
+
+function toggleDictionaryPopup(){const popup = document.getElementById("dictionaryPopup");
+popup.style.display = popup.style.display === "flex"
+? "none"
+: "flex";}
+
+function confirmDictionaryChange(){const selected = document
+.getElementById("dictionarySelect")
+.value;
+
+if(selected === currentDictionary){return;}
+pendingDictionary = selected;
+toggleDictionaryPopup();}
+
+function cancelDictionaryChange(){document
+.getElementById("dictionarySelect")
+.value = currentDictionary;
+toggleDictionaryPopup();}
+
 
 // ------------------------ TOGGLES ---------------------------------------------------------------
 function toggleHelp(){playClickSound();
@@ -374,6 +417,27 @@ function toggleScore(){playClickSound();
 const popup=document.getElementById("scorePopup");
 popup.style.display=popup.style.display==="flex"?"none":"flex";}
 
+function showDefinition(word){playClickSound();
+const entry = definitions[word.toLowerCase()];
+document.getElementById("definitionWord").textContent = word.toUpperCase();
+if(entry){document.getElementById("definitionType").textContent = entry.type || "";
+document.getElementById("definitionText").textContent = entry.definition || "Definition unavailable.";
+document.getElementById("definitionExample").textContent = entry.example
+? `Example: ${entry.example}`
+: "";}
+else{document.getElementById("definitionType").textContent = "";
+document.getElementById("definitionText").textContent = "Definition unavailable.";
+document.getElementById("definitionExample").textContent = "";}
+const popup = document.getElementById("definitionPopup");
+popup.style.display = "flex";}
+
+function toggleDefinition(){playClickSound();
+const popup = document.getElementById("definitionPopup");
+popup.style.display = popup.style.display === "flex"
+? "none"
+: "flex";}
+
+function definitionLink(word){return ` <span class="definitionLink" onclick="showDefinition('${word}')"> 📖</span>`;}
 
 // ------------------------ SCORING ---------------------------------------------------------------
 function scoreGuess(guess, answerWord){let colors = ["gray","gray","gray","gray","gray"];
@@ -651,7 +715,7 @@ html += "<table border='1' style='width:100%; border-collapse:collapse; text-ali
 html += "<tr><th rowspan=2>Word</th><th colspan=6>Round</th></tr> <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr>";
 
 for(const [word,data] of topwords){html += "<tr>";
-html += `<td class="profileword" data-word="${word}">${word.toUpperCase()}</td>`;
+html += `<td><span class="profileword" data-word="${word}">${word.toUpperCase()}</span> ${definitionLink(word)}</td>`;
 for(let i = 0; i < 6; i++){html += `<td>${data.counts[i]}</td>`;}
 html += "</tr>";}
 html += "</table><br>";
@@ -797,26 +861,6 @@ updateProfileWords();
 saveProfile();}
 
 
-// ------------------------ DICTIONARY ------------------------------------------------------------
-function toggleDictionaryPopup(){const popup = document.getElementById("dictionaryPopup");
-popup.style.display = popup.style.display === "flex"
-? "none"
-: "flex";}
-
-function confirmDictionaryChange(){const selected = document
-.getElementById("dictionarySelect")
-.value;
-
-if(selected === currentDictionary){return;}
-pendingDictionary = selected;
-toggleDictionaryPopup();}
-
-function cancelDictionaryChange(){document
-.getElementById("dictionarySelect")
-.value = currentDictionary;
-toggleDictionaryPopup();}
-
-
 // ------------------------ GAME LOGIC ------------------------------------------------------------
 function submitGuess(){if(gameover)
 return;
@@ -842,7 +886,7 @@ totalInvalidWords++;
 penaltyscore += 10;
 updateLiveScore();
 updateStats();
-if(invalidWords >= 5){setMessage(`Too many invalid words. Answer: ${answer.toUpperCase()}`,"error");
+if(invalidWords >= 5){setMessage(`Too many invalid words. Answer: ${answer.toUpperCase()}${definitionLink(answer)}`,"error");
 document.getElementById("guess").value = "";
 gameover = true;
 losses++;
@@ -888,7 +932,7 @@ if(finalscore > highscore){highscore = finalscore;}
 gameswon++;
 saveScores();
 
-setMessage(`Solved! You earned ${finalscore} points!`,"solved");
+setMessage(`Solved! You earned ${finalscore} points!${definitionLink(answer)}`, "solved");
 
 document
 .getElementById("playagain")
@@ -906,7 +950,8 @@ setTimeout(()=>beep(1047,0.35,"square"),250);
 return;}
 turn++;
 
-if(turn >= 6){setMessage("Answer: " + answer.toUpperCase(),"error");
+if(turn >= 6){setMessage(`Answer: ${answer.toUpperCase()}${definitionLink(answer)}`, "error");
+
 playLoseSound();
 
 document
@@ -1088,7 +1133,7 @@ key.className = "key " + keyboard[letter];}}
 
 // ------------------------ MESSAGE ---------------------------------------------------------------
 function setMessage(text,type="notice"){const message = document.getElementById("message");
-message.textContent = text;
+message.innerHTML = text;
 message.className = type;}
 
 
@@ -1142,6 +1187,8 @@ if(e.key === "Delete") beep(600,0.01,"triangle");
 
 if(e.key === "Enter"){saveGuess();}});
 
+document.getElementById("definitionPopup").addEventListener("click",e=>{if(e.target.id === "definitionPopup"){toggleDefinition();}});
+
 document.addEventListener("click",e=>{if(e.target.closest("button") && !ismobile){document.getElementById("guess").focus();}});
 
 document.addEventListener("click",e=>{if(e.target.matches("button")){playClickSound();}});
@@ -1157,6 +1204,7 @@ document
 .getElementById("dictionarySelect")
 .value = savedDictionary;
 await loadDictionary(savedDictionary);
+loadDefinitions();
 
 loadStats();
 loadScores();
