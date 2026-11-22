@@ -495,7 +495,8 @@ if (-not $Find -and -not $Exclude -and $Import){Write-Host -f yellow ("-" * 100)
 if ($args.Count -gt 0 -and $args[0] -match '(?i)^[a-z]{5},[a-z]{5}$') {$TestWords = $args[0]}
 if ($TestWords){TestTwordleWords $TestWords}
 if ($Find) {Findword $Find $Exclude | Format-List}
-if ($BuildDefinitions) {BuildDefinitions}
+if ($BuildDefinitions) {if ($Import) {BuildDefinitions $Import}
+else {BuildDefinitions}}
 
 # ----------------- HELP SCREEN -------------------------------------------------------------------
 if (-not $TestWords -and -not $Find -and -not $BuildDefinitions) {Write-Host -f cyan "Usage: Twordle -Import <importfile> -TestWords <word1,word2,word3> -MoreDetails -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -First <word> -Cheat -BuildDefinitions -Help`n"
