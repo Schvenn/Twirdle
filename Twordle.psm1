@@ -278,19 +278,6 @@ Words   = $results -join ', '}}
 
 # ----------------- BUILDDEFINITIONS --------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 function BuildDefinitions {param([string]$path = (Join-Path $PSScriptRoot 'twordle.txt'), [string]$jsonpath = (Join-Path $PSScriptRoot 'Definitions.json'))
 $wordstodefine = Get-Content $path
 
@@ -405,22 +392,6 @@ SaveDefinitions "Saving final definitions..." $new
 
 if($passnew -eq 0){Write-Host -f Yellow "No new definitions found during pass $pass. Stopping."
 break}}}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # ----------------- GAME --------------------------------------------------------------------------
 if ($Play) {$Wins = 0
