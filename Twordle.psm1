@@ -1,4 +1,4 @@
-function Twordle ([string[]]$TestWords, [switch]$MoreDetails, [string[]]$Find, [string]$Exclude, [string]$Import, [switch]$Force, [switch]$Play, [switch]$Cheat, [string]$First, [switch]$Help) {# Twordle/Wordle word helper and game.
+function Twordle ([string[]]$TestWords, [switch]$MoreDetails, [string[]]$Find, [string]$Exclude, [string]$Import, [switch]$Force, [switch]$Play, [switch]$Cheat, [string]$First, [switch]$BuildDefinitions, [switch]$Help) {# Twordle/Wordle word helper and game.
 
 # ----------------- HELP --------------------------------------------------------------------------
 function help {# Inline help.
@@ -276,6 +276,24 @@ Exclude = $Exclude
 Matches = $results.Count
 Words   = $results -join ', '}}
 
+# ----------------- BUILDDEFINITIONS --------------------------------------------------------------
+function BuildDefinitions {param([string]$path = (Join-Path $PSScriptRoot 'twordle.txt'))
+$wordstodefine = Get-Content $path
+$definitions = @{}
+$processed = 0
+foreach($word in $wordstodefine){$processed++
+Write-Host "[$processed/$($wordstodefine.Count)] $word"
+try{$result = Invoke-RestMethod -Uri "https://api.dictionaryapi.dev/api/v2/entries/en/$word" -TimeoutSec 10
+$entry = $result[0]
+$definitions[$word.ToLower()] = @{type = $entry.meanings[0].partOfSpeech
+definition = $entry.meanings[0].definitions[0].definition
+example = $entry.meanings[0].definitions[0].example}}
+catch{$definitions[$word.ToLower()] = @{type = ""
+definition = ""
+example = ""}}}
+$definitions | ConvertTo-Json -Depth 5 | Set-Content .\Definitions.json -Encoding UTF8;
+return}
+
 # ----------------- GAME --------------------------------------------------------------------------
 if ($Play) {$Wins = 0
 $Losses = 0
@@ -479,9 +497,10 @@ if ($TestWords){TestTwordleWords $TestWords}
 if ($Find) {Findword $Find $Exclude | Format-List}
 
 # ----------------- HELP SCREEN -------------------------------------------------------------------
-if (-not $TestWords -and -not $Find) {Write-Host -f cyan "Usage: Twordle -Import <importfile> -TestWords <word1,word2,word3> -MoreDetails -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -First <word> -Cheat -Help`n"
+if (-not $TestWords -and -not $Find) {Write-Host -f cyan "Usage: Twordle -Import <importfile> -TestWords <word1,word2,word3> -MoreDetails -Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force -Play -First <word> -Cheat -BuildDefinitions -Help`n"
 Write-Host -f cyan "Import" -n; Write-Host -f white " can be used universally to specify a custom word list.`n"
 Write-Host -f cyan "TestWords" -n; Write-Host -f white " allows you score and compare up to 3 opening turns and can be used with " -n; Write-Host -f cyan "MoreDetails" -n; Write-Host -f white " to see additional words.`n"
+Write-Host -f cyan "BuildDefinitions" -n; Write-Host -f white " creates a Definitions.json file of the chosen dictionary.`n"
 Write-Host -f cyan "Find, Exclude," -n; Write-Host -f white " and " -n; Write-Host -f cyan "Force" -n; Write-Host -f white " work together."
 Write-Host -f cyan "Play, First, Cheat," -n; Write-Host -f white " and " -n; Write-Host -f cyan "Force" -n; Write-Host -f white " also work together.`n"
 Write-Host -f yellow ("-"*80)
@@ -517,13 +536,15 @@ This module serves two purposes:
 
 Usage: Twordle  -Import <importfile> 
 		-TestWords <word1,word2,word3> -MoreDetails
-		-Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force 
+		-Find <_r_wS,W_RDS,...> -Exclude <abcdefg...> -Force
+		-BuildDefinitions
 		-Play -First <word> -Cheat -Force
 		-Help
 
 You can use -Import to define a custom dictionary file.
 The TestWords option provides a weighted statistical analysis of various plays.
 The Find option is a cheat tool to assist in solving the puzzle.
+The BuildDefinitions option will reach out to dictionaryapi.dev to build a JSON definitions list for the chosen dictionary.
 The Play option lets you play an offline version of the game.
 
 ---------------------------------------------------------------------------------------------------
