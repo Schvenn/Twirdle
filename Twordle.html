@@ -60,7 +60,7 @@ th{background:#227; font-weight:bold;}
 #definitionType{color:#ffff00; margin-bottom:10px; font-style:italic;}
 #definitionText{color:#ffffff; margin-bottom:15px;}
 #definitionExample{color:#cccccc; font-size:14px;}
-.definitionLink{cursor:pointer; text-decoration:none;}
+.definitionLink{margin-top:10px; cursor:pointer; text-decoration:none;}
 
 #statsPanel{text-align:left;}
 
@@ -227,13 +227,13 @@ While working towards the solution, the score will update:<br>
 </div>
 
 <div id="definitionPopup">
-
 <div id="definitionContent">
 <button onclick="toggleDefinition()">X</button>
 <h2 id="definitionWord"></h2>
 <div id="definitionType"></div>
 <div id="definitionText"></div>
 <div id="definitionExample"></div>
+<div id="definitionLink"></div>
 </div>
 </div>
 
@@ -639,7 +639,8 @@ document.getElementById("definitionExample").textContent = entry.example
 else{document.getElementById("definitionType").textContent = "";
 document.getElementById("definitionText").textContent = "Definition unavailable.";
 document.getElementById("definitionExample").textContent = "";}
-document.getElementById("definitionPopup").style.display = "flex";}
+document.getElementById("definitionPopup").style.display = "flex";
+document.getElementById("definitionLink").innerHTML = entry.link || `<hr><a href="https://www.thefreedictionary.com/${word}" target="_blank" rel="noopener noreferrer">Look up ${word} ↗</a>`;}
 
 function toggleDefinition(){playClickSound();
 const popup = document.getElementById("definitionPopup");
