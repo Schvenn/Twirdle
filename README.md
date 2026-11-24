@@ -163,7 +163,7 @@ Guess: WIMPY
 
 As you can see, it has lots of cheat features, making it a great tool for learning, testing and playing, as well as a unique scoring system. You choose the level of effort you want to put into the game by deciding which cheats if any, that you use.
 
-<img width="671" height="580" alt="image" src="https://github.com/user-attachments/assets/cf33acf7-05e4-40f4-b5b8-ee055c99a964" />
+<img width="667" height="580" alt="image" src="https://github.com/user-attachments/assets/dc3a97e2-b4b4-4c40-a20c-efb2c8b17f11" />
 
 <br>`Twordle.html` is the Current version, supporting multiple dictionaries, which also requires two dictionary files: `Twordle.txt` and `SOWPODS5.txt`.
 
