@@ -10,103 +10,106 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{background:#000000; color:white; font-family:Arial,Helvetica,sans-serif; text-align:center; margin:0; padding:20px;}
+body{background:#000; color:white; font-family:Arial,Helvetica,sans-serif; text-align:center; margin:0; padding:20px;}
 h1{margin-bottom:10px;}
-#message{height: 40px; margin-bottom:15px; color:white; font-weight:bold;}
-#message.solved{color:#00FF00 !important;}
-#message.error{color:#FF0000 !important;}
-#message.notice{color:#FFFFFF !important;}
-#message.warning{color:#F54927 !important;}
+th{background:#227; font-weight:bold;}
 
-#headerRow{display:grid; grid-template-columns: 220px 1fr 300px; gap:20px; max-width:1400px; margin:auto;}
+#message{height:40px; margin-bottom:15px; color:white; font-weight:bold;}
+#message.solved{color:#00FF00!important;}
+#message.error{color:#FF0000!important;}
+#message.notice{color:#FFFFFF!important;}
+#message.warning{color:#F54927!important;}
+
+#headerRow,#layout{display:grid; grid-template-columns:220px 1fr 300px; gap:20px; max-width:1400px; margin:auto;}
 #headerRow h1{text-align:center; margin:0 0 15px 0;}
+#layout{align-items:start;}
 
-#layout{display:grid; grid-template-columns: 220px 1fr 300px; gap:20px; max-width:1400px; margin:auto; align-items:start;}
+#helpButton,#scoreButton{color:#ff0000; cursor:pointer; font-size:16px; font-weight:bold;}
+#helpButton,#soundButton,#scoreButton{display:inline-block; cursor:pointer;}
+#helpPopup,#scorePopup,#confirmPopup,#profilePopup,#dictionaryPopup,#definitionPopup,#addWordPopup,#firstGuessPopup,#customDictionaryPopup,#deleteCustomWordPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); justify-content:center; align-items:center; box-sizing:border-box;}
+#helpPopup,#scorePopup{z-index:1000; padding:15px;}
+#confirmPopup,#profilePopup,#dictionaryPopup,#definitionPopup,#addWordPopup,#firstGuessPopup,#customDictionaryPopup,#deleteCustomWordPopup{z-index:1100; padding:5px;}
+#helpContent,#scoreContent,#definitionContent{position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left; line-height:1.5;}
+#customDictionaryContent{position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:600px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left;}
+#helpContent h2,#scoreContent h2,#definitionContent h2,#customDictionaryContent h2{text-align:center; margin-top:0;}
+#helpContent button,#scoreContent button,#definitionContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
+#customDictionaryContent button.close{position:absolute; top:10px; right:10px;}
+#helpContent p,#scoreContent p{margin:12px 0;}
 
-#helpButton, #scoreButton {color:#ff0000; cursor:pointer; font-size:16px; font-weight:bold;}
-#helpPopup, #scorePopup {display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1000; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;}
-#helpContent, #scoreContent {position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left; line-height:1.5;}
-#helpContent h2, #scoreContent h2{text-align:center; margin-top:0;}
-#helpContent button, #scoreContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
-#helpContent p, #scoreContent p{margin:12px 0;}
-#helpButton, #soundButton, #scoreButton{display:inline-block; cursor:pointer;}
+#scoreBoard{font-size:48px; font-weight:bold; color:#00FF00}
 
-#scoreBoard {font-size:48px; font-weight:bold; color:#00FF00}
+#confirmContent,#addWordContent{background:#222; border:1px solid #555; border-radius:8px; padding:10px; max-width:350px; width:100%; box-sizing:border-box; text-align:center;}
 
-#confirmPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
-#profilePopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
-#dictionaryPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
-#firstGuessPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:5px; box-sizing:border-box;}
+#customWordDefinition{width:300px; height:80px; font-size:14px; text-transform:none; text-align:left; resize:vertical; padding:5px; box-sizing:border-box;}
+.addWordLink{color:#00ff00; cursor:pointer; font-weight:normal; margin-left:5px;}
+.addWordLink:hover,.profileword:hover{text-decoration:underline;}
 
-#confirmContent{background:#222; border:1px solid #555; border-radius:8px; padding:10px; max-width:350px; width:100%; box-sizing:border-box; text-align:center;}
 #confirmContent h3{margin-top:10px; margin-bottom:15px;}
 #confirmContent p{margin:5px 0 12px;}
 #confirmContent button{margin:0 5px;}
+#toggleConfirm{font-size:12px;}
 
-#toggleConfirm {font-size:12px}
-#firstGuess {margin-top:5px;}
-#saveGuess {margin-top:5px; background:#225555; border:1px solid #4466aa; border-radius:6px; color:#fff;}
-#profileConfirm {margin-top:5px;}
+#firstGuess,#editCustomDictionary,#saveGuess,#profileConfirm{margin-top:5px;}
+#saveGuess{background:#225555; border:1px solid #4466aa; border-radius:6px; color:#fff;}
+
 #dictionarySelect{margin-top:5px; margin-bottom:10px; padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px; width:175px;}
+
 #newGame{color:#ffff00; cursor:pointer; font-size:16px; font-weight:bold;}
 
-#definitionPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1100; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;}
-#definitionContent{position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left; line-height:1.5;}
-#definitionContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
-#definitionContent h2{text-align:center; margin-top:0;}
-#definitionWord {color:#ffffb3; margin-bottom:10px;}
-#definitionType {color:#ffff00; margin-bottom:10px; font-style:italic;}
-#definitionText {color:#ffffff; margin-bottom:15px;}
-#definitionExample {color:#cccccc; font-size:14px;}
-.definitionLink {cursor:pointer; text-decoration:none;}
+#definitionWord{color:#ffffb3; margin-bottom:10px;}
+#definitionType{color:#ffff00; margin-bottom:10px; font-style:italic;}
+#definitionText{color:#ffffff; margin-bottom:15px;}
+#definitionExample{color:#cccccc; font-size:14px;}
+.definitionLink{cursor:pointer; text-decoration:none;}
 
 #statsPanel{text-align:left;}
 
+#customDictionaryList{margin-top:15px;}
+#customDictionaryCount{text-align:center; color:#cccccc; margin-top:-10px; margin-bottom:10px; font-size:14px;}
+.customdictionaryword{display:grid; grid-template-columns:80px 120px 1fr 40px; gap:10px; align-items:center; border-bottom:1px solid #444; padding:6px 0;}
+.customdictionarywordname{color:#ffffb3; font-weight:bold;}
+.customdictionarywordtype{color:#ffff00; font-style:italic;}
+.deletecustomword{color:#ff4444; cursor:pointer; text-align:center; font-weight:bold;}
+.deletecustomword:hover{color:#ff8888;}
+
 #gamePanel{text-align:center;}
-#controls {margin-top:5px;}
+#controls{margin-top:5px;}
 
 #sidePanel{position:relative; min-height:450px; max-height:450px;}
-#cheatPanel{position:absolute; inset:0; z-index:1;}
-#profilePanel{position:absolute; inset:0; z-index:2;}
-th{background:#227; font-weight: bold;}
+
+#profilePanel{z-index:2;}
 .profileword{cursor:pointer; color:#7db4ff;}
-.profileword:hover{text-decoration:underline;}
 
-#cheatPanel{display:none; text-align:left; border:1px solid #444; padding:10px; overflow-y:auto; max-height:450px;}
-#cheatHeader {text-align:center; font-size:20px; font-weight:bold; padding-bottom:10px;}
-#possibleWords{text-align:center; font-size:12px; line-height:1.5; word-wrap:break-word;}
+#cheatPanel,#profilePanel{position:absolute; inset:0; display:none; text-align:left; border:1px solid #444; padding:10px; overflow-y:auto; max-height:450px;}
+#cheatPanel{z-index:1;}
+#cheatHeader,#profileHeader{text-align:center; font-size:20px; font-weight:bold; padding-bottom:10px;}
+#possibleWords,#profileWords{text-align:center; font-size:12px; line-height:1.5; word-wrap:break-word;}
+
 #currentWord{font-weight:bold; color:#538d4e;}
-
-#profilePanel{display:none; text-align:left; border:1px solid #444; padding:10px; overflow-y:auto; max-height:450px;}
-#profileHeader {text-align:center; font-size:20px; font-weight:bold; padding-bottom:10px;}
-#profileWords{text-align:center; font-size:12px; line-height:1.5; word-wrap:break-word;}
 
 #secondaryButtons{margin-top:10px; margin-bottom:20px;}
 #secondaryButtons button{margin:0 5px;}
 
 #board{display:flex; flex-direction:column; gap:5px; align-items:center; margin-bottom:20px;}
 .row{display:flex; gap:5px;}
-.tile{width:60px; height:60px; border:2px solid #3a3a3c; display:flex; justify-content:center; align-items:center; font-size:32px;font-weight:bold; text-transform:uppercase; transition:transform .2s;}
-
+.tile{width:60px; height:60px; border:2px solid #3a3a3c; display:flex; justify-content:center; align-items:center; font-size:32px; font-weight:bold; text-transform:uppercase; transition:transform .2s;}
 .tile.revealed{animation:pop .15s ease-out;}
 @keyframes pop{0%{transform:scale(0.99);}
 99%{transform:scale(1.01);}
 100%{transform:scale(1);}}
-
 .green{background:#538d4e; border-color:#538d4e;}
 .yellow{background:#b59f3b; border-color:#b59f3b;}
 .gray{background:#3a3a3c; border-color:#3a3a3c;}
 #guess{background:#223355; border:1px solid #4466aa; border-radius:6px; color:#fff;}
-
 input{width:120px; height:35px; font-size:26px; text-transform:uppercase; text-align:center;}
+
 button{padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px;}
-button:active{transform:scale(0.95)}
+button:active,.key:active{transform:scale(0.95);}
 
 #keyboard{max-width:700px; margin:auto;}
 .keyrow{margin-top:5px;}
 .key{display:inline-block; width:32px; padding:10px 0; margin:2px; border-radius:4px; background:#818384; font-weight:bold; cursor:pointer; user-select:none;}
 .key.special{width:60px;}
-.key:active{transform:scale(0.95);}
 .key.green{background:#538d4e;}
 .key.yellow{background:#b59f3b;}
 .key.gray{background:#3a3a3c;}
@@ -116,18 +119,18 @@ button:active{transform:scale(0.95)}
 #footer{margin-top:100px; padding-bottom:20px; font-size:8px;}
 
 @media(max-width:1000px){body{padding:10px;}
-@media(max-width:1000px){#board .tile{width:min(12vw,48px); height:min(12vw,48px); font-size:min(8vw,32px);}}
-@media(max-width:1000px) and (max-height:800px){#board .tile{width:min(10vw,40px); height:min(10vw,40px); font-size:min(7vw,26px);}}
-@media(max-width:1000px) and (max-height:700px){#board .tile{width:min(8vw,32px); height:min(8vw,32px); font-size:min(6vw,22px);}}
 #headerRow{grid-template-columns:minmax(0,1fr);}
 #layout{grid-template-columns:minmax(0,1fr); gap:15px;}
 #statsPanel{order:2; width:auto;}
 #gamePanel{order:1; min-width:0;}
 #sidePanel{order:4; position:relative; width:100%;}
-#cheatPanel{min-width:0;}
-#profilePanel{min-width:0;}
+#cheatPanel,#profilePanel{min-width:0;}
 .tile{width:48px; height:48px; font-size:26px;}
 .key{width:27px; padding:9px 0; margin:1px;}}
+
+@media(max-width:1000px) and (max-height:800px){#board .tile{width:min(10vw,40px); height:min(10vw,40px); font-size:min(7vw,26px);}}
+
+@media(max-width:1000px) and (max-height:700px){#board .tile{width:min(8vw,32px); height:min(8vw,32px); font-size:min(6vw,22px);}}
 </style>
 
 </head>
@@ -184,7 +187,7 @@ Solve the word for 50 points.</p>
 <li>That bonus decreases by 10 points each turn.</li></ul></p>
 
 <p><b>⭐ Word Bonuses:</b><br>
-<ul><li>Gain 5 points for solving a word that contains at least one rare letter: V, X, Z, J, or Q.</li>
+<ul><li>Gain 5 points for solving a word that contains at least one rare letter: J, Q, V, X, or Z.</li>
 <li>Gain 5 points for solving a word that has at least 4 vowels, or has no vowels: A, E, I, O, U, or Y.</li></ul></p>
 
 <p><b>📈 Progress:</b><br>
@@ -221,12 +224,30 @@ While working towards the solution, the score will update:<br>
 </div>
 
 <div id="definitionPopup">
+
 <div id="definitionContent">
 <button onclick="toggleDefinition()">X</button>
 <h2 id="definitionWord"></h2>
 <div id="definitionType"></div>
 <div id="definitionText"></div>
 <div id="definitionExample"></div>
+</div>
+</div>
+
+<div id="customDictionaryPopup" onclick="if(event.target===this)toggleCustomDictionary()">
+<div id="customDictionaryContent">
+<button class="close" onclick="toggleCustomDictionary()">✕</button>
+<h2>My Dictionary</h2>
+<div id="customDictionaryCount"></div>
+<div id="customDictionaryList"></div>
+</div>
+</div>
+
+<div id="deleteCustomWordPopup" style="display:none;" onclick="if(event.target===this)toggleDeleteCustomWordPopup()">
+<div id="confirmContent">
+<h3>Remove Custom Word?</h3>
+<p>Are you sure you want to remove <b id="deleteCustomWordLabel"></b> from your custom dictionary?</p>
+<button onclick="confirmDeleteCustomWord()">Yes, Remove Word</button><button onclick="toggleDeleteCustomWordPopup()">Cancel</button>
 </div>
 </div>
 
@@ -245,6 +266,35 @@ While working towards the solution, the score will update:<br>
 <p>Are you sure you want to clear the saved first guess "<span id="firstGuessWord"></span>"?</p>
 <button onclick="clearFirstGuess()">Yes, Clear First Guess</button>
 <button onclick="toggleFirstGuessConfirm()">Cancel</button>
+</div>
+</div>
+
+<div id="addWordPopup" onclick="if(event.target===this)cancelAddWord()">
+<div id="confirmContent">
+<small id="fifthinvalidword" style="display:none;">This is the 5th invalid word entered this round. If it is a valid word, you can add it to your personal dictionary.</small>
+<h3>Add Custom Word</h3>
+<div>
+<b id="customWordLabel"></b>
+</div>
+<input id="customWordText" maxlength="5">
+<br><br>
+<select id="customWordType">
+<option value="noun">noun</option>
+<option value="verb">verb</option>
+<option value="adjective">adjective</option>
+<option value="adverb">adverb</option>
+<option value="participle">participle</option>
+<option value="interjection">interjection</option>
+<option value="preposition">preposition</option>
+<option value="pronoun">pronoun</option>
+<option value="proper noun">proper noun</option>
+<option value="plural">plural</option>
+</select>
+<br><br>
+<textarea id="customWordDefinition"></textarea>
+<br><br>
+<button onclick="addCustomWord()">Add Word</button>
+<button onclick="cancelAddWord()">Cancel</button>
 </div>
 </div>
 
@@ -275,6 +325,7 @@ While working towards the solution, the score will update:<br>
 <div><button id="profileButton" onclick="toggleProfile()">🔴 Player Profile</button><br>
 <div><input id="saveGuess" maxlength="5" autocomplete="off"><br>
 <button id="firstGuess" onclick="saveGuess()">Save First Guess</button></div>
+<div><button id="editCustomDictionary" onclick="modifyCustomDictionary()">My Dictionary</button></div>
 <button id="profileConfirm" onclick="toggleProfileConfirm()">Clear Profile</button>
 </div>
 <br>
@@ -322,6 +373,11 @@ let dictionary = [];
 let pendingDictionary = null;
 let currentDictionary = "Twordle.txt";
 let definitions = {};
+let customdictionary = {};
+let showaddword = false;
+let pendinggameover = false;
+let pendingcustomword = "";
+let pendingdeleteword = "";
 let soundenabled = true;
 let answer = "";
 let turn = 0;
@@ -401,6 +457,146 @@ function cancelDictionaryChange(){document
 .value = currentDictionary;
 toggleDictionaryPopup();}
 
+// ------------------------ CUSTOM DICTIONARY -----------------------------------------------------
+function saveCustomDictionary(){updateCustomDictionary();}
+
+function updateCustomDictionary(){const data = JSON.stringify(customdictionary);
+try {localStorage.setItem("twordleCustomDictionary",data);}
+catch(e){}
+
+try {document.cookie = "twordleCustomDictionary=" + encodeURIComponent(data) + "; max-age=31536000; path=/; SameSite=Lax";}
+catch(e){}}
+
+function loadCustomDictionary(){let data = null;
+try {data = localStorage.getItem("twordleCustomDictionary");}
+catch(e){}
+
+if(!data){const cookie = document.cookie
+.split("; ")
+.find(row => row.startsWith("twordleCustomDictionary="));
+
+if(cookie){data = decodeURIComponent(cookie.substring("twordleCustomDictionary=".length));}}
+
+if(data){try{customdictionary = JSON.parse(data);}
+catch(e){customdictionary = {};}}}
+
+function clearCustomDictionary(){customdictionary = {};
+try {localStorage.removeItem("twordleCustomDictionary");}
+catch(e){}
+
+try {document.cookie = "twordleCustomDictionary=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}
+catch(e){}}
+
+function showAddWordPopup(word = pendingcustomword){pendingcustomword = (word || "").toLowerCase();
+document.getElementById("customWordType").selectedIndex = 0;
+document.getElementById("customWordDefinition").value = "";
+
+if(pendingcustomword){document.getElementById("customWordLabel").style.display = "block";
+document.getElementById("customWordText").style.display = "none";
+document.getElementById("customWordLabel").textContent = pendingcustomword.toUpperCase();}
+else{document.getElementById("customWordLabel").style.display = "none";
+document.getElementById("customWordText").style.display = "inline-block";
+document.getElementById("customWordText").value = "";}
+document.getElementById("fifthinvalidword").style.display = pendinggameover
+? "block"
+: "none";
+document.getElementById("addWordPopup").style.display = "flex";}
+
+function hideAddWordPopup(){document.getElementById("addWordPopup").style.display = "none";}
+
+function cancelAddWord(){hideAddWordPopup();
+if(pendinggameover) {loseGameInvalidWords();}}
+
+function addCustomWord(){let word = pendingcustomword;
+if(!word){word = document
+.getElementById("customWordText")
+.value
+.trim()
+.toLowerCase();
+
+if(!/^[a-z]{5}$/.test(word)){setMessage("Enter a valid five-letter word.","warning");
+return;}
+
+if(dictionary.includes(word)){setMessage(`${word.toUpperCase()} already exists in the dictionary.`,"warning");
+return;}
+
+if(customdictionary[word]){setMessage(`${word.toUpperCase()} already exists in your custom dictionary.`,"warning");
+return;}}
+
+const type = document
+.getElementById("customWordType")
+.value;
+
+const definition = document
+.getElementById("customWordDefinition")
+.value
+.trim();
+
+if(!definition){setMessage("A definition is required.","warning");
+return;}
+customdictionary[word] = {type:type,
+definition:definition,
+notfound:false,
+example:"This is a player added custom word."};
+updateCustomDictionary();
+
+if(pendingcustomword){invalidWords = Math.max(0,invalidWords - 1);
+totalInvalidWords = Math.max(0,totalInvalidWords - 1);
+penaltyscore = Math.max(0,penaltyscore - 10);
+updateLiveScore();
+updateStats();
+pendinggameover = false;
+document.getElementById("guess").value = word.toUpperCase();}
+showaddword = false;
+pendingcustomword = "";
+hideAddWordPopup();
+setMessage(`${word.toUpperCase()} added to your custom dictionary.`, "notice");
+
+if(document.getElementById("guess").value){submitGuess();}
+else {modifyCustomDictionary();}}
+
+function modifyCustomDictionary(){let html = "";
+const words = Object.keys(customdictionary).sort();
+document.getElementById("customDictionaryCount").textContent = `(${words.length.toLocaleString()} ${words.length === 1 ? "word" : "words"})`;
+
+if(words.length === 0){html = "<center>No custom words found.</center>";}
+else {for(const word of words)
+{const entry = customdictionary[word];
+html += `<div class="customdictionaryword"><div class="customdictionarywordname">${word.toUpperCase()}</div>
+<div class="customdictionarywordtype">${entry.type}</div>
+<div>${entry.definition}</div>
+<div class="deletecustomword" onclick="deleteCustomWord('${word}')">❌</div></div>`;}}
+
+html += `<div style="text-align:center; margin-top:10px;"><span class="profileword" onclick="newCustomWord()">➕ Add Custom Word</span></div>`;
+document.getElementById("customDictionaryList").innerHTML = html;
+toggleCustomDictionary();}
+
+function toggleCustomDictionary(){const popup = document.getElementById("customDictionaryPopup");
+popup.style.display = popup.style.display === "flex"
+? "none"
+: "flex";}
+
+function deleteCustomWord(word){pendingdeleteword = word;
+document.getElementById("deleteCustomWordLabel").textContent = word.toUpperCase();
+toggleDeleteCustomWordPopup();}
+
+function toggleDeleteCustomWordPopup(){const popup = document.getElementById("deleteCustomWordPopup");
+popup.style.display = popup.style.display === "flex"
+? "none"
+: "flex";}
+
+function confirmDeleteCustomWord(){delete customdictionary[pendingdeleteword];
+updateCustomDictionary();
+pendingdeleteword = "";
+toggleDeleteCustomWordPopup();
+modifyCustomDictionary();}
+
+function newCustomWord(){toggleCustomDictionary();
+pendingcustomword = "";
+pendinggameover = false;
+document.getElementById("customWordType").selectedIndex = 0;
+document.getElementById("customWordDefinition").value = "";
+showAddWordPopup();}
 
 // ------------------------ TOGGLES ---------------------------------------------------------------
 function toggleHelp(){playClickSound();
@@ -420,8 +616,9 @@ const popup=document.getElementById("scorePopup");
 popup.style.display=popup.style.display==="flex"?"none":"flex";}
 
 function showDefinition(word){playClickSound();
-const entry = definitions[word.toLowerCase()];
+const entry = definitions[word.toLowerCase()] || customdictionary[word.toLowerCase()];
 document.getElementById("definitionWord").textContent = word.toUpperCase();
+
 if(entry){document.getElementById("definitionType").textContent = entry.type || "";
 document.getElementById("definitionText").innerHTML = entry.definition || `Local definition unavailable. <a href="https://www.thefreedictionary.com/${word}" target="_blank" rel="noopener noreferrer">Look up definition ↗</a>`;
 document.getElementById("definitionExample").textContent = entry.example
@@ -430,8 +627,7 @@ document.getElementById("definitionExample").textContent = entry.example
 else{document.getElementById("definitionType").textContent = "";
 document.getElementById("definitionText").textContent = "Definition unavailable.";
 document.getElementById("definitionExample").textContent = "";}
-const popup = document.getElementById("definitionPopup");
-popup.style.display = "flex";}
+document.getElementById("definitionPopup").style.display = "flex";}
 
 function toggleDefinition(){playClickSound();
 const popup = document.getElementById("definitionPopup");
@@ -670,9 +866,10 @@ if(cookie){data = decodeURIComponent(cookie.substring("twordleProfile=".length))
 
 if(data){try{profile = JSON.parse(data);}catch(e){profile = {};}}
 
+loadCustomDictionary();
+
 firstguess = "";
 try{firstguess = localStorage.getItem("twordleFirstGuess") || "";}catch(e){}
-
 
 if(!firstguess){const cookie = document.cookie
 .split("; ")
@@ -883,28 +1080,29 @@ beep(300,0.12,"square", 0.02);
 setTimeout(()=>beep(200,0.12,"square", 0.02),100);
 return;}
 
-if(!dictionary.includes(guess)){invalidWords++;
+if(!isValidWord(guess)){pendingcustomword = guess;
+invalidWords++;
 totalInvalidWords++;
 penaltyscore += 10;
 updateLiveScore();
 updateStats();
-if(invalidWords >= 5){setMessage(`Too many invalid words. Answer: ${answer.toUpperCase()}${definitionLink(answer)}`,"error");
+showaddword = true;
+pendinggameover = (invalidWords >= 5);
+
+if(invalidWords >= 5){showaddword = false;
+setMessage(`${guess.toUpperCase()} is not in this dictionary. If this word is valid, add it now.`, "warning");
+showAddWordPopup();
+return;};
+
+setMessage(`${guess.toUpperCase()} is not in this dictionary. <span class="definitionLink" onclick="showAddWordPopup('${guess}')">Add Word</span> | ${5 - invalidWords} invalid guesses remaining.`,
+"warning");
 document.getElementById("guess").value = "";
-gameover = true;
-losses++;
-playLoseSound();
-updateStats();
-updateProfile("loss");
-document
-.getElementById("playagain")
-.style.display = "inline-block";
+setTimeout(()=>beep(200,0.12,"square",0.02),100);
+beep(150,0.25,"sawtooth",0.02);
 return;}
 
-setMessage(`${guess.toUpperCase()} is not in this dictionary. ${5 - invalidWords} invalid guesses remaining.`,"warning");
-document.getElementById("guess").value = "";
-setTimeout(()=>beep(200,0.12,"square", 0.02),100);
-beep(150,0.25,"sawtooth", 0.02);
-return;}
+showaddword = false;
+pendingcustomword = "";
 usedWords.push(guess);
 const colors = scoreGuess(guess, answer);
 addLetterProgress(colors);
@@ -1009,6 +1207,9 @@ const reduction = before - averageRemaining;
 const percent = before ? Math.round(reduction / before * 100) : 0;
 setMessage(`${guess.toUpperCase()} is expected to reduce ${before} possibilites to about ${averageRemaining} (↓${percent}%).`,"message");}
 
+function isValidWord(word) {word = word.toLowerCase();
+return dictionary.includes(word) || customdictionary[word];}
+
 function wordMatchesBoard(word){for(const row of board){const test = scoreGuess(row.word.toLowerCase(), word);
 for(let i=0;i<5;i++){if(test[i] !== row.colors[i]){return false;}}}
 
@@ -1025,6 +1226,18 @@ else if(row.colors[i] === "yellow"){beep(700,0.03,"triangle",0.02);}
 else{beep(300,0.02,"square",0.02);}
 renderBoard();
 if(i === 4){board.activeRow = -1;}},i * 200);}}
+
+function loseGameInvalidWords(){showaddword = false;
+setMessage(`Too many invalid words. Answer: ${answer.toUpperCase()}${definitionLink(answer)}`, "error");
+document.getElementById("guess").value = "";
+gameover = true;
+losses++;
+
+playLoseSound();
+updateStats();
+updateProfile("loss");
+document.getElementById("playagain").style.display = "inline-block";
+return;}
 
 function newGame(){answer = dictionary[Math.floor(Math.random() * dictionary.length)];
 resetScore();
@@ -1058,9 +1271,9 @@ document
 : "";
 
 setMessage("");
+showaddword = false;
 buildKeyboard();
 updateEvaluateButton();
-
 
 renderBoard();
 updateStats();
@@ -1077,7 +1290,7 @@ setTimeout(()=>beep(784,0.15,"sine", 0.02),100);}
 // ------------------------ KEYBOARD --------------------------------------------------------------
 
 function buildKeyboard(){const rows = ["QWERTYUIOP",
-"ASDFGHJKL",
+"ASDFGHJKL?",
 "←ZXCVBNM↵"];
 let html = "";
 
@@ -1135,7 +1348,10 @@ key.className = "key " + keyboard[letter];}}
 
 // ------------------------ MESSAGE ---------------------------------------------------------------
 function setMessage(text,type="notice"){const message = document.getElementById("message");
-message.innerHTML = text;
+let addwordhtml = "";
+if(showaddword)
+{addwordhtml = ` <span class="addWordLink" onclick="showAddWordPopup('${pendingcustomword}')">Add Word</span>`;}
+message.innerHTML = text + addwordhtml;
 message.className = type;}
 
 
