@@ -24,13 +24,13 @@ th{background:#227; font-weight:bold;}
 #headerRow h1{text-align:center; margin:0 0 15px 0;}
 #layout{align-items:start;}
 
-#helpButton,#scoreButton{color:#ff0000; cursor:pointer; font-size:16px; font-weight:bold;}
+#helpButton,#scoreButton{color:#ff0000; font-size:16px; font-weight:bold;}
 #helpButton,#soundButton,#scoreButton{display:inline-block; cursor:pointer;}
-#helpPopup,#scorePopup,#confirmPopup,#profilePopup,#dictionaryPopup,#definitionPopup,#addWordPopup,#firstGuessPopup,#customDictionaryPopup,#deleteCustomWordPopup{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); justify-content:center; align-items:center; box-sizing:border-box;}
+[id$="Popup"]{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); justify-content:center; align-items:center; box-sizing:border-box;}
 #helpPopup,#scorePopup{z-index:1000; padding:15px;}
 #confirmPopup,#profilePopup,#dictionaryPopup,#definitionPopup,#addWordPopup,#firstGuessPopup,#customDictionaryPopup,#deleteCustomWordPopup{z-index:1100; padding:5px;}
-#helpContent,#scoreContent,#definitionContent{position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left; line-height:1.5;}
-#customDictionaryContent{position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:600px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left;}
+[id$="Content"]{position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left; line-height:1.5;}
+#customDictionaryContent{max-width:600px;}
 #helpContent h2,#scoreContent h2,#definitionContent h2,#customDictionaryContent h2{text-align:center; margin-top:0;}
 #helpContent button,#scoreContent button,#definitionContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
 #customDictionaryContent button.close{position:absolute; top:10px; right:10px;}
