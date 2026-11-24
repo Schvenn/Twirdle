@@ -71,6 +71,9 @@ th{background:#227; font-weight:bold;}
 .customdictionarywordtype{color:#ffff00; font-style:italic;}
 .deletecustomword{color:#ff4444; cursor:pointer; text-align:center; font-weight:bold;}
 .deletecustomword:hover{color:#ff8888;}
+#customWordHelp{margin-top:10px; font-size:12px; color:#cccccc;}
+#customWordHelp a{color:#7db4ff; text-decoration:none;}
+#customWordHelp a:hover{text-decoration:underline;}
 
 #gamePanel{text-align:center;}
 #controls{margin-top:5px;}
@@ -273,9 +276,7 @@ While working towards the solution, the score will update:<br>
 <div id="confirmContent">
 <small id="fifthinvalidword" style="display:none;">This is the 5th invalid word entered this round. If it is a valid word, you can add it to your personal dictionary.</small>
 <h3>Add Custom Word</h3>
-<div>
-<b id="customWordLabel"></b>
-</div>
+<div><b id="customWordLabel"></b></div>
 <input id="customWordText" maxlength="5">
 <br><br>
 <select id="customWordType">
@@ -292,7 +293,10 @@ While working towards the solution, the score will update:<br>
 </select>
 <br><br>
 <textarea id="customWordDefinition"></textarea>
-<br><br>
+<div id="customWordHelp" style="margin-top:10px; font-size:12px;">
+<a id="customWordLookup" href="https://www.thefreedictionary.com" target="_blank" rel="noopener noreferrer">Look up definition ↗</a>
+</div>
+<br>
 <button onclick="addCustomWord()">Add Word</button>
 <button onclick="cancelAddWord()">Cancel</button>
 </div>
@@ -490,13 +494,20 @@ catch(e){}}
 function showAddWordPopup(word = pendingcustomword){pendingcustomword = (word || "").toLowerCase();
 document.getElementById("customWordType").selectedIndex = 0;
 document.getElementById("customWordDefinition").value = "";
+const help = document.getElementById("customWordHelp");
+const lookup = document.getElementById("customWordLookup");
 
 if(pendingcustomword){document.getElementById("customWordLabel").style.display = "block";
 document.getElementById("customWordText").style.display = "none";
-document.getElementById("customWordLabel").textContent = pendingcustomword.toUpperCase();}
+document.getElementById("customWordLabel").textContent = pendingcustomword.toUpperCase();
+lookup.href = `https://www.thefreedictionary.com/${pendingcustomword}`;
+lookup.textContent = `Look up ${pendingcustomword.toUpperCase()} ↗`;}
 else{document.getElementById("customWordLabel").style.display = "none";
 document.getElementById("customWordText").style.display = "inline-block";
-document.getElementById("customWordText").value = "";}
+document.getElementById("customWordText").value = "";
+lookup.href = "https://www.thefreedictionary.com";
+lookup.textContent = "Look up definition ↗";}
+help.style.color = "#cccccc";
 document.getElementById("fifthinvalidword").style.display = pendinggameover
 ? "block"
 : "none";
@@ -532,7 +543,8 @@ const definition = document
 .value
 .trim();
 
-if(!definition){setMessage("A definition is required.","warning");
+if(!definition){document.getElementById("customWordHelp").innerHTML = `A definition is required.<br><br>
+<a href="https://www.thefreedictionary.com/${word}" target="_blank" rel="noopener noreferrer">Look up ${word.toUpperCase()} ↗</a>`;
 return;}
 customdictionary[word] = {type:type,
 definition:definition,
