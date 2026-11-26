@@ -491,11 +491,13 @@ catch(e){}
 try {document.cookie = "twordleCustomDictionary=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";}
 catch(e){}}
 
-function showAddWordPopup(word = pendingcustomword){pendingcustomword = (word || "").toLowerCase();
+function showAddWordPopup(word){pendingcustomword = (word || "").toLowerCase();
 document.getElementById("customWordType").selectedIndex = 0;
 document.getElementById("customWordDefinition").value = "";
 const help = document.getElementById("customWordHelp");
+help.innerHTML = '<a id="customWordLookup" href="https://www.thefreedictionary.com" target="_blank" rel="noopener noreferrer">Look up definition ↗</a>';
 const lookup = document.getElementById("customWordLookup");
+
 
 if(pendingcustomword){document.getElementById("customWordLabel").style.display = "block";
 document.getElementById("customWordText").style.display = "none";
@@ -505,7 +507,7 @@ lookup.textContent = `Look up ${pendingcustomword.toUpperCase()} ↗`;}
 else{document.getElementById("customWordLabel").style.display = "none";
 document.getElementById("customWordText").style.display = "inline-block";
 document.getElementById("customWordText").value = "";
-lookup.href = "https://www.thefreedictionary.com";
+lookup.href = `https://www.thefreedictionary.com`;
 lookup.textContent = "Look up definition ↗";}
 help.style.color = "#cccccc";
 document.getElementById("fifthinvalidword").style.display = pendinggameover
@@ -629,18 +631,24 @@ popup.style.display=popup.style.display==="flex"?"none":"flex";}
 
 function showDefinition(word){playClickSound();
 const entry = definitions[word.toLowerCase()] || customdictionary[word.toLowerCase()];
+const definitionlink = document.getElementById("definitionLink");
+
 document.getElementById("definitionWord").textContent = word.toUpperCase();
+document.getElementById("definitionType").textContent = "";
+document.getElementById("definitionText").textContent = "";
+document.getElementById("definitionExample").textContent = "";
+definitionlink.innerHTML = "";
 
 if(entry){document.getElementById("definitionType").textContent = entry.type || "";
-document.getElementById("definitionText").innerHTML = entry.definition || `Local definition unavailable. <a href="https://www.thefreedictionary.com/${word}" target="_blank" rel="noopener noreferrer">Look up definition ↗</a>`;
+document.getElementById("definitionText").innerHTML = entry.definition || "Definition unavailable.";
 document.getElementById("definitionExample").textContent = entry.example
 ? `Example: ${entry.example}`
-: "";}
-else{document.getElementById("definitionType").textContent = "";
-document.getElementById("definitionText").textContent = "Definition unavailable.";
-document.getElementById("definitionExample").textContent = "";}
-document.getElementById("definitionPopup").style.display = "flex";
-document.getElementById("definitionLink").innerHTML = entry.link || `<hr><a href="https://www.thefreedictionary.com/${word}" target="_blank" rel="noopener noreferrer">Look up ${word} ↗</a>`;}
+: "";
+definitionlink.innerHTML = entry.link || `<hr><a href="https://www.thefreedictionary.com/${word}" target="_blank" rel="noopener noreferrer">Look up ${word} ↗</a>`;}
+else{document.getElementById("definitionText").textContent = "Definition unavailable.";
+definitionlink.innerHTML = `<hr><a href="https://www.thefreedictionary.com/${word}" target="_blank" rel="noopener noreferrer">Look up ${word} ↗</a>`;}
+
+document.getElementById("definitionPopup").style.display = "flex";}
 
 function toggleDefinition(){playClickSound();
 const popup = document.getElementById("definitionPopup");
@@ -1104,7 +1112,7 @@ pendinggameover = (invalidWords >= 5);
 
 if(invalidWords >= 5){showaddword = false;
 setMessage(`${guess.toUpperCase()} is not in this dictionary. If this word is valid, add it now.`, "warning");
-showAddWordPopup();
+showAddWordPopup(guess);
 return;};
 
 setMessage(`${guess.toUpperCase()} is not in this dictionary. <span class="definitionLink" onclick="showAddWordPopup('${guess}')">Add Word</span> | ${5 - invalidWords} invalid guesses remaining.`,
