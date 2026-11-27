@@ -39,7 +39,7 @@ th{background:#227; font-weight:bold;}
 #confirmContent,#addWordContent{background:#222; border:1px solid #555; border-radius:8px; padding:10px; max-width:350px; width:100%; box-sizing:border-box; text-align:center;}
 
 #customWordDefinition{top-margin:10px; width:300px; height:80px; font-size:14px; text-transform:none; text-align:left; resize:vertical; padding:5px; box-sizing:border-box;}
-.addWordLink, {color:#00ff00; cursor:pointer; font-weight:normal; margin-left:5px;}
+.addWordLink{color:#ffff00!important; cursor:pointer; font-weight:bold; font-size:18px;}
 .addWordLink:hover,.profileword:hover {text-decoration:underline;}
 
 .submitDictionary{cursor:pointer;}
@@ -590,7 +590,7 @@ const entry = getWordEntry(word);
 const hasdefinition = !!entry?.definition;
 
 if(dictionary.includes(word) && hasdefinition && !confirmdefinitionoverride){confirmdefinitionoverride = true;
-document.getElementById("customWordHelp").innerHTML = `${word.toUpperCase()} already exis.<br><br>Click Add Word again to replace the existing definition.`;
+document.getElementById("customWordHelp").innerHTML = `${word.toUpperCase()} already exists.<br><br>Click Add Word again to replace the existing definition.`;
 return;}
 
 customdictionary[word] = {type:type, definition:definition, notfound:false, example:example};
@@ -1176,7 +1176,7 @@ setMessage(`${guess.toUpperCase()} is not in this dictionary. If this word is va
 showAddWordPopup(guess);
 return;};
 
-setMessage(`${guess.toUpperCase()} is not in this dictionary. <span class="definitionLink" onclick="showAddWordPopup('${guess}')">Add Word</span> | ${5 - invalidWords} invalid guesses remaining.`,
+setMessage(`${guess.toUpperCase()} is not in this dictionary. ${5 - invalidWords} invalid guesses remaining. `,
 "warning");
 document.getElementById("guess").value = "";
 setTimeout(()=>beep(200,0.12,"square",0.02),100);
@@ -1436,7 +1436,7 @@ key.className = "key " + keyboard[letter];}}
 function setMessage(text,type="notice"){const message = document.getElementById("message");
 let addwordhtml = "";
 if(showaddword)
-{addwordhtml = ` <span class="addWordLink" onclick="showAddWordPopup('${pendingcustomword}')">Add Word</span>`;}
+{addwordhtml = ` <span class="addWordLink" onclick="showAddWordPopup('${pendingcustomword}')">Add Word?</span>`;}
 message.innerHTML = text + addwordhtml;
 message.className = type;}
 
