@@ -40,9 +40,15 @@ th{background:#227; font-weight:bold;}
 
 #confirmContent,#addWordContent{background:#222; border:1px solid #555; border-radius:8px; padding:10px; max-width:350px; width:100%; box-sizing:border-box; text-align:center;}
 
-#customWordDefinition{width:300px; height:80px; font-size:14px; text-transform:none; text-align:left; resize:vertical; padding:5px; box-sizing:border-box;}
-.addWordLink{color:#00ff00; cursor:pointer; font-weight:normal; margin-left:5px;}
-.addWordLink:hover,.profileword:hover{text-decoration:underline;}
+#customWordDefinition{top-margin:10px; width:300px; height:80px; font-size:14px; text-transform:none; text-align:left; resize:vertical; padding:5px; box-sizing:border-box;}
+.addWordLink, {color:#00ff00; cursor:pointer; font-weight:normal; margin-left:5px;}
+.addWordLink:hover,.profileword:hover {text-decoration:underline;}
+
+.submitDictionary{cursor:pointer;}
+.submitDictionary:hover{text-decoration:underline;}
+
+#addCustomWordText{text-align:left;}
+#customWordExample{top-margin:10px; width:300px; height:40px; font-size:14px; text-transform:none; text-align:left; resize:vertical; padding:5px; box-sizing:border-box;}
 
 #confirmContent h3{margin-top:10px; margin-bottom:15px;}
 #confirmContent p{margin:5px 0 12px;}
@@ -64,7 +70,7 @@ th{background:#227; font-weight:bold;}
 
 #statsPanel{text-align:left;}
 
-#customDictionaryList{margin-top:15px;}
+#customDictionaryList{margin-top:15px; max-height:60vh;	overflow-y:auto;}
 #customDictionaryCount{text-align:center; color:#cccccc; margin-top:-10px; margin-bottom:10px; font-size:14px;}
 .customdictionaryword{display:grid; grid-template-columns:80px 120px 1fr 40px; gap:10px; align-items:center; border-bottom:1px solid #444; padding:6px 0;}
 .customdictionarywordname{color:#ffffb3; font-weight:bold;}
@@ -242,7 +248,16 @@ While working towards the solution, the score will update:<br>
 <button class="close" onclick="toggleCustomDictionary()">✕</button>
 <h2>My Dictionary</h2>
 <div id="customDictionaryCount"></div>
+<hr>
+<div style="text-align:center;">
+<span class="profileword" onclick="newCustomWord()">➕ Add Custom Word</span>
+</div>
+<hr>
 <div id="customDictionaryList"></div>
+<hr>
+<div style="text-align:center;">
+<span class="submitDictionary" onclick="submitDictionary()">🖂 Submit Dictionary Updates</span>
+</div>
 </div>
 </div>
 
@@ -292,7 +307,10 @@ While working towards the solution, the score will update:<br>
 <option value="plural">plural</option>
 </select>
 <br><br>
-<textarea id="customWordDefinition"></textarea>
+<div id="addCustomWordText">Definition:</div>
+<textarea id="customWordDefinition" placeholder="Definitions are mandatory."></textarea>
+<div id="addCustomWordText">Example:</div>
+<textarea id="customWordExample" placeholder="Optional example sentence"></textarea>
 <div id="customWordHelp" style="margin-top:10px; font-size:12px;">
 <a id="customWordLookup" href="https://www.thefreedictionary.com" target="_blank" rel="noopener noreferrer">Look up definition ↗</a>
 </div>
@@ -340,7 +358,7 @@ While working towards the solution, the score will update:<br>
 <div id="message"></div>
 <div id="board"></div>
 
-<div id="controls"><input id="guess" maxlength="5" autocomplete="off"> <button onclick="submitGuess()">Guess</button></div>
+<div id="controls"><input id="guess" maxlength="5" autocomplete="off"> <button onclick="submitGuess()">Guess</button> <button onclick="lookupThisWord()">Lookup</button></div>
 <div id="secondaryButtons"><button id="hintButton" onclick="giveHint()">Hint</button><button id="evaluateButton" onclick="evaluateGuess()">Evaluate</button><button id="cheatButton" onclick="toggleCheat()">🔴 Cheat</button><button id="undoButton" onclick="undo()">Undo</button></div>
 <div id="keyboard"></div>
 
@@ -377,6 +395,7 @@ let dictionary = [];
 let pendingDictionary = null;
 let currentDictionary = "Twordle.txt";
 let definitions = {};
+let confirmdefinitionoverride = false;
 let customdictionary = {};
 let showaddword = false;
 let pendinggameover = false;
@@ -498,7 +517,6 @@ const help = document.getElementById("customWordHelp");
 help.innerHTML = '<a id="customWordLookup" href="https://www.thefreedictionary.com" target="_blank" rel="noopener noreferrer">Look up definition ↗</a>';
 const lookup = document.getElementById("customWordLookup");
 
-
 if(pendingcustomword){document.getElementById("customWordLabel").style.display = "block";
 document.getElementById("customWordText").style.display = "none";
 document.getElementById("customWordLabel").textContent = pendingcustomword.toUpperCase();
@@ -515,44 +533,43 @@ document.getElementById("fifthinvalidword").style.display = pendinggameover
 : "none";
 document.getElementById("addWordPopup").style.display = "flex";}
 
-function hideAddWordPopup(){document.getElementById("addWordPopup").style.display = "none";}
+function hideAddWordPopup(){confirmdefinitionoverride = false;
+document.getElementById("addWordPopup").style.display = "none";}
 
 function cancelAddWord(){hideAddWordPopup();
 if(pendinggameover) {loseGameInvalidWords();}}
 
+function getWordEntry(word){word = word.toLowerCase();
+return customdictionary[word] || definitions[word];}
+
 function addCustomWord(){let word = pendingcustomword;
-if(!word){word = document
-.getElementById("customWordText")
-.value
-.trim()
-.toLowerCase();
+if(!word){word = document.getElementById("customWordText").value.trim().toLowerCase();
 
-if(!/^[a-z]{5}$/.test(word)){setMessage("Enter a valid five-letter word.","warning");
+function setCustomWordError(message){document.getElementById("customWordHelp").textContent = message;}
+
+if(!/^[a-z]{5}$/.test(word)){setCustomWordError("Enter a valid five-letter word.");
 return;}
 
-if(dictionary.includes(word)){setMessage(`${word.toUpperCase()} already exists in the dictionary.`,"warning");
+const entry = getWordEntry(word);
+const hasdefinition = !!entry?.definition;}
+
+const type = document.getElementById("customWordType").value;
+const definition = document.getElementById("customWordDefinition").value.trim();
+const example = document.getElementById("customWordExample").value.trim();
+
+if(!definition){document.getElementById("customWordHelp").innerHTML = `A definition is required.<br><br><a href="https://www.thefreedictionary.com/${word}" target="_blank" rel="noopener noreferrer">Look up ${word.toUpperCase()} ↗</a>`;
 return;}
 
-if(customdictionary[word]){setMessage(`${word.toUpperCase()} already exists in your custom dictionary.`,"warning");
-return;}}
+const entry = getWordEntry(word);
+const hasdefinition = !!entry?.definition;
 
-const type = document
-.getElementById("customWordType")
-.value;
-
-const definition = document
-.getElementById("customWordDefinition")
-.value
-.trim();
-
-if(!definition){document.getElementById("customWordHelp").innerHTML = `A definition is required.<br><br>
-<a href="https://www.thefreedictionary.com/${word}" target="_blank" rel="noopener noreferrer">Look up ${word.toUpperCase()} ↗</a>`;
+if(dictionary.includes(word) && hasdefinition && !confirmdefinitionoverride){confirmdefinitionoverride = true;
+document.getElementById("customWordHelp").innerHTML = `${word.toUpperCase()} already exis.<br><br>Click Add Word again to replace the existing definition.`;
 return;}
-customdictionary[word] = {type:type,
-definition:definition,
-notfound:false,
-example:"This is a player added custom word."};
+
+customdictionary[word] = {type:type, definition:definition, notfound:false, example:example};
 updateCustomDictionary();
+confirmdefinitionoverride = false;
 
 if(pendingcustomword){invalidWords = Math.max(0,invalidWords - 1);
 totalInvalidWords = Math.max(0,totalInvalidWords - 1);
@@ -561,27 +578,31 @@ updateLiveScore();
 updateStats();
 pendinggameover = false;
 document.getElementById("guess").value = word.toUpperCase();}
+
 showaddword = false;
 pendingcustomword = "";
 hideAddWordPopup();
-setMessage(`${word.toUpperCase()} added to your custom dictionary.`, "notice");
+
+setMessage(dictionary.includes(word)
+? `${word.toUpperCase()} definition saved.`
+: `${word.toUpperCase()} added to your custom dictionary.`,
+"notice");
 
 if(document.getElementById("guess").value){submitGuess();}
-else {modifyCustomDictionary();}}
+else{modifyCustomDictionary();}}
 
 function modifyCustomDictionary(){let html = "";
 const words = Object.keys(customdictionary).sort();
+
 document.getElementById("customDictionaryCount").textContent = `(${words.length.toLocaleString()} ${words.length === 1 ? "word" : "words"})`;
 
 if(words.length === 0){html = "<center>No custom words found.</center>";}
-else {for(const word of words)
-{const entry = customdictionary[word];
-html += `<div class="customdictionaryword"><div class="customdictionarywordname">${word.toUpperCase()}</div>
+else{for(const word of words){const entry = customdictionary[word];
+html += `<div class="customdictionaryword">
+<div class="customdictionarywordname">${word.toUpperCase()}</div>
 <div class="customdictionarywordtype">${entry.type}</div>
-<div>${entry.definition}</div>
+<div>${entry.definition}<hr>${entry.example || ""}</div>
 <div class="deletecustomword" onclick="deleteCustomWord('${word}')">❌</div></div>`;}}
-
-html += `<div style="text-align:center; margin-top:10px;"><span class="profileword" onclick="newCustomWord()">➕ Add Custom Word</span></div>`;
 document.getElementById("customDictionaryList").innerHTML = html;
 toggleCustomDictionary();}
 
@@ -610,7 +631,19 @@ pendingcustomword = "";
 pendinggameover = false;
 document.getElementById("customWordType").selectedIndex = 0;
 document.getElementById("customWordDefinition").value = "";
+document.getElementById("customWordExample").value = "";
 showAddWordPopup();}
+
+function decodeHex(hex){let text="";
+for(let i = 0;i < hex.length;i += 2){text += String.fromCharCode(parseInt(hex.substr(i,2),16));}
+return text;}
+
+function submitDictionary(){let a = JSON.stringify(customdictionary,null,2);
+let b =  `${decodeHex("446f206e6f74206368616e676520616e797468696e672062656c6f772074686973206c696e650a2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d")}
+${a}`;
+
+window.location.href = 
+`${decodeHex("6d61696c746f")}:${decodeHex("73636876656e6e4073636876656e6e2e6361")}?${decodeHex("7375626a656374")}=${encodeURIComponent(decodeHex("54776f72646c652044696374696f6e617279205375626d697373696f6e"))}&${decodeHex("626f6479")}=${encodeURIComponent(b)}`;}
 
 // ------------------------ TOGGLES ---------------------------------------------------------------
 function toggleHelp(){playClickSound();
@@ -630,7 +663,7 @@ const popup=document.getElementById("scorePopup");
 popup.style.display=popup.style.display==="flex"?"none":"flex";}
 
 function showDefinition(word){playClickSound();
-const entry = definitions[word.toLowerCase()] || customdictionary[word.toLowerCase()];
+const entry = customdictionary[word.toLowerCase()] || definitions[word.toLowerCase()];
 const definitionlink = document.getElementById("definitionLink");
 
 document.getElementById("definitionWord").textContent = word.toUpperCase();
@@ -984,7 +1017,7 @@ function saveGuess(){const guess = document
 if(!guess){if(firstguess){toggleFirstGuessConfirm();}
 return;}
 
-if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word.");
+if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a valid five-letter word.");
 return;}
 
 if(!dictionary.includes(guess)){setMessage("That word is not in the dictionary.");
@@ -1091,7 +1124,7 @@ let guess = document
 .trim()
 .toLowerCase();
 
-if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word.","notice");
+if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a valid five-letter word.","notice");
 beep(150,0.25,"sawtooth", 0.02);
 return;}
 
@@ -1187,6 +1220,10 @@ return;}
 
 updateEvaluateStatus();}
 
+function lookupThisWord(){let guess = document.getElementById("guess").value.trim().toLowerCase();
+if (!guess) return;
+window.open(`https://www.thefreedictionary.com/${guess}`,"_blank","noopener,noreferrer");;}
+
 function evaluateGuess(){const guess = document
 .getElementById("guess")
 .value
@@ -1203,7 +1240,7 @@ const matches = dictionary.filter(word => wordMatchesBoard(word));
 setMessage(`Based on your current board, there ${matches.length === 1 ? "is" : "are"} ${matches.length.toLocaleString()} possible ${matches.length === 1 ? "match" : "matches"}.`,"notice");
 return;}
 
-if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word to evaluate.");return;}
+if(!/^[a-z]{5}$/.test(guess)){setMessage("Enter a five-letter word to evaluate."); return;}
 const candidates = dictionary.filter(word => wordMatchesBoard(word));
 const before = candidates.length;
 let totalRemaining = 0;
