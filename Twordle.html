@@ -26,14 +26,12 @@ th{background:#227; font-weight:bold;}
 
 #helpButton,#scoreButton{color:#ff0000; font-size:16px; font-weight:bold;}
 #helpButton,#soundButton,#scoreButton{display:inline-block; cursor:pointer;}
-[id$="Popup"]{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); justify-content:center; align-items:center; box-sizing:border-box;}
-#helpPopup,#scorePopup{z-index:1000; padding:15px;}
-#confirmPopup,#profilePopup,#dictionaryPopup,#definitionPopup,#addWordPopup,#firstGuessPopup,#customDictionaryPopup,#deleteCustomWordPopup{z-index:1100; padding:5px;}
+[id$="Popup"]{display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); justify-content:center; align-items:center; box-sizing:border-box; z-index:1100; padding:5px;}
 [id$="Content"]{position:relative; background:#222; border:1px solid #555; border-radius:8px; padding:25px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto; box-sizing:border-box; text-align:left; line-height:1.5;}
-#customDictionaryContent{max-width:600px;}
-#helpContent h2,#scoreContent h2,#definitionContent h2,#customDictionaryContent h2{text-align:center; margin-top:0;}
+#customDictionaryContent,#dictionaryContent{max-width:600px;}
+#helpContent h2,#scoreContent h2,#definitionContent h2,#customDictionaryContent h2,#dictionaryContent h2{text-align:center; margin-top:0;}
 #helpContent button,#scoreContent button,#definitionContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
-#customDictionaryContent button.close{position:absolute; top:10px; right:10px;}
+#customDictionaryContent button.close,#dictionaryContent button.close{position:absolute; top:10px; right:10px;}
 #helpContent p,#scoreContent p{margin:12px 0;}
 
 #scoreBoard{font-size:48px; font-weight:bold; color:#00FF00}
@@ -70,11 +68,11 @@ th{background:#227; font-weight:bold;}
 
 #statsPanel{text-align:left;}
 
-#customDictionaryList{margin-top:15px; max-height:60vh;	overflow-y:auto;}
-#customDictionaryCount{text-align:center; color:#cccccc; margin-top:-10px; margin-bottom:10px; font-size:14px;}
-.customdictionaryword{display:grid; grid-template-columns:80px 120px 1fr 40px; gap:10px; align-items:center; border-bottom:1px solid #444; padding:6px 0;}
-.customdictionarywordname{color:#ffffb3; font-weight:bold;}
-.customdictionarywordtype{color:#ffff00; font-style:italic;}
+#customDictionaryList,#dictionaryList{margin-top:15px; max-height:60vh;	overflow-y:auto;}
+#customDictionaryCount,#dictionaryCount{text-align:center; color:#cccccc; margin-top:-10px; margin-bottom:10px; font-size:14px;}
+.customdictionaryword,.dictionaryword{display:grid; grid-template-columns:80px 120px 1fr 40px; gap:10px; align-items:center; border-bottom:1px solid #444; padding:6px 0;}
+.customdictionarywordname,.dictionarywordname{color:#ffffb3; font-weight:bold;}
+.customdictionarywordtype,.dictionarywordtype{color:#ffff00; font-style:italic;}
 .deletecustomword{color:#ff4444; cursor:pointer; text-align:center; font-weight:bold;}
 .deletecustomword:hover{color:#ff8888;}
 #customWordHelp{margin-top:10px; font-size:12px; color:#cccccc;}
@@ -254,7 +252,6 @@ While working towards the solution, the score will update:<br>
 </div>
 <hr>
 <div id="customDictionaryList"></div>
-<hr>
 <div style="text-align:center;">
 <span class="submitDictionary" onclick="submitDictionary()">🖂 Submit Dictionary Updates</span>
 </div>
@@ -320,6 +317,16 @@ While working towards the solution, the score will update:<br>
 </div>
 </div>
 
+<div id="viewDictionaryPopup" onclick="if(event.target===this)viewDictionary()">
+<div id="dictionaryContent">
+<button class="close" onclick="toggleDictionary()">✕</button>
+<h2>Full Dictionary</h2>
+<div id="dictionaryCount"></div>
+<hr>
+<div id="dictionaryList"></div>
+</div>
+</div>
+
 <div id="layout">
 <div id="statsPanel">
 <div id="helpButton" onclick="toggleHelp()">Help ?</div> | <div id="soundButton" onclick="toggleSound()">🔊</div>| <div id="scoreButton" onclick="toggleScore()">🏆</div><br>
@@ -352,6 +359,7 @@ While working towards the solution, the score will update:<br>
 </div>
 <br>
 <div><select id="dictionarySelect" onchange="confirmDictionaryChange()"><option value="Twordle.txt" selected>Standard Dictionary</option><option value="SOWPODS5.txt">SOWPODS Extreme</option></select></div>
+<div><button onclick="viewDictionary()">Browse Dictionary</button></div>
 </div>
 
 <div id="gamePanel">
@@ -480,6 +488,24 @@ function cancelDictionaryChange(){document
 .value = currentDictionary;
 toggleDictionaryPopup();}
 
+function toggleDictionary(){const popup = document.getElementById("viewDictionaryPopup");
+popup.style.display = popup.style.display === "flex"
+? "none"
+: "flex";}
+
+function viewDictionary(){let html = "";
+const words = [...dictionary].sort();
+document.getElementById("dictionaryCount").textContent = `(${words.length.toLocaleString()} ${words.length === 1 ? "word" : "words"})`;
+
+for(const word of words){const entry = getWordEntry(word) || {};
+html += `<div class="dictionaryword">
+<div class="dictionarywordname">${word.toUpperCase()}</div>
+<div class="dictionarywordtype">${entry.type || ""}</div>
+<div>${entry.definition || ""}${entry.example ? `<hr>${entry.example}` : ""}</div></div>`;}
+
+document.getElementById("dictionaryList").innerHTML = html;
+toggleDictionary();}
+
 // ------------------------ CUSTOM DICTIONARY -----------------------------------------------------
 function saveCustomDictionary(){updateCustomDictionary();}
 
@@ -591,19 +617,7 @@ setMessage(dictionary.includes(word)
 if(document.getElementById("guess").value){submitGuess();}
 else{modifyCustomDictionary();}}
 
-function modifyCustomDictionary(){let html = "";
-const words = Object.keys(customdictionary).sort();
-
-document.getElementById("customDictionaryCount").textContent = `(${words.length.toLocaleString()} ${words.length === 1 ? "word" : "words"})`;
-
-if(words.length === 0){html = "<center>No custom words found.</center>";}
-else{for(const word of words){const entry = customdictionary[word];
-html += `<div class="customdictionaryword">
-<div class="customdictionarywordname">${word.toUpperCase()}</div>
-<div class="customdictionarywordtype">${entry.type}</div>
-<div>${entry.definition}<hr>${entry.example || ""}</div>
-<div class="deletecustomword" onclick="deleteCustomWord('${word}')">❌</div></div>`;}}
-document.getElementById("customDictionaryList").innerHTML = html;
+function modifyCustomDictionary(){refreshCustomDictionary();
 toggleCustomDictionary();}
 
 function toggleCustomDictionary(){const popup = document.getElementById("customDictionaryPopup");
@@ -615,6 +629,20 @@ function deleteCustomWord(word){pendingdeleteword = word;
 document.getElementById("deleteCustomWordLabel").textContent = word.toUpperCase();
 toggleDeleteCustomWordPopup();}
 
+function refreshCustomDictionary(){let html = "";
+const words = Object.keys(customdictionary).sort();
+document.getElementById("customDictionaryCount").textContent = `(${words.length.toLocaleString()} ${words.length === 1 ? "word" : "words"})`;
+
+if(words.length === 0){html = "<center>No custom words found.</center><hr><br>";}
+else{for(const word of words){const entry = customdictionary[word];
+html += `<div class="customdictionaryword">
+<div class="customdictionarywordname">${word.toUpperCase()}</div>
+<div class="customdictionarywordtype">${entry.type}</div>
+<div>${entry.definition || ""}${entry.example ? `<hr>${entry.example}` : ""}</div>
+<div class="deletecustomword" onclick="deleteCustomWord('${word}')">❌</div></div>`;}
+html += `<br>`;}
+document.getElementById("customDictionaryList").innerHTML = html;}
+
 function toggleDeleteCustomWordPopup(){const popup = document.getElementById("deleteCustomWordPopup");
 popup.style.display = popup.style.display === "flex"
 ? "none"
@@ -624,7 +652,7 @@ function confirmDeleteCustomWord(){delete customdictionary[pendingdeleteword];
 updateCustomDictionary();
 pendingdeleteword = "";
 toggleDeleteCustomWordPopup();
-modifyCustomDictionary();}
+refreshCustomDictionary();}
 
 function newCustomWord(){toggleCustomDictionary();
 pendingcustomword = "";
@@ -642,7 +670,7 @@ function submitDictionary(){let a = JSON.stringify(customdictionary,null,2);
 let b =  `${decodeHex("446f206e6f74206368616e676520616e797468696e672062656c6f772074686973206c696e650a2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d")}
 ${a}`;
 
-window.location.href = 
+window.location.href =
 `${decodeHex("6d61696c746f")}:${decodeHex("73636876656e6e4073636876656e6e2e6361")}?${decodeHex("7375626a656374")}=${encodeURIComponent(decodeHex("54776f72646c652044696374696f6e617279205375626d697373696f6e"))}&${decodeHex("626f6479")}=${encodeURIComponent(b)}`;}
 
 // ------------------------ TOGGLES ---------------------------------------------------------------
