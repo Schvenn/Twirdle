@@ -10,15 +10,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{background:#000; color:white; font-family:Arial,Helvetica,sans-serif; text-align:center; margin:0; padding:20px;}
+body{background:#000; color:white; font-family: "Segoe UI", "Inter", sans-serif; text-align:center; margin:0; padding:20px;}
 h1{margin-bottom:10px;}
 th{background:#227; font-weight:bold;}
 
-#message{height:40px; margin-bottom:15px; color:white; font-weight:bold;}
-#message.solved{color:#00FF00!important;}
-#message.error{color:#FF0000!important;}
-#message.notice{color:#FFFFFF!important;}
-#message.warning{color:#F54927!important;}
+#message{width:320px; max-width:350px; min-height:42px; padding:5px 5px; margin:0 auto 15px auto; border-radius:10px; font-weight:600; text-align:center; background:#1a1d26; border:1px solid #303545; color:#e0e0e0; box-shadow:0 2px 8px rgba(0,0,0,.35);}
+.solved{background:#162616!important; border-color:#4a8f4a; color:#9be59b!important;}
+.error{background:#2a1414!important; border-color:#a94442; color:#ff8f8f!important;}
+.notice{background:#182338!important; border-color:#4667a6; color:#b9d3ff!important;}
+.warning{background:#2d2413!important; border-color:#b2933a; color:#ffd56f!important;}
 
 #headerRow,#layout{display:grid; grid-template-columns:220px 1fr 300px; gap:20px; max-width:1400px; margin:auto;}
 #headerRow h1{text-align:center; margin:0 0 15px 0;}
@@ -32,7 +32,10 @@ th{background:#227; font-weight:bold;}
 #helpContent h2,#scoreContent h2,#definitionContent h2,#customDictionaryContent h2,#dictionaryContent h2{text-align:center; margin-top:0;}
 #helpContent button,#scoreContent button,#definitionContent button{position:absolute; top:10px; right:10px; padding:4px 9px;}
 #customDictionaryContent button.close,#dictionaryContent button.close{position:absolute; top:10px; right:10px;}
-#helpContent p,#scoreContent p{margin:12px 0;}
+#helpContent,#scoreContent{display:flex; flex-direction:column; padding:0;}
+
+.popupHeader{flex-shrink:0; background:#222; padding:5px; border-bottom:1px solid #444;}
+.popupBody{padding:25px; overflow-y:auto;}
 
 #scoreBoard{font-size:48px; font-weight:bold; color:#00FF00}
 
@@ -56,9 +59,9 @@ th{background:#227; font-weight:bold;}
 #firstGuess,#editCustomDictionary,#saveGuess,#profileConfirm{margin-top:5px;}
 #saveGuess{background:#225555; border:1px solid #4466aa; border-radius:6px; color:#fff;}
 
-#dictionarySelect{margin-top:5px; margin-bottom:10px; padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px; width:175px;}
+#dictionarySelect{margin-top:5px; margin-bottom:10px; padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; box-shadow:0 2px 10px rgba(0,0,0,.4); border:1px solid rgba(255,255,255,.05); border-radius:8px; width:175px;}
 
-#newGame{color:#ffff00; cursor:pointer; font-size:16px; font-weight:bold;}
+#newGame{color:#ffff00; cursor:pointer; font-size:16px; font-weight:bold; margin-top:10px;}
 
 #definitionWord{color:#ffffb3; margin-bottom:10px;}
 #definitionType{color:#ffff00; margin-bottom:10px; font-style:italic;}
@@ -66,7 +69,11 @@ th{background:#227; font-weight:bold;}
 #definitionExample{color:#cccccc; font-size:14px;}
 .definitionLink{margin-top:10px; cursor:pointer; text-decoration:none;}
 
-#statsPanel{text-align:left;}
+.sectionTitle{font-size:11px; font-weight:700; letter-spacing:1.5px; color:#999; margin:18px 0 8px 0; cursor:pointer;}
+.collapsed{display:none;}
+#scoreBoard{font-size:58px; font-weight:700; color:#3f8f3f; line-height:0.8;}
+#statsPanel{text-align:left; line-height:1.4;}
+#statsPanel button, #statsPanel select, #statsPanel input{margin-top:4px; margin-bottom:4px;}
 
 #customDictionaryList,#dictionaryList{margin-top:15px; max-height:60vh;	overflow-y:auto;}
 #customDictionaryCount,#dictionaryCount{text-align:center; color:#cccccc; margin-top:-10px; margin-bottom:10px; font-size:14px;}
@@ -84,22 +91,19 @@ th{background:#227; font-weight:bold;}
 
 #sidePanel{position:relative; min-height:450px; max-height:450px;}
 
-#profilePanel{z-index:2;}
 .profileword{cursor:pointer; color:#7db4ff;}
-
 #cheatPanel,#profilePanel{position:absolute; inset:0; display:none; text-align:left; border:1px solid #444; padding:10px; overflow-y:auto; max-height:450px;}
-#cheatPanel{z-index:1;}
 #cheatHeader,#profileHeader{text-align:center; font-size:20px; font-weight:bold; padding-bottom:10px;}
 #possibleWords,#profileWords{text-align:center; font-size:12px; line-height:1.5; word-wrap:break-word;}
 
-#currentWord{font-weight:bold; color:#538d4e;}
+#currentWord{font-size:40px; font-weight:bold; color:#538d4e; line-height:0.8;}
 
 #secondaryButtons{margin-top:10px; margin-bottom:20px;}
 #secondaryButtons button{margin:0 5px;}
 
 #board{display:flex; flex-direction:column; gap:5px; align-items:center; margin-bottom:20px;}
 .row{display:flex; gap:5px;}
-.tile{width:60px; height:60px; border:2px solid #3a3a3c; display:flex; justify-content:center; align-items:center; font-size:32px; font-weight:bold; text-transform:uppercase; transition:transform .2s;}
+.tile{width:60px; height:60px; border:2px solid #3a3a3c; display:flex; justify-content:center; align-items:center; border-radius:8px; font-size:32px; font-weight:bold; text-transform:uppercase; transition:transform .2s;}
 .tile.revealed{animation:pop .15s ease-out;}
 @keyframes pop{0%{transform:scale(0.99);}
 99%{transform:scale(1.01);}
@@ -110,12 +114,12 @@ th{background:#227; font-weight:bold;}
 #guess{background:#223355; border:1px solid #4466aa; border-radius:6px; color:#fff;}
 input{width:120px; height:35px; font-size:26px; text-transform:uppercase; text-align:center;}
 
-button{padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; border:1px solid #666; border-radius:4px;}
+button{padding:8px 8px; font-size:14px; font-weight:bold; cursor:pointer; background:#449; color:#fff; box-shadow:0 2px 10px rgba(0,0,0,.4); border:1px solid rgba(255,255,255,.05); border-radius:8px;}
 button:active,.key:active{transform:scale(0.95);}
 
 #keyboard{max-width:700px; margin:auto;}
 .keyrow{margin-top:5px;}
-.key{display:inline-block; width:32px; padding:10px 0; margin:2px; border-radius:4px; background:#818384; font-weight:bold; cursor:pointer; user-select:none;}
+.key{display:inline-block; width:32px; padding:10px 0; margin:2px; border-radius:6px; background:#818384; font-weight:bold; cursor:pointer; user-select:none;}
 .key.special{width:60px;}
 .key.green{background:#538d4e;}
 .key.yellow{background:#b59f3b;}
@@ -123,7 +127,7 @@ button:active,.key:active{transform:scale(0.95);}
 
 #playagain{display:none; margin-top:15px;}
 
-#footer{margin-top:100px; padding-bottom:20px; font-size:8px;}
+#footerArea{margin-top:100px; text-align:left; padding-bottom:20px; font-size:8px;}
 
 @media(max-width:1000px){body{padding:10px;}
 #headerRow{grid-template-columns:minmax(0,1fr);}
@@ -151,8 +155,11 @@ button:active,.key:active{transform:scale(0.95);}
 
 <div id="helpPopup" onclick="if(event.target===this)toggleHelp()">
 <div id="helpContent">
+<div class="popupHeader">
 <button onclick="toggleHelp()">✕</button>
-<h2>How to Play Twordle v3.1</h2>
+<h2>How to Play Twordle</h2>
+</div>
+<div class="popupBody">
 <p>Guess the hidden five-letter word in six attempts.</p>
 <ul>
 <li>Enter any valid five-letter word.</li>
@@ -180,12 +187,16 @@ button:active,.key:active{transform:scale(0.95);}
 <h3>Privacy</h3>
 <p>This page uses localStorage/cookies to save those stats and for no other reason.</p>
 <p style="text-align:center; font-weight:bold; margin-top:20px;">Have fun!</p>
-</div></div>
+</div>
+</div>
+</div>
 
 <div id="scorePopup" onclick="if(event.target===this)toggleScore()">
-<div id="scoreContent"><button onclick="toggleScore()">✕</button>
+<div id="scoreContent">
+<div class="popupHeader"><button onclick="toggleScore()">✕</button>
 <h2>Scoring</h2>
-
+</div>
+<div class="popupBody">
 <p><b>🏆 Base Score:</b><br>
 Solve the word for 50 points.</p>
 
@@ -210,6 +221,7 @@ While working towards the solution, the score will update:<br>
 <li>Invalid words cost 10 points each.</li>
 <li>Undo costs 15 points each use.</li>
 <li>Using the Cheat panel costs 20 points, once per turn.</li></ul></p>
+</div>
 </div>
 </div>
 
@@ -330,36 +342,51 @@ While working towards the solution, the score will update:<br>
 <div id="layout">
 <div id="statsPanel">
 <div id="helpButton" onclick="toggleHelp()">Help ?</div> | <div id="soundButton" onclick="toggleSound()">🔊</div>| <div id="scoreButton" onclick="toggleScore()">🏆</div><br>
-<br>
+
+<div class="sectionTitle">SCORE:</div>
 <div id="scoreBoard">000</div>
-<br>
 <div id="newGame" onclick="newGame()">New Game</div>
-<br>
+
+<div class="sectionTitle">CURRENT WORD:</div>
+<div><span id="currentWord"></span></div>
+
+<div class="sectionTitle" onclick="toggleSection(this,'statisticsSection')">► STATISTICS</div>
+<div id="statisticsSection" class="collapsed">
 <div>Wins: <span id="wins">0</span></div>
 <div>Losses: <span id="losses">0</span></div>
 <br>
+<div><button onclick="toggleConfirm()">Clear Stats</button></div>
+</div>
+
+<div class="sectionTitle" onclick="toggleSection(this,'performanceSection')">► PERFORMANCE</div>
+<div id="performanceSection" class="collapsed">
 <div>Win %: <span id="winpct">0</span></div>
 <div>Turns/Win: <span id="winavg">0</span></div>
 <div>Invalid Words: <span id="invalidcount">0</span></div>
-<br>
-<div style = "color:#ff0000;">Cheats Used:</div>
+</div>
+
+<div class="sectionTitle" style="color:#c66;" onclick="toggleSection(this,'cheatsSection')">► CHEATS USED</div>
+<div id="cheatsSection" class="collapsed">
 <div>Hints: <span id="hintcount">0</span></div>
 <div>Cheats: <span id="cheatcount">0</span></div>
 <div>Undo: <span id="undocount">0</span></div>
-<br>
-<div><button onclick="toggleConfirm()">Clear Stats</button></div>
-<br>
-<div>Current Word: <span id="currentWord"></span></div>
-<br>
+</div>
+
+<div class="sectionTitle" onclick="toggleSection(this,'profileSection')">► PROFILE</div>
+<div id="profileSection" class="collapsed">
 <div><button id="profileButton" onclick="toggleProfile()">🔴 Player Profile</button><br>
 <div><input id="saveGuess" maxlength="5" autocomplete="off"><br>
 <button id="firstGuess" onclick="saveGuess()">Save First Guess</button></div>
 <div><button id="editCustomDictionary" onclick="modifyCustomDictionary()">My Dictionary</button></div>
 <button id="profileConfirm" onclick="toggleProfileConfirm()">Clear Profile</button>
 </div>
-<br>
+</div>
+
+<div class="sectionTitle" onclick="toggleSection(this,'dictionarySection')">► DICTIONARY</div>
+<div id="dictionarySection" class="collapsed">
 <div><select id="dictionarySelect" onchange="confirmDictionaryChange()"><option value="Twordle.txt" selected>Standard Dictionary</option><option value="SOWPODS5.txt">SOWPODS Extreme</option></select></div>
 <div><button onclick="viewDictionary()">Browse Dictionary</button></div>
+</div>
 </div>
 
 <div id="gamePanel">
@@ -385,7 +412,10 @@ While working towards the solution, the score will update:<br>
 </div>
 </div>
 
-<div id="footer"><table><tr><td style="text-align:left;"><a href="https://github.com/Schvenn/Twirdle"  target="_blank">Twordle on Github</a> is a WORDLE&trade; inspired clone created by <a href = "https://github.com/Schvenn"  target="_blank">Schvenn</a><br>
+<div id="footerArea">
+<div class="sectionTitle" onclick="toggleSection(this,'footer')">► Twordle ©</div>
+<div id="footer" class="collapsed">
+<table><tr><td style="text-align:left;"><a href="https://github.com/Schvenn/Twirdle"  target="_blank">Twordle on Github</a> is a WORDLE&trade; inspired clone created by <a href = "https://github.com/Schvenn"  target="_blank">Schvenn</a><br>
 and is licensed under the
 <a href = "https://github.com/Schvenn/Twirdle/blob/main/LICENSE"  target="_blank">MIT License</a>.<br><br>
 This version was created with the intent of allowing people to play<br>
@@ -395,7 +425,9 @@ multiple rounds per day, and learn strategies.<br><br>
 <a href="https://www.nytco.com/press/the-new-york-times-acquires-wordle/" rel="noopener noreferrer" target="_blank">Ownership</a><br><br>
 Twordle is an independently developed word game and is not<br>
 affiliated with or endorsed by The New York Times Company.<br>
-WORDLE&trade; is a trademark of The New York Times Company.</td></tr></table></div>
+WORDLE&trade; is a trademark of The New York Times Company.</td></tr></table>
+</div>
+</div>
 
 <script>
 // ------------------------ DEFINE VARIABLES ------------------------------------------------------
@@ -674,6 +706,10 @@ window.location.href =
 `${decodeHex("6d61696c746f")}:${decodeHex("73636876656e6e4073636876656e6e2e6361")}?${decodeHex("7375626a656374")}=${encodeURIComponent(decodeHex("54776f72646c652044696374696f6e617279205375626d697373696f6e"))}&${decodeHex("626f6479")}=${encodeURIComponent(b)}`;}
 
 // ------------------------ TOGGLES ---------------------------------------------------------------
+function toggleSection(header,id){let section = document.getElementById(id);
+section.classList.toggle("collapsed");
+header.innerHTML = (section.classList.contains("collapsed") ? "► " : "▼ ") + header.innerHTML.substring(2);}
+
 function toggleHelp(){playClickSound();
 const popup=document.getElementById("helpPopup");
 popup.style.display=popup.style.display==="flex"?"none":"flex";}
