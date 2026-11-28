@@ -10,8 +10,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{background:#000; color:white; font-family: "Segoe UI", "Inter", sans-serif; text-align:center; margin:0; padding:20px;}
-h1{margin-bottom:10px;}
+body{background:#030010; color:white; font-family: "Segoe UI", "Inter", sans-serif; text-align:center; margin:0; padding:20px;}
+
+#title{margin:0; font-family:Consolas,Monaco,"Courier New",monospace; font-size:42px; font-weight:700; letter-spacing:4px; color:#ffffff;}
+
+@keyframes titleReveal{0%{opacity:0; transform:translateY(-100px);} 60%{opacity:1; transform:translateY(8px);} 65%{transform:translateY(3px);} 75%{transform:translateY(-3px);} 85%{transform:translateY(3px);} 100%{opacity:1; transform:translateY(0);}}
+h1{animation:titleReveal .7s ease-out; margin-bottom:15px;}
+
+@keyframes titleReset{0%{transform:translateX(0px);} 50%{transform:translateX(-25px);} 60%{transform:translateX(16px);} 78%{transform:translateX(-6px);} 92%{transform:translateX(2px);} 100%{transform:translateX(0);}}
+.titleReset{animation:titleReset .7s ease-out;}
+
 th{background:#227; font-weight:bold;}
 
 #message{width:320px; max-width:350px; min-height:42px; padding:5px 5px; margin:0 auto 15px auto; border-radius:10px; font-weight:600; text-align:center; background:#1a1d26; border:1px solid #303545; color:#e0e0e0; box-shadow:0 2px 8px rgba(0,0,0,.35);}
@@ -149,7 +157,7 @@ button:active,.key:active{transform:scale(0.95);}
 
 <div id="headerRow">
 <div></div>
-<h1>Twordle</h1>
+<h1 id="title">TWORDLE</h1>
 <div></div>
 </div>
 
@@ -431,6 +439,7 @@ WORDLE&trade; is a trademark of The New York Times Company.</td></tr></table>
 
 <script>
 // ------------------------ DEFINE VARIABLES ------------------------------------------------------
+let firstload = true;
 let dictionary = [];
 let pendingDictionary = null;
 let currentDictionary = "Twordle.txt";
@@ -1361,7 +1370,13 @@ updateProfile("loss");
 document.getElementById("playagain").style.display = "inline-block";
 return;}
 
-function newGame(){answer = dictionary[Math.floor(Math.random() * dictionary.length)];
+function newGame(){if(!firstload){let title = document.getElementById("title");
+title.classList.remove("titleReset");
+void title.offsetWidth;
+title.classList.add("titleReset");}
+firstload = false;
+
+answer = dictionary[Math.floor(Math.random() * dictionary.length)];
 resetScore();
 grayletteruses = {};
 board = [];
