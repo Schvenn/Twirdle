@@ -384,7 +384,6 @@ While working towards the solution, the score will update:<br>
 <div class="statValue" id="losses">0</div>
 </div>
 </div>
-<div><button onclick="toggleConfirm()">Clear Stats</button></div>
 </div>
 
 <div class="sectionTitle" onclick="toggleSection(this,'performanceSection')">► PERFORMANCE</div>
@@ -425,11 +424,11 @@ While working towards the solution, the score will update:<br>
 
 <div class="sectionTitle" onclick="toggleSection(this,'profileSection')">► PROFILE</div>
 <div id="profileSection" class="collapsed">
-<div><button id="profileButton" onclick="toggleProfile()">🔴 Player Profile</button><br>
+<div><button id="profileButton" onclick="toggleProfile()">🔴 Player Profile</button><br></div>
 <div><input id="saveGuess" maxlength="5" autocomplete="off"><br>
 <button id="firstGuess" onclick="saveGuess()">Save First Guess</button></div>
-<button id="profileConfirm" onclick="toggleProfileConfirm()">Clear Profile</button>
-</div>
+<div><button onclick="toggleConfirm()">Clear Stats</button></div>
+<div><button id="profileConfirm" onclick="toggleProfileConfirm()">Clear Profile</button></div>
 </div>
 
 <div class="sectionTitle" onclick="toggleSection(this,'dictionarySection')">► DICTIONARIES</div>
