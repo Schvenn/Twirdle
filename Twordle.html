@@ -22,7 +22,7 @@ h1{animation:titleReveal .7s ease-out; margin-bottom:15px;}
 
 th{background:#227; font-weight:bold;}
 
-#message{width:320px; max-width:350px; min-height:42px; padding:5px 5px; margin:0 auto 15px auto; border-radius:10px; font-weight:600; text-align:center; background:#1a1d26; border:1px solid #303545; color:#e0e0e0; box-shadow:0 2px 8px rgba(0,0,0,.35);}
+#message{width:320px; max-width:350px; min-height:42px; padding:5px 5px; margin:0 auto 15px auto; border-radius:10px; font-weight:600; text-align:center; background:#1a1d26; border:1px solid #303545; color:#e0e0e0; box-shadow:0 2px 8px rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; text-align:center;}
 .solved{background:#162616!important; border-color:#4a8f4a; color:#9be59b!important;}
 .error{background:#2a1414!important; border-color:#a94442; color:#ff8f8f!important;}
 .notice{background:#182338!important; border-color:#4667a6; color:#b9d3ff!important;}
@@ -1301,7 +1301,7 @@ if(finalscore > highscore){highscore = finalscore;}
 gameswon++;
 saveScores();
 
-setMessage(`Solved! You earned ${finalscore} points!${definitionLink(answer)}`, "solved");
+setMessage(`Solved! You earned ${finalscore} points! ${definitionLink(answer)}`, "solved");
 
 document
 .getElementById("playagain")
