@@ -47,6 +47,20 @@ th{background:#227; font-weight:bold;}
 
 #scoreBoard{font-size:48px; font-weight:bold; color:#00FF00}
 
+.recordRow{display:flex; gap:8px; margin:5px 0;}
+.statBox{text-align:center; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,.08);}
+.statLabel{font-size:10px; font-weight:700; letter-spacing:1px;}
+.statValue{font-size:22px; font-weight:700;}
+
+.winBox{background:#122612; border-color:#538d4e; color:#7fd879;}
+.lossBox{background:#261212; border-color:#a94442; color:#ff8f8f;}
+.pctBox{background:#122612; border-color:#538d4e; color:#7fd879;}
+.avgBox{background:#101c30; border-color:#4667a6; color:#9ec1ff;}
+.invalidBox{background:#2d2413; border-color:#b2933a; color:#ffd56f;}
+.hintBox{background:#241b12; border-color:#9c7b2f; color:#ffd56f;}
+.cheatBox{background:#261212; border-color:#a94442; color:#ff8f8f;}
+.undoBox{background:#300909; border-color:#d14a4a; color:#ffb0b0;}
+
 #confirmContent,#addWordContent{background:#222; border:1px solid #555; border-radius:8px; padding:10px; max-width:350px; width:100%; box-sizing:border-box; text-align:center;}
 
 #customWordDefinition{top-margin:10px; width:300px; height:80px; font-size:14px; text-transform:none; text-align:left; resize:vertical; padding:5px; box-sizing:border-box;}
@@ -100,6 +114,8 @@ th{background:#227; font-weight:bold;}
 #sidePanel{position:relative; min-height:450px; max-height:450px;}
 
 .profileword{cursor:pointer; color:#7db4ff;}
+#profilePanel{background:#080016;}
+#cheatPanel{background:#100006;}
 #cheatPanel,#profilePanel{position:absolute; inset:0; display:none; text-align:left; border:1px solid #444; padding:10px; overflow-y:auto; max-height:450px;}
 #cheatHeader,#profileHeader{text-align:center; font-size:20px; font-weight:bold; padding-bottom:10px;}
 #possibleWords,#profileWords{text-align:center; font-size:12px; line-height:1.5; word-wrap:break-word;}
@@ -360,24 +376,53 @@ While working towards the solution, the score will update:<br>
 
 <div class="sectionTitle" onclick="toggleSection(this,'statisticsSection')">► STATISTICS</div>
 <div id="statisticsSection" class="collapsed">
-<div>Wins: <span id="wins">0</span></div>
-<div>Losses: <span id="losses">0</span></div>
-<br>
+<div class="recordRow">
+<div class="statBox winBox">
+<div class="statLabel">WINS</div>
+<div class="statValue" id="wins">0</div>
+</div>
+<div class="statBox lossBox">
+<div class="statLabel">LOSSES</div>
+<div class="statValue" id="losses">0</div>
+</div>
+</div>
 <div><button onclick="toggleConfirm()">Clear Stats</button></div>
 </div>
 
 <div class="sectionTitle" onclick="toggleSection(this,'performanceSection')">► PERFORMANCE</div>
 <div id="performanceSection" class="collapsed">
-<div>Win %: <span id="winpct">0</span></div>
-<div>Turns/Win: <span id="winavg">0</span></div>
-<div>Invalid Words: <span id="invalidcount">0</span></div>
+<div class="recordRow">
+<div class="statBox pctBox">
+<div class="statLabel">WIN %<br><br></div>
+<div class="statValue" id="winpct">0</div>
+</div>
+<div class="statBox avgBox">
+<div class="statLabel">AVERAGE<br>TURNS</div>
+<div class="statValue" id="winavg">0</div>
+</div>
+<div class="statBox invalidBox">
+<div class="statLabel">INVALID<br>WORDS</div>
+<div class="statValue" id="invalidcount">0</div>
+</div>
+</div>
 </div>
 
 <div class="sectionTitle" style="color:#c66;" onclick="toggleSection(this,'cheatsSection')">► CHEATS USED</div>
 <div id="cheatsSection" class="collapsed">
-<div>Hints: <span id="hintcount">0</span></div>
-<div>Cheats: <span id="cheatcount">0</span></div>
-<div>Undo: <span id="undocount">0</span></div>
+<div class="recordRow">
+<div class="statBox hintBox">
+<div class="statLabel">HINTS</div>
+<div class="statValue" id="hintcount">0</div>
+</div>
+<div class="statBox cheatBox">
+<div class="statLabel">CHEATS</div>
+<div class="statValue" id="cheatcount">0</div>
+</div>
+<div class="statBox undoBox">
+<div class="statLabel">UNDO</div>
+<div class="statValue" id="undocount">0</div>
+</div>
+</div>
 </div>
 
 <div class="sectionTitle" onclick="toggleSection(this,'profileSection')">► PROFILE</div>
@@ -385,13 +430,13 @@ While working towards the solution, the score will update:<br>
 <div><button id="profileButton" onclick="toggleProfile()">🔴 Player Profile</button><br>
 <div><input id="saveGuess" maxlength="5" autocomplete="off"><br>
 <button id="firstGuess" onclick="saveGuess()">Save First Guess</button></div>
-<div><button id="editCustomDictionary" onclick="modifyCustomDictionary()">My Dictionary</button></div>
 <button id="profileConfirm" onclick="toggleProfileConfirm()">Clear Profile</button>
 </div>
 </div>
 
-<div class="sectionTitle" onclick="toggleSection(this,'dictionarySection')">► DICTIONARY</div>
+<div class="sectionTitle" onclick="toggleSection(this,'dictionarySection')">► DICTIONARIES</div>
 <div id="dictionarySection" class="collapsed">
+<div><button id="editCustomDictionary" onclick="modifyCustomDictionary()">My Dictionary</button></div>
 <div><select id="dictionarySelect" onchange="confirmDictionaryChange()"><option value="Twordle.txt" selected>Standard Dictionary</option><option value="SOWPODS5.txt">SOWPODS Extreme</option></select></div>
 <div><button onclick="viewDictionary()">Browse Dictionary</button></div>
 </div>
