@@ -509,6 +509,7 @@ bloat
 blobs
 block
 blocs
+blogs
 bloke
 blond
 blood
@@ -2783,6 +2784,7 @@ lends
 lento
 leper
 lepta
+letch
 letup
 levee
 level
@@ -3174,6 +3176,7 @@ mores
 morns
 moron
 morph
+morse
 morts
 mosey
 mossy
@@ -4186,6 +4189,7 @@ saith
 sakes
 salad
 sales
+salet
 sally
 salon
 salsa
@@ -5104,6 +5108,7 @@ toner
 tones
 tongs
 tonic
+tonne
 tools
 toons
 tooth
@@ -5184,6 +5189,7 @@ trios
 tripe
 trips
 trite
+trods
 troll
 tromp
 troop
@@ -5560,6 +5566,7 @@ whews
 wheys
 which
 whiff
+whigs
 while
 whims
 whine
